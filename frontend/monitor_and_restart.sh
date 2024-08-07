@@ -10,6 +10,7 @@ while true; do
         rm -rf .next
         npm run build
         pm2 restart mexc_indexing_frontend
+        echo -n > /logs/mexc_indexing_frontend-error.log
 
         # Clear the log file to prevent repeated restarts on the same error
         : > "$LOG_FILE"
