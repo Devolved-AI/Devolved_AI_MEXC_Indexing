@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ClipboardJS from 'clipboard';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 // Dynamically import the Player component for client-side rendering only
@@ -25,6 +25,7 @@ const BlocksDetailsByBlockNumber = () => {
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
   const blockNumber = pathname.split('/').pop();
+  const router = useRouter();
   // console.log(blockNumber);
 
   useEffect(() => {
@@ -47,9 +48,25 @@ const BlocksDetailsByBlockNumber = () => {
 
   useEffect(() => {
     if (blockNumber) {
-      fetchBlockDetails(blockNumber as string);
+      const fetchWithRetry = async (retries: number) => {
+        try {
+          setLoading(true);
+          await fetchBlockDetails(blockNumber as string);
+          setLoading(false);
+        } catch (err) {
+          if (retries > 0) {
+            fetchWithRetry(retries - 1);
+          } else {
+            setError('Transaction not found or an error occurred.');
+            setBlockData(null);
+            router.push('/'); // Redirect to the homepage after retries fail
+          }
+        }
+      };
+
+      fetchWithRetry(2); // Attempt to fetch data with 2 retries
     }
-  }, [blockNumber]);
+  }, [blockNumber, router]);
 
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);

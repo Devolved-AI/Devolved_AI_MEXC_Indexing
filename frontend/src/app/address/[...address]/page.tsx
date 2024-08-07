@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import ClipboardJS from 'clipboard';
 import { FiClipboard } from 'react-icons/fi';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 // Dynamically import the Player component for client-side rendering only
@@ -29,6 +29,7 @@ const TransactionDetailsByAddress = () => {
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
   const address = pathname.split('/').pop();
+  const router = useRouter();
 
   useEffect(() => {
     // Initialize ClipboardJS
@@ -50,10 +51,22 @@ const TransactionDetailsByAddress = () => {
 
   useEffect(() => {
     if (address) {
-      fetchTransactionDetails(address as string);
-      fetchBalance(address as string);
+      const fetchWithRetry = async (fn: Function, retries: number) => {
+        try {
+          await fn();
+        } catch (err) {
+          if (retries > 0) {
+            await fetchWithRetry(fn, retries - 1);
+          } else {
+            router.push('/'); // Redirect to the homepage after retries fail
+          }
+        }
+      };
+
+      fetchWithRetry(() => fetchTransactionDetails(address as string), 2);
+      fetchWithRetry(() => fetchBalance(address as string), 2);
     }
-  }, [address]);
+  }, [address, router]);
 
   const fetchTransactionDetails = async (address: string) => {
     setLoading(true);
