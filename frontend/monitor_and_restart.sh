@@ -7,7 +7,6 @@ while true; do
     if [ -s "$LOG_FILE" ]; then
         echo "Error detected in log file."
         echo "Executing recovery steps..."
-        npm run build
         pm2 restart mexc_indexing_frontend
         echo -n > /logs/mexc_indexing_frontend-error.log
 
