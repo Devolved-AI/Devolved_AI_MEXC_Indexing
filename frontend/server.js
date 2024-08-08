@@ -13,7 +13,7 @@ app.prepare().then(() => {
 
   // Use cors middleware
   server.use(cors({
-    origin: process.env.CORS_ORIGIN, // or a specific origin
+    origin: "*", // or a specific origin
     methods: ['POST'],
   }));
 
