@@ -4,56 +4,35 @@ import { formatDistanceToNow } from 'date-fns';
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   if (request.method !== "POST") {
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         message: "Method not allowed!",
-      }),
-      {
-        status: 405,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+      },
+      { status: 405 }
     );
   }
 
   const nextActionHeader = request.headers.get("next-action");
   if (!nextActionHeader) {
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         message: "Missing 'next-action' header",
-      }),
-      {
-        status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+      },
+      { status: 400 }
     );
   }
 
   const { address } = await request.json();
 
   if (!address) {
-    return new NextResponse(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         message: "Address is required",
-      }),
-      {
-        status: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+      },
+      { status: 400 }
     );
   }
 
@@ -72,20 +51,13 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
-      return new NextResponse(
-        JSON.stringify({
-          success: false,
-          message: "No transactions found for the given address",
-        }),
-        {
-          status: 404,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
-        }
-      );
+        return NextResponse.json(
+            {
+              success: false,
+              message: "No transactions found for the given address",
+            },
+            { status: 404 }
+        );
     }
 
     const transactions = result.rows.map(tx => ({
@@ -99,35 +71,21 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
       gas_fee: tx.gas_fee,
     }));
 
-    return new NextResponse(
-      JSON.stringify({
-        success: true,
-        result: transactions,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    return NextResponse.json(
+        {
+            success: true,
+            result: transactions,
         },
-      }
+        { status: 200 }
     );
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    return new NextResponse(
-      JSON.stringify({
-        success: false,
-        message: 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    return NextResponse.json(
+        {
+            success: false,
+            message: 'Internal server error',
         },
-      }
+        { status: 500 }
     );
   }
 };

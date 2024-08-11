@@ -17,15 +17,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "8080:80"
-
-  app:
-    build: .
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    ports:
-      - "4000:4000"
-    depends_on:
-      - db
   
   redis:
     image: redis:latest

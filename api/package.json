@@ -1,0 +1,26 @@
+{
+  "name": "argochain_explorer",
+  "version": "1.0.0",
+  "description": "An explorer made specifically for the Argochain ecosystem.",
+  "main": "fetchChainData.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "init": "node init.js",
+    "fetch": "node fetchChainData.js",
+    "listener": "node listener.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^7.1.0",
+    "nodemon": "^3.1.4",
+    "pg": "^8.12.0",
+    "redis": "^4.6.15"
+  }
+}
