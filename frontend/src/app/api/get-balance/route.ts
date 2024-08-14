@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ApiPromise, WsProvider } from "@polkadot/api";
+import { pool } from '@/lib/dbConnect';
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   if (request.method !== "POST") {
@@ -44,11 +45,35 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     const balanceFormatted = balanceValue.toLocaleString(undefined, {
       minimumFractionDigits: 4,
       maximumFractionDigits: 4,
-    }) + " AGC";
+    });
+
+    // Update balance in PostgreSQL
+    await pool.query(
+      `INSERT INTO account_balances (account_address, balance, last_updated)
+       VALUES ($1, $2, CURRENT_TIMESTAMP)
+       ON CONFLICT (account_address)
+       DO UPDATE SET balance = $2, last_updated = CURRENT_TIMESTAMP`,
+      [address, balanceFormatted]
+    );
+
+    // Fetch the updated balance from PostgreSQL
+    const result = await pool.query(
+      'SELECT balance FROM account_balances WHERE account_address = $1',
+      [address]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { message: "No balance found for the given address" },
+        { status: 404 }
+      );
+    }
+
+    const updatedBalance = result.rows[0].balance + " AGC";
 
     return NextResponse.json({
       success: true,
-      balance: balanceFormatted 
+      balance: updatedBalance
     }, { status: 200 });
   } catch (error) {
     console.error("Error fetching balance:", error);
