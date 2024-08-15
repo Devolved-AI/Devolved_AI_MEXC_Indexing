@@ -13,17 +13,6 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     );
   }
 
-  const nextActionHeader = request.headers.get("next-action");
-  if (!nextActionHeader) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Missing 'next-action' header",
-      },
-      { status: 400 }
-    );
-  }
-
   try {
     const redisClient = getClient();
     

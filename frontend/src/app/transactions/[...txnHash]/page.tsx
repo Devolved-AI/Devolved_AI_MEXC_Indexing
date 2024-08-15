@@ -53,8 +53,7 @@ const TransactionDetails = () => {
       const response = await fetch('/api/transaction-by-hash', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'next-action': 'search-transaction'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ txHash })
       });

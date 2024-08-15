@@ -5,13 +5,10 @@ module.exports = {
       script: "npm",
       args: "start",
       autorestart: true,
-      time: true,
+      max_restarts: 100,
       restart_delay: 3000,
       watch: true,
-      ignore_watch: [
-        "node_modules",
-        "logs"
-      ],
+      ignore_watch: ["node_modules", "logs"],
       max_memory_restart: "1G",
       log_date_format: "YYYY-MM-DD HH:mm Z",
       error_file: './logs/mexc_indexing_frontend-error.log',
@@ -21,7 +18,7 @@ module.exports = {
         followSymlinks: false,
         usePolling: true,
         interval: 1000,
-      }
-    }
-  ]
+      },
+    },
+  ],
 };

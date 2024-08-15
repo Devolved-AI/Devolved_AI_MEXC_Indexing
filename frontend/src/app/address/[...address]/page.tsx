@@ -74,8 +74,7 @@ const TransactionDetailsByAddress = () => {
       const response = await fetch('/api/transaction-by-address', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'next-action': 'search-address'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ address })
       });
@@ -102,8 +101,7 @@ const TransactionDetailsByAddress = () => {
       const response = await fetch('/api/get-balance', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'next-action': 'search-balance'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ address })
       });

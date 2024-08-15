@@ -74,8 +74,7 @@ const BlocksDetailsByBlockNumber = () => {
       const response = await fetch('/api/block-details-by-block-number', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'next-action': 'search-block'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ blockNumber })
       });
