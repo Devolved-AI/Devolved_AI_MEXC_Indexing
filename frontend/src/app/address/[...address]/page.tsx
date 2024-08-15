@@ -23,12 +23,12 @@ interface Transaction {
 }
 
 const TransactionDetailsByAddress = () => {
-  const [transactionData, setTransactionData] = useState<any>(null);
+  const [transactionData, setTransactionData] = useState<Transaction[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [balance, setBalance] = useState<string>("0.0 AGC");
+  const [balance, setBalance] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
-  const address = pathname.split('/').pop();
+  const address = pathname?.split('/').pop();
   const router = useRouter();
 
   useEffect(() => {
@@ -85,12 +85,12 @@ const TransactionDetailsByAddress = () => {
         setTransactionData(data.result);
         setError(null);
       } else {
-        setError(data.message);
         setTransactionData(null);
+        setError(data.message);
       }
     } catch (err) {
-      setError('Transaction not found or an error occurred.');
       setTransactionData(null);
+      setError('Transaction not found or an error occurred.');
     } finally {
       setLoading(false);
     }
@@ -112,9 +112,11 @@ const TransactionDetailsByAddress = () => {
         setBalance(data.balance);
         setError(null);
       } else {
+        setBalance(null);
         setError(data.message);
       }
     } catch (err) {
+      setBalance(null);
       setError('Balance not found or an error occurred.');
     }
   };
@@ -142,13 +144,16 @@ const TransactionDetailsByAddress = () => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+      {balance && (
+        <div className="text-center mb-4">
+          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4>
+        </div>
+      )}
 
-      {transactionData && (
+      {transactionData ? (
         <div className="mt-6">
           <div className="bg-white shadow-md rounded-lg p-4">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">Address Details</h2>
-            <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance }</h4>
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
@@ -210,6 +215,12 @@ const TransactionDetailsByAddress = () => {
             </div>
           </div>
         </div>
+      ) : (
+        <div className="text-center text-red-500 mt-6">Transaction details not found.</div>
+      )}
+
+      {!balance && !transactionData && (
+        <div className="text-center text-red-500 mt-6">Balance and transaction details not found.</div>
       )}
     </div>
   );
