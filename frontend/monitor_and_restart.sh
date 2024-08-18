@@ -14,5 +14,5 @@ while true; do
             : > "$LOG_FILE"
         fi
     done
-    sleep 5  # Check every 30 seconds
+    sleep 20  # Check every 20 seconds
 done

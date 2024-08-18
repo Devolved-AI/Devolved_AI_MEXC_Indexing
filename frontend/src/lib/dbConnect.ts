@@ -16,7 +16,7 @@ const connectToDatabase = async (retries = RETRY_LIMIT): Promise<Pool> => {
   while (retries > 0) {
     try {
       await pool.connect();
-      // console.log('Connected to PostgreSQL database');
+      console.log('Connected to PostgreSQL database');
       return pool;
     } catch (error) {
       console.error(`Failed to connect to PostgreSQL database. Retries left: ${retries - 1}`);
