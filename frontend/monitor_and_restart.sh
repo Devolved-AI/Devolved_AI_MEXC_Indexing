@@ -1,7 +1,12 @@
 #!/bin/bash
 
 LOG_FILE="./logs/mexc_indexing_frontend-error.log"
-ERROR_KEYWORDS=("Invariant: Missing 'next-action' header" "Failed to find Server Action" "node:async_hooks")
+ERROR_KEYWORDS=(
+    "Invariant: Missing 'next-action' header" 
+    "Failed to find Server Action" 
+    "node:async_hooks"
+    "RPC methods not decorated"
+)
 
 while true; do
     for keyword in "${ERROR_KEYWORDS[@]}"; do
@@ -14,5 +19,5 @@ while true; do
             : > "$LOG_FILE"
         fi
     done
-    sleep 5  # Check every 20 seconds
+    sleep 10  # Check every 20 seconds
 done
