@@ -1,26 +1,23 @@
 // src/server.js
 const express = require('express');
 const { Pool } = require('pg');
+const { formatDistanceToNow } = require("date-fns");
+const helmet = require('helmet');
+const cors = require('cors');
 require('dotenv').config();
-// const initDb = require('./utils/initDb');
-// const fetchChainData = require('./utils/fetchChainData');
+require('express-async-errors');
 
-const app = express();
 const port = process.env.PORT || 4000;
 
+const app = express();
+
+app.use(helmet());
+app.use(cors({
+  origin: '*', // You can specify a specific origin like 'http://localhost:3000' if needed
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
-
-// Initialize the database
-// initDb()
-//   .then(() => {
-//     // Start fetching chain data
-//     setInterval(fetchChainData, 6000); // Fetch data every 6 seconds
-//   })
-//   .catch((err) => {
-//     console.error('Error during initialization:', err);
-//   });
-
-// Health Check Endpoint
 
 // Initialize PostgreSQL connection pool using environment variables
 const pool = new Pool({
@@ -54,6 +51,62 @@ app.get('/hitme/health', async (req, res) => {
       message: 'Failed to connect to the database.',
     });
   }
+});
+
+app.post('/hitme/address', async (req, res) => {
+  const { address } = req.body;
+  console.log(address);
+
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: "Address is required",
+      });
+    }
+
+    try {
+        const query = `
+          SELECT transactions.tx_hash, transactions.method, transactions.block_number, blocks.timestamp, transactions.from_address, transactions.to_address, transactions.amount, transactions.gas_fee as gas_fee
+          FROM transactions
+          LEFT JOIN blocks ON transactions.block_number = blocks.block_number
+          WHERE transactions.from_address = $1 OR transactions.to_address = $1
+          ORDER BY transactions.block_number DESC
+        `;
+        const values = [address];
+    
+        const result = await pool.query(query, values);
+    
+        if (result.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "No transactions found for the given address",
+          });
+        }
+    
+        const transactions = result.rows.map((tx) => ({
+          tx_hash: tx.tx_hash,
+          method: tx.method,
+          block_number: tx.block_number,
+          age: tx.timestamp
+            ? `${formatDistanceToNow(new Date(tx.timestamp))} ago`
+            : "N/A",
+          from_address: tx.from_address,
+          to_address: tx.to_address,
+          amount: tx.amount,
+          gas_fee: tx.gas_fee,
+        }));
+    
+        return res.status(200).json({
+          success: true,
+          result: transactions,
+        });
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
 });
 
 app.listen(port, () => {

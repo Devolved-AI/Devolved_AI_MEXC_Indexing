@@ -2,7 +2,7 @@
 
 LOG_FILE="./logs/mexc_indexing_frontend-error.log"
 PROCESS_NAME="mexc_indexing_frontend"
-FREEZE_CHECK_INTERVAL=30  # seconds
+FREEZE_CHECK_INTERVAL=3  # seconds
 
 # Function to check if the process is running
 is_process_running() {

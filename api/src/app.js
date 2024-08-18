@@ -6,7 +6,6 @@ require('express-async-errors');
 
 const blockRoutes = require('./routes/blockRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
-const addressRoutes = require('./routes/addressRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 
@@ -19,7 +18,6 @@ app.use(express.json());
 
 app.use('/hitme/blocks', blockRoutes);
 app.use('/hitme/transactions', transactionRoutes);
-app.use('/hitme/address', addressRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

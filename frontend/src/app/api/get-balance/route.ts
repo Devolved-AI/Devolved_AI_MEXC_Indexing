@@ -58,7 +58,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
       );
     }
 
-    const updatedBalance = result.rows[0].balance + " AGC";
+    const updatedBalance = result.rows[0].balance;
 
     return NextResponse.json({
       success: true,
