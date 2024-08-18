@@ -555,3 +555,4 @@ MigrationBackup/
 
 backend/
 cache/
+api/

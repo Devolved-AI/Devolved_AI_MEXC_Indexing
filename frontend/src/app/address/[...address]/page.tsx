@@ -64,7 +64,7 @@ const TransactionDetailsByAddress = () => {
       };
 
       fetchWithRetry(() => fetchTransactionDetails(address as string), 2);
-      fetchWithRetry(() => fetchBalance(address as string), 2);
+      // fetchWithRetry(() => fetchBalance(address as string), 2);
     }
   }, [address, router]);
 
@@ -146,7 +146,8 @@ const TransactionDetailsByAddress = () => {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (
         <div className="text-center mb-4">
-          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4>
+          {/* <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4> */}
+          <h4 className="text-md sm:text-md font-medium mb-4">Balance: [Comming  Soon ...]</h4>
         </div>
       )}
 
