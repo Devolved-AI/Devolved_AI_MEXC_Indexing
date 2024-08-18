@@ -5,7 +5,7 @@ module.exports = {
       script: "npm",
       args: "start",
       autorestart: true,
-      max_restarts: 100,
+      // max_restarts: 100,
       restart_delay: 3000,
       watch: true,
       ignore_watch: ["node_modules", "logs"],
