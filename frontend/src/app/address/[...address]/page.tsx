@@ -98,7 +98,7 @@ const TransactionDetailsByAddress = () => {
 
   const fetchBalance = async (address: string) => {
     try {
-      const response = await fetch('https://argowallet.devolvedai.com/api/get-balance', {
+      const response = await fetch('/api/get-balance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -146,8 +146,7 @@ const TransactionDetailsByAddress = () => {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (
         <div className="text-center mb-4">
-          {/* <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4> */}
-          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance}</h4>
+          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4>
         </div>
       )}
 
