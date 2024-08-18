@@ -14,10 +14,9 @@ while true; do
             echo "Error detected: $keyword"
             echo "Executing recovery steps..."
             pm2 restart mexc_indexing_frontend
-
             # Clear the log file to prevent repeated restarts on the same error
             : > "$LOG_FILE"
         fi
     done
-    sleep 10  # Check every 20 seconds
+    sleep 20  # Check every 20 seconds
 done
