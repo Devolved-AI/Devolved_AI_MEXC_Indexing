@@ -27,6 +27,7 @@ const TransactionDetailsByAddress = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [balance, setBalance] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
   const pathname = usePathname();
   const address = pathname?.split('/').pop();
   const router = useRouter();
@@ -56,17 +57,22 @@ const TransactionDetailsByAddress = () => {
           await fn();
         } catch (err) {
           if (retries > 0) {
-            await fetchWithRetry(fn, retries - 1);
+            setRetryCount((prevRetryCount) => prevRetryCount + 1);
+            if (retryCount < 5) {
+              window.location.reload(); // Reload the browser window if an error occurs
+            } else {
+              router.push('/'); // Redirect to the homepage if the error occurs for the 6th time
+            }
           } else {
-            router.push('/'); // Redirect to the homepage after retries fail
+            setRetryCount(0); // Reset the retry count if successful
           }
         }
       };
 
-      fetchWithRetry(() => fetchTransactionDetails(address as string), 2);
-      fetchWithRetry(() => fetchBalance(address as string), 2);
+      fetchWithRetry(() => fetchTransactionDetails(address as string), 5);
+      fetchWithRetry(() => fetchBalance(address as string), 5);
     }
-  }, [address, router]);
+  }, [address, retryCount, router]);
 
   const fetchTransactionDetails = async (address: string) => {
     setLoading(true);
@@ -84,13 +90,16 @@ const TransactionDetailsByAddress = () => {
       if (data.success) {
         setTransactionData(data.result);
         setError(null);
+        setRetryCount(0); // Reset the retry count on success
       } else {
         setTransactionData(null);
         setError(data.message);
+        throw new Error(data.message);
       }
     } catch (err) {
       setTransactionData(null);
       setError('Transaction not found or an error occurred.');
+      throw err; // Throw the error to trigger retry logic
     } finally {
       setLoading(false);
     }
@@ -111,13 +120,16 @@ const TransactionDetailsByAddress = () => {
       if (data.success) {
         setBalance(data.balance);
         setError(null);
+        setRetryCount(0); // Reset the retry count on success
       } else {
         setBalance(null);
         setError(data.message);
+        throw new Error(data.message);
       }
     } catch (err) {
       setBalance(null);
       setError('Balance not found or an error occurred.');
+      throw err; // Throw the error to trigger retry logic
     }
   };
 

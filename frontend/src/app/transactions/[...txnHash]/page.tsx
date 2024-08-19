@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import ClipboardJS from 'clipboard';
 import { FiClipboard } from 'react-icons/fi';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 // Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
@@ -15,9 +15,10 @@ const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
   const pathname = usePathname();
-  const txnHash = pathname.split('/').pop(); 
-  // console.log(txnHash);
+  const txnHash = pathname?.split('/').pop();
+  const router = useRouter();
 
   useEffect( () =>
   {
@@ -43,9 +44,30 @@ const TransactionDetails = () => {
 
   useEffect(() => {
     if (txnHash) {
-      fetchTransactionDetails(txnHash as string);
+      const fetchWithRetry = async (retries: number) => {
+        try {
+          setLoading(true);
+          await fetchTransactionDetails(txnHash as string);
+          setLoading(false);
+        } catch (err) {
+          if (retries > 0) {
+            setRetryCount(prev => prev + 1);
+            if (retryCount < 5) {
+              window.location.reload(); // Reload the browser window if an error occurs
+            } else {
+              router.push('/'); // Redirect to the homepage if the error occurs for the 6th time
+            }
+          } else {
+            setError('Transaction not found or an error occurred.');
+            setTransactionData(null);
+            router.push('/'); // Redirect to the homepage after retries fail
+          }
+        }
+      };
+
+      fetchWithRetry(5); // Attempt to fetch data with 5 retries
     }
-  }, [txnHash]);
+  }, [txnHash, retryCount, router]);
 
   const fetchTransactionDetails = async (txHash: string) => {
     setLoading(true);
@@ -63,13 +85,16 @@ const TransactionDetails = () => {
       if (data.success) {
         setTransactionData(data.result);
         setError(null);
+        setRetryCount(0); // Reset the retry count on success
       } else {
         setError(data.message);
         setTransactionData(null);
+        throw new Error(data.message);
       }
     } catch (err) {
       setError('Transaction not found or an error occurred.');
       setTransactionData(null);
+      throw err; // Throw the error to trigger retry logic
     } finally {
       setLoading(false);
     }

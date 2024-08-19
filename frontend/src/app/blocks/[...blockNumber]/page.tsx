@@ -23,10 +23,10 @@ const BlocksDetailsByBlockNumber = () => {
   const [blockData, setBlockData] = useState<Block | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
   const pathname = usePathname();
   const blockNumber = pathname.split('/').pop();
   const router = useRouter();
-  // console.log(blockNumber);
 
   useEffect(() => {
     // Initialize ClipboardJS
@@ -55,7 +55,12 @@ const BlocksDetailsByBlockNumber = () => {
           setLoading(false);
         } catch (err) {
           if (retries > 0) {
-            fetchWithRetry(retries - 1);
+            setRetryCount(prev => prev + 1);
+            if (retryCount < 5) {
+              window.location.reload(); // Reload the browser window if an error occurs
+            } else {
+              router.push('/'); // Redirect to the homepage if the error occurs for the 6th time
+            }
           } else {
             setError('Transaction not found or an error occurred.');
             setBlockData(null);
@@ -64,9 +69,9 @@ const BlocksDetailsByBlockNumber = () => {
         }
       };
 
-      fetchWithRetry(2); // Attempt to fetch data with 2 retries
+      fetchWithRetry(5); // Attempt to fetch data with 5 retries
     }
-  }, [blockNumber, router]);
+  }, [blockNumber, retryCount, router]);
 
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);
@@ -85,13 +90,16 @@ const BlocksDetailsByBlockNumber = () => {
       if (data.success) {
         setBlockData(data.result);
         setError(null);
+        setRetryCount(0); // Reset the retry count on success
       } else {
         setError(data.message);
         setBlockData(null);
+        throw new Error(data.message);
       }
     } catch (err) {
       setError('Transaction not found or an error occurred.');
       setBlockData(null);
+      throw err; // Throw the error to trigger retry logic
     } finally {
       setLoading(false);
     }
