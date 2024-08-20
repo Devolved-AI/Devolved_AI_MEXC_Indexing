@@ -26,6 +26,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
     const provider = new WsProvider(process.env.RPC_NODE_URL);
     const api = await ApiPromise.create({ provider });
 
+    await api.isReady;  // Ensure the API is ready
+
     // @ts-ignore
     const { data: balance } = await api.query.system.account(address);
     const balanceValue = parseFloat(balance.free.toString()) / Math.pow(10, 18);
