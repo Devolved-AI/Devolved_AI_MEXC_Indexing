@@ -13,10 +13,12 @@ while true; do
         if grep -q "$keyword" "$LOG_FILE"; then
             echo "Error detected: $keyword"
             echo "Executing recovery steps..."
+            pm2 stop mexc_indexing_frontend
+            kill -9 $(lsof -t -i :3000)
             pm2 restart mexc_indexing_frontend
             # Clear the log file to prevent repeated restarts on the same error
             : > "$LOG_FILE"
         fi
     done
-    sleep 30  # Check every 20 seconds
+    sleep 20  # Check every 20 seconds
 done
