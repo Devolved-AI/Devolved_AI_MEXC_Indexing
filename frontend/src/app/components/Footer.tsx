@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FaTwitter, FaDiscord, FaLinkedin, FaTelegramPlane } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
   const year = new Date().getFullYear();
@@ -21,7 +22,7 @@ const Footer: React.FC = () => {
               </samp>
             </Link>
             <p className="mt-4 text-sm">
-            Argochain Indexing is a Block Explorer and Analytics Platform for Argochain.
+            Argochain Scanner is a Block Explorer and Analytics Platform for Argochain.
             </p>
           </div>
 
@@ -48,19 +49,24 @@ const Footer: React.FC = () => {
             <p className="text-sm">Phone: +0 000 000 000</p> */}
             <div className="flex mt-4 space-x-4">
               <samp className="text-gray-700 hover:text-gray-600">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 4.557a9.85 9.85 0 01-2.828.775 4.932 4.932 0 002.165-2.723 9.86 9.86 0 01-3.127 1.195 4.918 4.918 0 00-8.384 4.482 13.953 13.953 0 01-10.141-5.146 4.822 4.822 0 00-.665 2.475c0 1.71.869 3.217 2.188 4.099a4.902 4.902 0 01-2.229-.616v.06a4.917 4.917 0 003.946 4.814 4.995 4.995 0 01-2.223.084 4.922 4.922 0 004.6 3.417A9.86 9.86 0 010 21.54a13.955 13.955 0 007.548 2.213c9.054 0 14.009-7.503 14.009-14.01 0-.213-.005-.426-.015-.637A10.006 10.006 0 0024 4.557z" />
-                </svg>
+                <Link href="https://twitter.com/devolvedai" target='_blank'>
+                  <FaTwitter className="h-6 w-6" />
+                </Link>
               </samp>
               <samp className="text-gray-700 hover:text-gray-600">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M22.675 0h-21.35C.602 0 0 .601 0 1.345v21.31C0 23.398.602 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.894-4.786 4.66-4.786 1.325 0 2.463.099 2.797.142v3.24l-1.92.001c-1.504 0-1.795.716-1.795 1.764v2.316h3.586l-.467 3.622h-3.12V24h6.115C23.398 24 24 23.398 24 22.655V1.345C24 .601 23.398 0 22.675 0z" />
-                </svg>
+                <Link href="https://discord.com/invite/devolvedai" target='_blank'>
+                  <FaDiscord className="h-6 w-6" />
+                </Link>
               </samp>
               <samp className="text-gray-700 hover:text-gray-600">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M22.23 0H1.77C.79 0 0 .8 0 1.78v20.44C0 23.2.79 24 1.77 24h20.46c.98 0 1.77-.8 1.77-1.78V1.78C24 .8 23.21 0 22.23 0zM7.12 20.45H3.56V9h3.56v11.45zM5.34 7.58C4.15 7.58 3.2 6.63 3.2 5.45c0-1.18.95-2.13 2.14-2.13s2.14.95 2.14 2.13c0 1.18-.96 2.13-2.14 2.13zM20.45 20.45h-3.56v-5.84c0-1.39-.03-3.18-1.94-3.18-1.94 0-2.23 1.51-2.23 3.07v5.95h-3.56V9h3.42v1.57h.05c.48-.92 1.65-1.88 3.4-1.88 3.63 0 4.3 2.39 4.3 5.5v6.26z" />
-                </svg>
+                <Link href="https://www.linkedin.com/company/devolvedai" target='_blank'>
+                  <FaLinkedin className="h-6 w-6" />
+                </Link>
+              </samp>
+              <samp className="text-gray-700 hover:text-gray-600">
+                <Link href="https://t.me/devolvedai" target='_blank'>
+                  <FaTelegramPlane className="h-6 w-6" />
+                </Link>
               </samp>
             </div>
           </div>
