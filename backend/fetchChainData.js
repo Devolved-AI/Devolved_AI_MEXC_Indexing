@@ -42,7 +42,7 @@ const main = async () => {
     if (latestBlockNumber - startBlockNumber > 5) {
       console.log('Block processing is lagging. Restarting process to resynchronize.');
       await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-      main();
+      restartPM2();
     }
 
     // Process blocks in batches
@@ -59,7 +59,7 @@ const main = async () => {
     await pool.end();
     console.log('Main process completed.');
     await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    main();
+    restartPM2();
   } catch (error) {
     console.error('Error initializing API:', error);
     await pool.end();
