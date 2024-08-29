@@ -39,11 +39,11 @@ const main = async () => {
     }
 
     // Check if the difference between the latest block number and the last processed block number is more than 2
-    // if (latestBlockNumber - startBlockNumber > 5) {
-    //   console.log('Block processing is lagging. Restarting process to resynchronize.');
-    //   await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    //   restartPM2();
-    // }
+    if (latestBlockNumber - startBlockNumber > 5) {
+      console.log('Block processing is lagging. Restarting process to resynchronize.');
+      await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
+      main();
+    }
 
     // Process blocks in batches
     for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
@@ -59,10 +59,11 @@ const main = async () => {
     await pool.end();
     console.log('Main process completed.');
     await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    restartPM2();
+    main();
   } catch (error) {
     console.error('Error initializing API:', error);
     await pool.end();
+    restartPM2();
   }
 };
 
@@ -81,7 +82,6 @@ const restartPM2 = () => {
     console.log(`PM2 stdout: ${stdout}`);
   });
 };
-
 
 // Process a batch of blocks
 const processBlockBatch = async (api, startBlockNumber, endBlockNumber) => {
@@ -181,7 +181,7 @@ const processBlock = async (api, blockNumber) => {
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
 
-      if (isSigned && section === 'balances' && (method === 'transfer' || method === 'transferKeepAlive')) {
+      if (isSigned) {
         const [to, amount] = args;
         const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
 
@@ -213,17 +213,13 @@ const processBlock = async (api, blockNumber) => {
           gas_fee: gasFee,
           gas_value: '0', // Assuming gas value is not available
           method: `${section}.${method}`,
-          events: events.filter(
-            (event) =>
-              (event.section === 'balances' && event.method === 'Transfer') ||
-              (event.section === 'balances' && event.method === 'Withdraw')
-          ),
+          events: events
         });
 
         // Update account balances
         await updateAccountBalance(api, signer.toString());
         await updateAccountBalance(api, to.toString());
-      }
+      } 
     }
 
     // Accumulate transaction data

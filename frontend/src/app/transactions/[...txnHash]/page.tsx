@@ -104,6 +104,21 @@ const TransactionDetails = () => {
     return (parseFloat(amount) / 1e18).toFixed(18);
   };
 
+  // Function to determine the transaction status
+  const getTransactionStatus = (events: any[]) => {
+    const failedEvent = events.find(event => event.section === 'system' && event.method === 'ExtrinsicFailed');
+    if (failedEvent) {
+      return { status: 'Failed', reason: 'FundsUnavailable' }; // Display the failure reason
+    }
+    
+    const successEvent = events.find(event => event.section === 'balances' && event.method === 'Transfer');
+    if (successEvent) {
+      return { status: 'Success' };
+    }
+    
+    return { status: 'Unknown' };
+  };
+
   if (loading) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow">
@@ -120,6 +135,8 @@ const TransactionDetails = () => {
       </div>
     );
   }
+
+  const statusInfo = transactionData ? getTransactionStatus(transactionData.events) : null;
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -196,7 +213,14 @@ const TransactionDetails = () => {
               <div className="flex justify-between">
                 <span className="font-semibold">Status:</span>
                 <span>
-                  { transactionData.method === 'balances.transferKeepAlive' || transactionData.method === 'balances.transfer' ? (
+                  {statusInfo && statusInfo.status === 'Failed' ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                      Failed - {statusInfo.reason}
+                    </span>
+                  ) : statusInfo && statusInfo.status === 'Success' ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -204,10 +228,11 @@ const TransactionDetails = () => {
                       Success
                     </span>
                   ) : (
-                    <span>{ transactionData.method }</span>
-                  ) }
+                    <span>Unknown</span>
+                  )}
                 </span>
               </div>
+
             </div>
           </div>
         </div>
