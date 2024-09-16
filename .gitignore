@@ -552,7 +552,3 @@ MigrationBackup/
 
 # txt
 *.txt
-
-backend/
-cache/
-api/

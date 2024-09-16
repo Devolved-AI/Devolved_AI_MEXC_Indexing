@@ -1,21 +1,20 @@
-require('module-alias/register'); // always call on top
+require('module-alias/register'); // Always call on top
 require('dotenv').config(); // Load environment variables
 
 const createTables = require('@config/initializeDB');
 const fetchChainData = require('@controllers/fetchChainData');
+const cacheListener = require('@controllers/cacheListener');
 
-// libraries
+// Libraries
 const express = require('express');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
-const DOMPurify = require('dompurify');
-const { JSDOM } = require('jsdom');
 const hpp = require('hpp');
 const { createLogger, transports, format } = require('winston');
 
-// routes
+// Routes
 const healthCheckRoute = require('@routes/healthCheck.route');
 
 const app = express();
@@ -33,50 +32,32 @@ const logger = createLogger({
     ],
 });
 
-// set security HTTP headers
+// Set security HTTP headers
 app.use(helmet());
 
-//Use compression middleware
+// Use compression middleware
 app.use(compression());
 
-// Other middlewares like express.json() can be used after compression
-// app.use(express.json());
-app.use(express.json({ limit: '4gb' }));
-app.use(express.urlencoded({ limit: '4gb', extended: true }));
+// Middleware for parsing JSON and URL-encoded data
+app.use(express.json({ limit: '4mb' })); // Adjusted limit for better performance
+app.use(express.urlencoded({ limit: '4mb', extended: true }));
 
-// enable cors
+// Enable CORS
 app.use(cors());
-app.options('*', cors());
-
-// Data sanitization against XSS
-// Initialize DOMPurify with jsdom
-const window = (new JSDOM('')).window;
-const dompurify = DOMPurify(window);
-
-// Middleware to sanitize user inputs
-app.use((req, res, next) => {
-    for (const prop in req.body) {
-        if (Object.hasOwnProperty.call(req.body, prop)) {
-            req.body[prop] = dompurify.sanitize(req.body[prop]);
-        }
-    }
-    next();
-});
 
 // Prevent parameter pollution
 app.use(hpp());
 
-// rate limiter
+// Rate limiter
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10000, // limit each IP to 100 requests per windowMs
+    max: 1000, // Limit each IP to 1000 requests per windowMs
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 }));
 
-// health check
+// Health check route
 app.use('/healthCheck', healthCheckRoute);
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -89,25 +70,28 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize the database tables when the server starts
-  createTables()
+createTables()
     .then(() => {
-      console.log('Database initialized and tables created successfully');
+        console.log('5.2 Database initialized and tables created successfully');
     })
     .catch((error) => {
-      console.error('Error initializing database:', error);
-    });
-  
-  // Start fetching blockchain data as soon as the server starts
-  fetchChainData()
-    .then(() => {
-      console.log('Started fetching blockchain data');
-    })
-    .catch((error) => {
-      console.error('Error starting data fetch:', error);
+        logger.error(`Error initializing database: ${error.message}`);
+        process.exit(1); // Exit process if database initialization fails
     });
 
-// server run
+// Start fetching blockchain data as soon as the server starts
+cacheListener()
+    .then(() => {
+        console.log('2. Started caching database');
+    })
+    .catch((error) => {
+        logger.error(`Error starting cache fetch: ${error.message}`);
+    });
+
+    cacheListener
+
+// Server run
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`1. Server running on port ${PORT}`);
 });
