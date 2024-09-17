@@ -92,7 +92,7 @@ const createTables = async () => {
     `);
 
     await client.query('COMMIT'); // Commit the transaction if all queries succeed
-    console.log('5.1 Tables created successfully');
+    console.log('6 Tables created successfully');
   } catch (err) {
     await client.query('ROLLBACK'); // Rollback transaction in case of error
     console.error('Error creating tables:', err);

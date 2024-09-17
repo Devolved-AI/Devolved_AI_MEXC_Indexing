@@ -1,33 +1,22 @@
+// src/controllers/cacheListener.js
 const pool = require('@config/connectDB'); // Importing pg client
-const { createClient } = require('redis');
+const redisClient = require('@config/redisClient'); // Importing redis client
 require('dotenv').config();
-
-const redisClient = createClient({
-  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-});
 
 const initialize = async () => {
   try {
-    // Connect to PostgreSQL
-    await pool.connect();
-    console.log('Connected to PostgreSQL');
-
     // Connect to Redis
     await redisClient.connect();
-    console.log('Connected to Redis');
-
-    // Listen for PostgreSQL notifications for each table
-    pool.query('LISTEN block_change');
-    pool.query('LISTEN event_change');
-    pool.query('LISTEN transaction_change');
-    pool.query('LISTEN account_change');
-    pool.query('LISTEN transaction_message_change');
+    console.log('4. Connected to Redis');
 
     // Initialize Redis with the current state of the database
     await initializeRedisWithAllData();
 
-    // Listen for changes and update Redis cache
-    pool.on('notification', async (msg) => {
+    // Connect to PostgreSQL and listen for notifications
+    const client = await pool.connect();
+    console.log('3. Connected to PostgreSQL');
+
+    client.on('notification', async (msg) => {
       const payload = JSON.parse(msg.payload);
       const operation = payload.operation;
       const record = payload.record;
@@ -48,55 +37,49 @@ const initialize = async () => {
         case 'transaction_message_change':
           await cacheTransactionMessage(operation, record);
           break;
+        default:
+          console.error(`Unknown notification channel: ${msg.channel}`);
       }
     });
 
-    pool.on('error', (err) => {
+    // Subscribe to the necessary PostgreSQL notification channels
+    await client.query('LISTEN block_change');
+    await client.query('LISTEN event_change');
+    await client.query('LISTEN transaction_change');
+    await client.query('LISTEN account_change');
+    await client.query('LISTEN transaction_message_change');
+
+    client.on('error', (err) => {
       console.error('PostgreSQL client error', err);
-      reconnectPostgres();
+      reconnectPostgres(client);
     });
-
-    redisClient.on('error', (err) => {
-      console.error('Redis client error', err);
-      reconnectRedis();
-    });
-
   } catch (err) {
     console.error('Error in initialize function:', err);
     setTimeout(initialize, 5000); // Retry after 5 seconds
   }
 };
 
-const reconnectPostgres = () => {
+const reconnectPostgres = (client) => {
   console.log('Reconnecting to PostgreSQL...');
-  pool.connect((err) => {
+  client.connect((err) => {
     if (err) {
       console.error('PostgreSQL client reconnection error', err);
-      setTimeout(reconnectPostgres, 5000); // Retry after 5 seconds
+      setTimeout(() => reconnectPostgres(client), 5000); // Retry after 5 seconds
     } else {
-      console.log('Reconnected to PostgreSQL');
+      console.log('3.1 Reconnected to PostgreSQL');
     }
   });
 };
 
-const reconnectRedis = () => {
-  console.log('Reconnecting to Redis...');
-  redisClient.connect().catch((err) => {
-    console.error('Redis client reconnection error', err);
-    setTimeout(reconnectRedis, 5000); // Retry after 5 seconds
-  });
-};
-
-// Function to initialize Redis with all current data from PostgreSQL
 const initializeRedisWithAllData = async () => {
   try {
-    console.log('Initializing Redis with all data from PostgreSQL...');
+    console.log('5. Initializing Redis with all data from PostgreSQL...');
     await initializeRedisBlocks();
     await initializeRedisEvents();
     await initializeRedisTransactions();
     await initializeRedisAccounts();
     await initializeRedisTransactionMessages();
-    console.log('Redis initialization complete.');
+    console.log('8. Redis initialization complete.');
   } catch (err) {
     console.error('Error initializing Redis with all data:', err);
   }
@@ -104,144 +87,84 @@ const initializeRedisWithAllData = async () => {
 
 // Individual table initialization functions
 const initializeRedisBlocks = async () => {
-  const query = 'SELECT * FROM blocks';
-  try {
-    const res = await pool.query(query);
-    for (const row of res.rows) {
-      await cacheBlock('INSERT', row);
-    }
-  } catch (err) {
-    console.error('Error initializing Redis with blocks:', err);
-  }
+  await initializeRedisTable('blocks', cacheBlock);
 };
 
 const initializeRedisEvents = async () => {
-  const query = 'SELECT * FROM events';
-  try {
-    const res = await pool.query(query);
-    for (const row of res.rows) {
-      await cacheEvent('INSERT', row);
-    }
-  } catch (err) {
-    console.error('Error initializing Redis with events:', err);
-  }
+  await initializeRedisTable('events', cacheEvent);
 };
 
 const initializeRedisTransactions = async () => {
-  const query = 'SELECT * FROM transactions';
-  try {
-    const res = await pool.query(query);
-    for (const row of res.rows) {
-      await cacheTransaction('INSERT', row);
-    }
-  } catch (err) {
-    console.error('Error initializing Redis with transactions:', err);
-  }
+  await initializeRedisTable('transactions', cacheTransaction);
 };
 
 const initializeRedisAccounts = async () => {
-  const query = 'SELECT * FROM accounts';
-  try {
-    const res = await pool.query(query);
-    for (const row of res.rows) {
-      await cacheAccount('INSERT', row);
-    }
-  } catch (err) {
-    console.error('Error initializing Redis with accounts:', err);
-  }
+  await initializeRedisTable('accounts', cacheAccount);
 };
 
 const initializeRedisTransactionMessages = async () => {
-  const query = 'SELECT * FROM transactionmessages';
+  await initializeRedisTable('transactionmessages', cacheTransactionMessage);
+};
+
+const initializeRedisTable = async (tableName, cacheFunction) => {
+  const query = `SELECT * FROM ${tableName}`;
   try {
     const res = await pool.query(query);
     for (const row of res.rows) {
-      await cacheTransactionMessage('INSERT', row);
+      await cacheFunction('INSERT', row);
     }
   } catch (err) {
-    console.error('Error initializing Redis with transactionMessages:', err);
+    console.error(`Error initializing Redis with ${tableName}:`, err);
   }
 };
 
 // Caching functions for different operations
 const cacheBlock = async (operation, block) => {
-  const key = `block:${block.block_number}`;
-  try {
-    if (operation === 'DELETE') {
-      await redisClient.del(key);
-      console.log(`Deleted block ${block.block_number} from Redis.`);
-    } else {
-      await redisClient.hSet(key, block);
-      console.log(`Cached block ${block.block_number} in Redis.`);
-    }
-  } catch (err) {
-    console.error(`Error caching block ${block.block_number}:`, err);
-  }
+  await cacheEntity(operation, `block:${block.block_number}`, block);
 };
 
 const cacheEvent = async (operation, event) => {
-  const key = `event:${event.id}`;
-  try {
-    if (operation === 'DELETE') {
-      await redisClient.del(key);
-      console.log(`Deleted event ${event.id} from Redis.`);
-    } else {
-      await redisClient.hSet(key, event);
-      console.log(`Cached event ${event.id} in Redis.`);
-    }
-  } catch (err) {
-    console.error(`Error caching event ${event.id}:`, err);
-  }
+  await cacheEntity(operation, `event:${event.id}`, event);
 };
 
 const cacheTransaction = async (operation, transaction) => {
-  const key = `transaction:${transaction.tx_hash}`;
-  try {
-    if (operation === 'DELETE') {
-      await redisClient.del(key);
-      console.log(`Deleted transaction ${transaction.tx_hash} from Redis.`);
-    } else {
-      await redisClient.hSet(key, transaction);
-      console.log(`Cached transaction ${transaction.tx_hash} in Redis.`);
-    }
-  } catch (err) {
-    console.error(`Error caching transaction ${transaction.tx_hash}:`, err);
-  }
+  await cacheEntity(operation, `transaction:${transaction.tx_hash}`, transaction);
 };
 
 const cacheAccount = async (operation, account) => {
-  const key = `account:${account.address}`;
-  try {
-    if (operation === 'DELETE') {
-      await redisClient.del(key);
-      console.log(`Deleted account ${account.address} from Redis.`);
-    } else {
-      await redisClient.hSet(key, account);
-      console.log(`Cached account ${account.address} in Redis.`);
-    }
-  } catch (err) {
-    console.error(`Error caching account ${account.address}:`, err);
-  }
+  await cacheEntity(operation, `account:${account.address}`, account);
 };
 
 const cacheTransactionMessage = async (operation, transactionMessage) => {
-  const key = `transactionMessage:${transactionMessage.id}`;
+  await cacheEntity(operation, `transactionMessage:${transactionMessage.id}`, transactionMessage);
+};
+
+// General cache entity function
+const cacheEntity = async (operation, key, entity) => {
   try {
     if (operation === 'DELETE') {
       await redisClient.del(key);
-      console.log(`Deleted transactionMessage ${transactionMessage.id} from Redis.`);
+      console.log(`Deleted ${key} from Redis.`);
     } else {
-      await redisClient.hSet(key, transactionMessage);
-      console.log(`Cached transactionMessage ${transactionMessage.id} in Redis.`);
+      await redisClient.hSet(key, mapObjectToHash(entity));
+      console.log(`Cached ${key} in Redis.`);
     }
   } catch (err) {
-    console.error(`Error caching transactionMessage ${transactionMessage.id}:`, err);
+    console.error(`Error caching ${key}:`, err);
   }
 };
 
-// Your function
+// Helper function to map an object to Redis hash
+const mapObjectToHash = (obj) => {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    acc[key] = value !== null && value !== undefined ? value.toString() : '';
+    return acc;
+  }, {});
+};
+
+// Start the cache listener
 const cacheListener = async () => {
-  initialize();
+  await initialize();
 };
 
 module.exports = cacheListener;

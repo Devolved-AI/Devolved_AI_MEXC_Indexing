@@ -1,6 +1,4 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
-const fs = require('fs');
-const { exec } = require('child_process');
 require('dotenv').config();
 const pool = require('@config/connectDB');  
 
@@ -10,7 +8,6 @@ const wsProvider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
 const RETRY_LIMIT = 5; // Number of retries for block processing
 const RETRY_DELAY = 5000; // Delay between retries (in milliseconds)
 const BATCH_SIZE = parseInt(process.env.FETCHING_BATCH_SIZE || '10', 10);; // Number of blocks to process in a batch
-const RESTART_DELAY = 3000;
 
 const main = async () => {
   try {
@@ -23,19 +20,17 @@ const main = async () => {
     const latestBlockNumber = latestHeader.number.toNumber();
     console.log(`Latest block number: ${latestBlockNumber}`);
 
-    // Load last processed block number if it exists
-    let startBlockNumber = 0;
-    if (fs.existsSync('lastProcessedBlock.txt')) {
-      startBlockNumber = parseInt(fs.readFileSync('lastProcessedBlock.txt', 'utf8'), 10) + 1;
-      console.log(`Starting from block number: ${startBlockNumber}`);
+    const result = await pool.query('SELECT COALESCE(MAX(block_number), -1) as last_block_number FROM blocks');
+    const lastProcessedBlockNumber = result.rows[0].last_block_number;
+
+    // Ensure valid block number
+    let startBlockNumber = lastProcessedBlockNumber + 1;
+    if (lastProcessedBlockNumber < 0 || !Number.isFinite(lastProcessedBlockNumber)) {
+      console.error('Invalid last processed block number:', lastProcessedBlockNumber);
+      startBlockNumber = 0;  // Start from block 0 if invalid
     }
 
-    // Check if the difference between the latest block number and the last processed block number is more than 2
-    if (latestBlockNumber - startBlockNumber > 5) {
-      console.log('Block processing is lagging. Restarting process to resynchronize.');
-      // await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-      // restartPM2();
-    }
+    console.log(`Starting from block number: ${startBlockNumber}`);
 
     // Process blocks in batches
     for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
@@ -47,33 +42,15 @@ const main = async () => {
     // Fetch and store all account balances
     console.log('Fetching and storing all accounts...');
     await fetchAndStoreAllAccounts(api);
-
-    await pool.end();
     console.log('Main process completed.');
-    // await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    // restartPM2();
+    main()
   } catch (error) {
-    console.error('Error initializing API:', error);
-    await pool.end();
-    // restartPM2();
-  }
+    console.error('Error in main process:', error);
+  } 
+  // finally {
+  //   await pool.end();
+  // }
 };
-
-// const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-// const restartPM2 = () => {
-//   exec('pm2 start ecosystem.config.js --env production', (error, stdout, stderr) => {
-//     if (error) {
-//       console.error(`Error restarting PM2: ${error}`);
-//       return;
-//     }
-//     if (stderr) {
-//       console.error(`PM2 stderr: ${stderr}`);
-//       return;
-//     }
-//     console.log(`PM2 stdout: ${stdout}`);
-//   });
-// };
 
 // Process a batch of blocks
 const processBlockBatch = async (api, startBlockNumber, endBlockNumber) => {
@@ -96,8 +73,6 @@ const processBlockWithRetries = async (api, blockNumber) => {
       console.log(`Processing block ${blockNumber}`);
       await processBlock(api, blockNumber);
       console.log(`Successfully processed block ${blockNumber}`);
-      // Save last processed block number
-      fs.writeFileSync('lastProcessedBlock.txt', blockNumber.toString(), 'utf8');
       break;
     } catch (error) {
       retries++;

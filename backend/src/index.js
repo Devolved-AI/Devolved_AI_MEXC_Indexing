@@ -1,11 +1,6 @@
 require('module-alias/register'); // Always call on top
 require('dotenv').config(); // Load environment variables
 
-const createTables = require('@config/initializeDB');
-const fetchChainData = require('@controllers/fetchChainData');
-const cacheListener = require('@controllers/cacheListener');
-
-// Libraries
 const express = require('express');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
@@ -14,8 +9,17 @@ const cors = require('cors');
 const hpp = require('hpp');
 const { createLogger, transports, format } = require('winston');
 
+// Config
+const createTables = require('@config/initializeDB');
+
+// Controllers
+const fetchChainData = require('@controllers/fetchChainData');
+const cacheListener = require('@controllers/cacheListener');
+
 // Routes
 const healthCheckRoute = require('@routes/healthCheck.route');
+const transactionMessagesRoute = require('@routes/transactionMessages.route');
+const blockRoute = require('@routes/block.route');
 
 const app = express();
 
@@ -58,6 +62,9 @@ app.use(rateLimit({
 
 // Health check route
 app.use('/healthCheck', healthCheckRoute);
+app.use('/block', blockRoute);
+
+app.use('/transactionMessages', transactionMessagesRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -72,7 +79,7 @@ app.use((err, req, res, next) => {
 // Initialize the database tables when the server starts
 createTables()
     .then(() => {
-        console.log('5.2 Database initialized and tables created successfully');
+        console.log('7 Database initialized and tables created successfully');
     })
     .catch((error) => {
         logger.error(`Error initializing database: ${error.message}`);
@@ -80,6 +87,15 @@ createTables()
     });
 
 // Start fetching blockchain data as soon as the server starts
+fetchChainData()
+    .then(() => {
+        console.log('2. Started fetching data from chain and store in db');
+    })
+    .catch((error) => {
+        logger.error(`Error starting cache fetch: ${error.message}`);
+    });
+
+// Start cache data as soon as the db starts
 cacheListener()
     .then(() => {
         console.log('2. Started caching database');
@@ -87,8 +103,6 @@ cacheListener()
     .catch((error) => {
         logger.error(`Error starting cache fetch: ${error.message}`);
     });
-
-    cacheListener
 
 // Server run
 const PORT = process.env.PORT || 4000;
