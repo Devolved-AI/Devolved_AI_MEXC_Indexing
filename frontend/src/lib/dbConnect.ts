@@ -6,13 +6,13 @@ const pool = new Pool({
   host: process.env.POSTGRES_HOST,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
-  port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+  port: parseInt(process.env.POSTGRES_PORT || '5444', 10),
 });
 
 const RETRY_LIMIT = 10; // Number of retries for the database connection
 const RETRY_DELAY = 5000; // Delay between retries (in milliseconds)
 
-const connectToDatabase = async (retries = RETRY_LIMIT): Promise<Pool> => {
+const connectToDatabase = async (retries = RETRY_LIMIT): Promise<Pool> => {  
   while (retries > 0) {
     try {
       await pool.connect();

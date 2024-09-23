@@ -196,6 +196,7 @@ const processBlock = async (api, blockNumber) => {
           data: event.data.map((data) => data.toString()),
         }));
 
+        // Balance 
         for (const { event } of extrinsicEvents) {
           if (event.section === 'balances' && event.method === 'Withdraw') {
             gasFee = event.data[1].toString();
