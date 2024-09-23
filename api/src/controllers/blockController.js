@@ -12,6 +12,7 @@ const getBlockDetails = async (req, res, next) => {
       return res.json({ success: true, result: JSON.parse(blockData) });
     }
 
+    // @ts-ignore
     const result = await db.query('SELECT * FROM blocks WHERE block_number = $1', [blockNumber]);
 
     if (result.rows.length === 0) {

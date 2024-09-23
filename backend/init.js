@@ -4,13 +4,27 @@ require('dotenv').config();
 const client = new Client({
   user: process.env.POSTGRES_USER,
   database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD
+  password: process.env.POSTGRES_PASSWORD,
+  host: process.env.POSTGRES_HOST,
+  port: process.env.POSTGRES_PORT,
 });
 
-client.connect();
+const connectDatabase = async () => {
+  try {
+    console.log('Attempting to connect to the database...');
+    await client.connect();
+    console.log('Successfully connected to the database');
+    await createTables(); // Execute the table creation after successful connection
+  } catch (err) {
+    console.error('Error connecting to the database:', err);
+  }
+};
 
 const createTables = async () => {
   try {
+    console.log('Creating tables...');
+
+    // Create tables
     await client.query(`
       CREATE TABLE IF NOT EXISTS blocks (
         block_number BIGINT PRIMARY KEY,
@@ -20,7 +34,6 @@ const createTables = async () => {
         extrinsics_root VARCHAR(66) NOT NULL,
         timestamp TIMESTAMP NOT NULL
       );
-
       CREATE INDEX IF NOT EXISTS idx_blocks_hash ON blocks(block_hash);
 
       CREATE TABLE IF NOT EXISTS events (
@@ -30,7 +43,6 @@ const createTables = async () => {
         method VARCHAR(255) NOT NULL,
         data JSONB NOT NULL
       );
-
       CREATE INDEX IF NOT EXISTS idx_events_block_number ON events(block_number);
       CREATE INDEX IF NOT EXISTS idx_events_section_method ON events(section, method);
 
@@ -46,7 +58,6 @@ const createTables = async () => {
         method VARCHAR(255) NOT NULL,
         events JSONB NOT NULL
       );
-
       CREATE INDEX IF NOT EXISTS idx_transactions_block_number ON transactions(block_number);
       CREATE INDEX IF NOT EXISTS idx_transactions_from_address ON transactions(from_address);
       CREATE INDEX IF NOT EXISTS idx_transactions_to_address ON transactions(to_address);
@@ -55,7 +66,6 @@ const createTables = async () => {
         address VARCHAR(66) PRIMARY KEY,
         balance VARCHAR(255) NOT NULL
       );
-
       CREATE INDEX IF NOT EXISTS idx_accounts_balance ON accounts(balance);
     `);
 
@@ -63,8 +73,10 @@ const createTables = async () => {
   } catch (err) {
     console.error('Error creating tables:', err);
   } finally {
-    client.end();
+    await client.end();
+    console.log('Database connection closed');
   }
 };
 
-createTables();
+// Initiating the connection to the database and creating tables
+connectDatabase();

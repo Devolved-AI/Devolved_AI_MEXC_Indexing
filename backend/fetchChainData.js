@@ -12,12 +12,12 @@ const pool = new Pool({
   user: process.env.POSTGRES_USER,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD,
-  port: process.env.POSTGRES_PORT
+  port: process.env.POSTGRES_PORT,
 });
 
 const RETRY_LIMIT = 5; // Number of retries for block processing
 const RETRY_DELAY = 5000; // Delay between retries (in milliseconds)
-const BATCH_SIZE = parseInt(process.env.FETCHING_BATCH_SIZE || '10', 10);; // Number of blocks to process in a batch
+const BATCH_SIZE = parseInt(process.env.FETCHING_BATCH_SIZE || '10', 10); // Number of blocks to process in a batch
 const RESTART_DELAY = 3000;
 
 const main = async () => {
@@ -25,6 +25,18 @@ const main = async () => {
     console.log('Starting main process...');
     // Create API instance
     const api = await ApiPromise.create({ provider: wsProvider });
+
+    // Listen for log messages from the Polkadot API and filter out non-critical warnings
+    api.on('error', (error) => {
+      if (error.message.includes('RPC methods not decorated')) {
+        // Ignore non-critical warnings
+        console.warn('Non-critical warning:', error.message);
+      } else {
+        // Handle critical API errors
+        console.error('API error:', error);
+        restartPM2(); // Restart PM2 for actual critical errors
+      }
+    });
 
     // Get the latest block number
     const latestHeader = await api.rpc.chain.getHeader();
@@ -63,11 +75,11 @@ const main = async () => {
   } catch (error) {
     console.error('Error initializing API:', error);
     await pool.end();
-    restartPM2();
+    restartPM2(); // Restart only for actual critical errors
   }
 };
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const restartPM2 = () => {
   exec('pm2 start ecosystem.config.js --env production', (error, stdout, stderr) => {
@@ -91,8 +103,7 @@ const processBlockBatch = async (api, startBlockNumber, endBlockNumber) => {
   }
 
   console.log(`Processing blocks: ${blockNumbers.join(', ')}`);
-  const blockPromises = blockNumbers.map(blockNumber => processBlockWithRetries(api, blockNumber));
-  // const blockPromises = blockNumbers.map(blockNumber => processBlockWithTimeout(api, blockNumber));
+  const blockPromises = blockNumbers.map((blockNumber) => processBlockWithRetries(api, blockNumber));
   await Promise.all(blockPromises);
 };
 
@@ -112,7 +123,7 @@ const processBlockWithRetries = async (api, blockNumber) => {
       console.error(`Error processing block ${blockNumber}:`, error);
       if (retries < RETRY_LIMIT) {
         console.log(`Retrying block ${blockNumber} (${retries}/${RETRY_LIMIT})...`);
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
       } else {
         console.error(`Failed to process block ${blockNumber} after ${RETRY_LIMIT} retries.`);
       }
@@ -120,35 +131,16 @@ const processBlockWithRetries = async (api, blockNumber) => {
   }
 };
 
-const processBlockWithTimeout = (api, blockNumber, timeout = 60000) => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`Processing block ${blockNumber} timed out`));
-    }, timeout);
-
-    processBlock(api, blockNumber).then(
-      (result) => {
-        clearTimeout(timer);
-        resolve(result);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
-};
-
 // Process a single block
-const processBlock = async (api, blockNumber) => {
+const processBlock = async ( api, blockNumber ) => {
   try {
-    console.log(`Processing block ${blockNumber}`);
+    console.log( `Processing block ${blockNumber}` );
     const blockInsertData = [];
     const transactionInsertData = [];
     const eventInsertData = [];
 
-    const hash = await api.rpc.chain.getBlockHash(blockNumber);
-    const signedBlock = await api.rpc.chain.getBlock(hash);
+    const hash = await api.rpc.chain.getBlockHash( blockNumber );
+    const signedBlock = await api.rpc.chain.getBlock( hash );
     const blockNum = signedBlock.block.header.number.toNumber();
 
     const blockHash = signedBlock.block.header.hash.toHex();
@@ -158,52 +150,52 @@ const processBlock = async (api, blockNumber) => {
     let timestamp = new Date();
 
     // Extract timestamp from block extrinsics
-    for (const extrinsic of signedBlock.block.extrinsics) {
+    for ( const extrinsic of signedBlock.block.extrinsics ) {
       const { method: { method, section }, args } = extrinsic;
-      if (section === 'timestamp' && method === 'set') {
-        timestamp = new Date(parseInt(args[0].toString(), 10));
+      if ( section === 'timestamp' && method === 'set' ) {
+        timestamp = new Date( parseInt( args[ 0 ].toString(), 10 ) );
         break;
       }
     }
 
     // Ensure timestamp is not null
-    if (!timestamp) {
-      console.error(`No timestamp found for block ${blockNumber}`);
+    if ( !timestamp ) {
+      console.error( `No timestamp found for block ${blockNumber}` );
       return;
     }
 
     // Accumulate block data
-    blockInsertData.push([blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp]);
+    blockInsertData.push( [ blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp ] );
 
-    const allEvents = await api.query.system.events.at(signedBlock.block.header.hash);
+    const allEvents = await api.query.system.events.at( signedBlock.block.header.hash );
     const transactions = [];
 
-    for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
+    for ( const [ extrinsicIndex, extrinsic ] of signedBlock.block.extrinsics.entries() ) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
 
-      if (isSigned) {
-        const [to, amount] = args;
+      if ( isSigned ) {
+        const [ to, amount ] = args;
         const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
 
         let gasFee = '0';
         const extrinsicEvents = allEvents.filter(
-          ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
+          ( { phase } ) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq( extrinsicIndex )
         );
 
-        const events = extrinsicEvents.map(({ event }) => ({
+        const events = extrinsicEvents.map( ( { event } ) => ( {
           section: event.section,
           method: event.method,
-          data: event.data.map((data) => data.toString()),
-        }));
+          data: event.data.map( ( data ) => data.toString() ),
+        } ) );
 
         // Balance 
-        for (const { event } of extrinsicEvents) {
-          if (event.section === 'balances' && event.method === 'Withdraw') {
-            gasFee = event.data[1].toString();
+        for ( const { event } of extrinsicEvents ) {
+          if ( event.section === 'balances' && event.method === 'Withdraw' ) {
+            gasFee = event.data[ 1 ].toString();
           }
         }
 
-        transactions.push({
+        transactions.push( {
           extrinsic_index: extrinsicIndex,
           hash: hash.toHex(),
           block_number: blockNum,
@@ -215,17 +207,17 @@ const processBlock = async (api, blockNumber) => {
           gas_value: '0', // Assuming gas value is not available
           method: `${section}.${method}`,
           events: events
-        });
+        } );
 
         // Update account balances
-        await updateAccountBalance(api, signer.toString());
-        await updateAccountBalance(api, to.toString());
-      } 
+        await updateAccountBalance( api, signer.toString() );
+        await updateAccountBalance( api, to.toString() );
+      }
     }
 
     // Accumulate transaction data
-    for (const transaction of transactions) {
-      transactionInsertData.push([
+    for ( const transaction of transactions ) {
+      transactionInsertData.push( [
         transaction.hash,
         transaction.block_number,
         transaction.from_address,
@@ -235,123 +227,121 @@ const processBlock = async (api, blockNumber) => {
         transaction.gas_fee,
         transaction.gas_value,
         transaction.method,
-        JSON.stringify(transaction.events),
-      ]);
+        JSON.stringify( transaction.events ),
+      ] );
     }
 
     // Accumulate event data
-    for (const { event, phase } of allEvents) {
+    for ( const { event, phase } of allEvents ) {
       const { section, method, data } = event;
-      eventInsertData.push([
+      eventInsertData.push( [
         blockNum,
         section,
         method,
-        JSON.stringify(data.map(d => d.toString()))
-      ]);
+        JSON.stringify( data.map( d => d.toString() ) )
+      ] );
     }
 
     // Perform bulk insert for blocks
-    if (blockInsertData.length > 0) {
+    if ( blockInsertData.length > 0 ) {
       const blockQuery = `
         INSERT INTO blocks (block_number, block_hash, parent_hash, state_root, extrinsics_root, timestamp)
-        VALUES ${blockInsertData.map((_, i) => `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})`).join(', ')}
+        VALUES ${blockInsertData.map( ( _, i ) => `($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})` ).join( ', ' )}
         ON CONFLICT (block_number) DO NOTHING;
       `;
-      await pool.query(blockQuery, blockInsertData.flat());
-      console.log(`Inserted block data for block ${blockNumber}`);
+      await pool.query( blockQuery, blockInsertData.flat() );
+      console.log( `Inserted block data for block ${blockNumber}` );
     }
 
     // Perform bulk insert for transactions
-    if (transactionInsertData.length > 0) {
+    if ( transactionInsertData.length > 0 ) {
       const transactionQuery = `
         INSERT INTO transactions (tx_hash, block_number, from_address, to_address, amount, fee, gas_fee, gas_value, method, events)
-        VALUES ${transactionInsertData.map((_, i) => `($${i * 10 + 1}, $${i * 10 + 2}, $${i * 10 + 3}, $${i * 10 + 4}, $${i * 10 + 5}, $${i * 10 + 6}, $${i * 10 + 7}, $${i * 10 + 8}, $${i * 10 + 9}, $${i * 10 + 10})`).join(', ')}
+        VALUES ${transactionInsertData.map( ( _, i ) => `($${i * 10 + 1}, $${i * 10 + 2}, $${i * 10 + 3}, $${i * 10 + 4}, $${i * 10 + 5}, $${i * 10 + 6}, $${i * 10 + 7}, $${i * 10 + 8}, $${i * 10 + 9}, $${i * 10 + 10})` ).join( ', ' )}
         ON CONFLICT (tx_hash) DO NOTHING;
       `;
-      await pool.query(transactionQuery, transactionInsertData.flat());
-      console.log(`Inserted transaction data for block ${blockNumber}`);
+      await pool.query( transactionQuery, transactionInsertData.flat() );
+      console.log( `Inserted transaction data for block ${blockNumber}` );
     }
 
     // Perform bulk insert for events
-    if (eventInsertData.length > 0) {
+    if ( eventInsertData.length > 0 ) {
       const eventQuery = `
         INSERT INTO events (block_number, section, method, data)
-        VALUES ${eventInsertData.map((_, i) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`).join(', ')}
+        VALUES ${eventInsertData.map( ( _, i ) => `($${i * 4 + 1}, $${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})` ).join( ', ' )}
         ON CONFLICT DO NOTHING;
       `;
-      await pool.query(eventQuery, eventInsertData.flat());
-      console.log(`Inserted event data for block ${blockNumber}`);
+      await pool.query( eventQuery, eventInsertData.flat() );
+      console.log( `Inserted event data for block ${blockNumber}` );
     }
-    console.log(`Successfully processed block ${blockNumber}`);
-  } catch (error) {
-    console.error(`Error processing block ${blockNumber}:`, error);
+    console.log( `Successfully processed block ${blockNumber}` );
+  } catch ( error ) {
+    console.error( `Error processing block ${blockNumber}:`, error );
   }
 };
 
 // Update account balance for a given address
-const updateAccountBalance = async (api, address) => {
+const updateAccountBalance = async ( api, address ) => {
   try {
     // Check if the address is of the correct length (32 bytes)
-    if (address.length !== 48) { // 48 characters for hex representation of 32 bytes
-      console.error(`Invalid AccountId provided, expected 32 bytes, found ${address.length / 2} bytes`);
+    if ( address.length !== 48 ) { // 48 characters for hex representation of 32 bytes
+      console.error( `Invalid AccountId provided, expected 32 bytes, found ${address.length / 2} bytes` );
       return;
     }
 
-    const { data: { free: balance } } = await api.query.system.account(address);
+    const { data: { free: balance } } = await api.query.system.account( address );
 
     await pool.query(
       'INSERT INTO accounts (address, balance) VALUES ($1, $2) ON CONFLICT (address) DO UPDATE SET balance = $2',
-      [address, balance.toString()]
+      [ address, balance.toString() ]
     );
-  } catch (error) {
-    console.error(`Error updating balance for account ${address}:`, error);
+  } catch ( error ) {
+    console.error( `Error updating balance for account ${address}:`, error );
   }
 };
 
 // Fetch and store all accounts and their balances
-const fetchAndStoreAllAccounts = async (api) => {
+const fetchAndStoreAllAccounts = async ( api ) => {
   try {
-    console.log('Fetching and storing all accounts...');
+    console.log( 'Fetching and storing all accounts...' );
     const accounts = await api.query.system.account.entries();
-    console.log(`Fetched ${accounts.length} accounts.`);
-    const accountQueries = accounts.map(([key, account]) => {
-      const address = key.args.map(k => k.toString())[0];
+    console.log( `Fetched ${accounts.length} accounts.` );
+    const accountQueries = accounts.map( ( [ key, account ] ) => {
+      const address = key.args.map( k => k.toString() )[ 0 ];
       const balance = account.data.free.toString();
       return {
         text: `
           INSERT INTO accounts (address, balance) VALUES ($1, $2)
           ON CONFLICT (address) DO UPDATE SET balance = $2
         `,
-        values: [address, balance]
+        values: [ address, balance ]
       };
-    });
+    } );
 
-    if (accountQueries.length > 0) {
-      await Promise.all(accountQueries.map(query => pool.query(query)));
-      console.log('Successfully fetched and stored all accounts');
+    if ( accountQueries.length > 0 ) {
+      await Promise.all( accountQueries.map( query => pool.query( query ) ) );
+      console.log( 'Successfully fetched and stored all accounts' );
     }
-  } catch (error) {
-    console.error('Error fetching and storing accounts:', error);
+  } catch ( error ) {
+    console.error( 'Error fetching and storing accounts:', error );
   }
 };
 
-// Start the main process
 main().catch(console.error);
 
 // Monitor memory usage
 setInterval(() => {
   const memoryUsage = process.memoryUsage();
   console.log(`Memory Usage: RSS ${memoryUsage.rss}, Heap Total ${memoryUsage.heapTotal}, Heap Used ${memoryUsage.heapUsed}`);
-}, 60000); // Log memory usage every minute
+}, 60000);
 
 // Handle unhandled rejections and uncaught exceptions
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Recommended: send the information to a crash reporting service
+  // Optional: Add logging service
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  // Recommended: send the information to a crash reporting service
-  process.exit(1); // Exit the process to avoid undefined state
+  process.exit(1);
 });

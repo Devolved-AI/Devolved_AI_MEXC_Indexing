@@ -12,6 +12,7 @@ const getTransactionDetails = async (req, res, next) => {
       return res.json({ success: true, result: JSON.parse(transactionData) });
     }
 
+    // @ts-ignore
     const result = await db.query(`
       SELECT * FROM transactions WHERE from_address = $1 OR to_address = $1
       ORDER BY block_number DESC LIMIT 100
