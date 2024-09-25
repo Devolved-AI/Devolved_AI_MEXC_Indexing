@@ -10,16 +10,16 @@ const hpp = require('hpp');
 const { createLogger, transports, format } = require('winston');
 
 // Config
-const createTables = require('@config/initializeDB');
+const createTables = require('./config/initializeDB');
 
 // Controllers
-const fetchChainData = require('@controllers/fetchChainData');
-const cacheListener = require('@controllers/cacheListener');
+const fetchChainData = require('./controllers/fetchChainData');
+const cacheListener = require('./controllers/cacheListener');
 
 // Routes
-const healthCheckRoute = require('@routes/healthCheck.route');
-const transactionMessagesRoute = require('@routes/transactionMessages.route');
-const blockRoute = require('@routes/block.route');
+const healthCheckRoute = require('./routes/healthCheck.route');
+const transactionMessagesRoute = require('./routes/transactionMessages.route');
+const blockRoute = require('./routes/block.route');
 
 const app = express();
 
