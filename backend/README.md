@@ -1,76 +1,97 @@
-# Devolved AI MEXC Indexing
+# Devolved AI WebApp Backend
 
-This project fetches block and transaction data from a Substrate-based blockchain and stores it in a PostgreSQL database. It uses PM2 to manage the process and automatically restart on failure.
+## Description
 
-## Prerequisites
+This project is the backend for the Devolved AI WebApp, designed to provide efficient and scalable web services. Built with Express.js, it leverages a variety of packages to ensure security, performance, and ease of development.
 
-Before you begin, ensure you have met the following requirements:
-- Node.js (v14 or higher)
-- PostgreSQL (v13 or higher)
-- PM2 (Process Manager for Node.js)
+## Features
+
+- Buletproof 4 Layer Project Architecture
+- Data Validation
+- Security
+- Logging
+- Caching
+- Rate Limiter
+- Dependencies Injection
+- Service Layer
+- Pub/Sub Layer
+- Unit Testing
+- Corn Jobs Recurring Tasks
+- Configurations and Secrets
+- Loaders
 
 ## Getting Started
 
-### Clone the Repository
+### Prerequisites
+
+Ensure you have Node.js and npm installed on your machine. If not, follow the installation instructions on [Node.js official website](https://nodejs.org/).
+
+### Cloning the Repository
+
+To clone the repository and run the project on your local machine, follow these steps:
 
 ```bash
-git clone https://github.com/Devolved-AI/Devolved_AI_MEXC_Indexing.git
-cd Devolved_AI_MEXC_Indexing
-```
-
-### Install Dependencies
-```bash
+git clone https://github.com/Devolved-AI/Devolved_AI_Backend.git
+cd Devolved_AI_Backend
 npm install
 ```
 
-### Set Up Environment Variables
+Running the Application
+For development, run:
 
-Create a .env file in the root directory of your project and add the following content:
-``` bash
-POSTGRES_DB=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-PGADMIN_DEFAULT_EMAIL=
-PGADMIN_DEFAULT_PASSWORD=
-DATABASE_URL=
-ARGOCHAIN_RPC_URL=
+```bash
+npm run dev
 ```
 
-### Initialize the docker
-This script will setup postgres db and pgadmin portal
-
-``` bash
-docker-compose --env-file .env up -d --build
+For production, run:
+```bash
+npm start
 ```
 
-### Initialize the Database
-Run the following npm script to create the necessary tables in your PostgreSQL database:
+## Packages
+### Dependencies
 
-``` bash
-npm run init
-```
+[bcrypt]: Used for hashing and salting user passwords for secure storage.
 
-### Fetch and Store Blockchain Data
-To start fetching and storing blockchain data, use PM2 to run the script:
+[compression]: Middleware to compress response bodies for improved performance.
 
-``` bash
-npm i -g pm2
-pm2 start ecosystem.config.js --env production
-```
+[dotenv]: Loads environment variables from a .env file into process.env.
 
-### Managing the Process
-You can use PM2 commands to manage the running process:
+[express]: Web application framework for Node.js, designed for building web applications and APIs.
 
-#### View Logs: pm2 logs fetchChainData
+[express-rate-limit]: Middleware for limiting repeated requests to public APIs and/or endpoints.
 
-#### Restart: pm2 restart fetchChainData
+[express-session]: Session middleware for Express, supporting session management.
 
-#### Stop: pm2 stop fetchChainData
+[helmet]: Helmet helps secure Express applications by setting various HTTP headers. It's not a silver bullet, but it can help prevent some common attack vectors by configuring headers such as Content-Security-Policy, X-Frame-Options, and X-XSS-Protection. It's a middleware that can be easily integrated into any Express application to enhance security with minimal effort.
 
-#### Delete: pm2 delete fetchChainData
+[ioredis]: A robust, performance-focused, and full-featured Redis client for Node.js.
 
-### Scripts
+[joi]: Object schema validation to ensure data safety by validating JavaScript objects based on a predefined schema.
 
-#### initdb: Initializes the PostgreSQL database by creating the necessary tables.
+[jsonwebtoken]: Implements JSON Web Tokens for securely transmitting information between parties as a JSON object.
 
-#### fetchdata: Fetches and stores blockchain data into the PostgreSQL database.
+[module-alias]: Provides custom module path aliases to simplify imports in complex projects.
+
+[mongoose]: MongoDB object modeling tool designed to work in an asynchronous environment.
+
+[multer]: Middleware for handling multipart/form-data, primarily used for uploading files.
+
+[rate-limit-redis]: Redis store for express-rate-limit, allowing rate limit counters to be stored in a Redis database.
+
+[redis]: Node.js client for Redis, supports all Redis commands and focuses on high performance.
+
+[winston]: A logger for just about everything, designed to be a simple and universal logging library.
+DevDependencies
+
+[chai]: Assertion library for Node.js and the browser, can be paired with any JavaScript testing framework.
+
+[eslint]: Pluggable JavaScript linter that helps identify and report on patterns in JavaScript.
+
+[migrate-mongo]: A database migration tool for MongoDB in Node.js.
+
+[mocha]: A feature-rich JavaScript test framework running on Node.js, making asynchronous testing simple.
+
+[nodemon]: Utility that monitors for any changes in your source and automatically restarts your server.
+
+[supertest]: HTTP assertion library allowing you to test your Node.js HTTP servers.

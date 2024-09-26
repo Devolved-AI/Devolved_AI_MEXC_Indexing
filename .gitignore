@@ -553,6 +553,5 @@ MigrationBackup/
 # txt
 *.txt
 
-# backend/
-cache/
-api/
+# vscode tools
+/.vscode

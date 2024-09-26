@@ -1,16 +1,13 @@
-const { Client } = require('pg');
+const pool = require('../config/connectDB');
 require('dotenv').config();
 
-const client = new Client({
-  user: process.env.POSTGRES_USER,
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD
-});
-
-client.connect();
-
 const createTables = async () => {
+  const client = await pool.connect();  // Use pool to connect to the database
+
   try {
+    await client.query('BEGIN'); // Start a transaction
+
+    // Create blocks table
     await client.query(`
       CREATE TABLE IF NOT EXISTS blocks (
         block_number BIGINT PRIMARY KEY,
@@ -20,9 +17,14 @@ const createTables = async () => {
         extrinsics_root VARCHAR(66) NOT NULL,
         timestamp TIMESTAMP NOT NULL
       );
+    `);
 
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_blocks_hash ON blocks(block_hash);
+    `);
 
+    // Create events table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
         block_number BIGINT REFERENCES blocks(block_number),
@@ -30,10 +32,18 @@ const createTables = async () => {
         method VARCHAR(255) NOT NULL,
         data JSONB NOT NULL
       );
+    `);
 
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_events_block_number ON events(block_number);
-      CREATE INDEX IF NOT EXISTS idx_events_section_method ON events(section, method);
+    `);
 
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_events_section_method ON events(section, method);
+    `);
+
+    // Create transactions table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS transactions (
         tx_hash VARCHAR(66) PRIMARY KEY,
         block_number BIGINT REFERENCES blocks(block_number),
@@ -46,25 +56,49 @@ const createTables = async () => {
         method VARCHAR(255) NOT NULL,
         events JSONB NOT NULL
       );
+    `);
 
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_transactions_block_number ON transactions(block_number);
-      CREATE INDEX IF NOT EXISTS idx_transactions_from_address ON transactions(from_address);
-      CREATE INDEX IF NOT EXISTS idx_transactions_to_address ON transactions(to_address);
+    `);
 
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_transactions_from_address ON transactions(from_address);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_transactions_to_address ON transactions(to_address);
+    `);
+
+    // Create accounts table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS accounts (
         address VARCHAR(66) PRIMARY KEY,
         balance VARCHAR(255) NOT NULL
       );
+    `);
 
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_accounts_balance ON accounts(balance);
     `);
 
-    console.log('Tables created successfully');
+    // Create transactionMessages table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS transactionMessages (
+        id SERIAL PRIMARY KEY,
+        tx_hash VARCHAR(66) REFERENCES transactions(tx_hash),
+        message TEXT NOT NULL
+      );
+    `);
+
+    await client.query('COMMIT'); // Commit the transaction if all queries succeed
+    console.log('6 Tables created successfully');
   } catch (err) {
+    await client.query('ROLLBACK'); // Rollback transaction in case of error
     console.error('Error creating tables:', err);
   } finally {
-    client.end();
+    client.release(); // Release the client back to the pool
   }
 };
 
-createTables();
+module.exports = createTables;
