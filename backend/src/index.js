@@ -81,32 +81,22 @@ app.use( ( err, req, res, next ) => {
 } );
 
 // Initialize the database tables when the server starts
-createTables()
-    .then( () => {
-        console.log( '7 Database initialized and tables created successfully' );
-    } )
-    .catch( ( error ) => {
-        logger.error( `Error initializing database: ${error.message}` );
-        process.exit( 1 ); // Exit process if database initialization fails
-    } );
+// createTables()
+//     .then( () => {
+//         console.log( '7 Database initialized and tables created successfully' );
+//     } )
+//     .catch( ( error ) => {
+//         logger.error( `Error initializing database: ${error.message}` );
+//         process.exit( 1 ); // Exit process if database initialization fails
+//     } );
 
-// Start fetching blockchain data as soon as the server starts
-fetchChainData()
-    .then( () => {
-        console.log( '2. Started fetching data from chain and store in db' );
-    } )
-    .catch( ( error ) => {
-        logger.error( `Error starting cache fetch: ${error.message}` );
-    } );
-
-// Start cache data as soon as the db starts
-cacheListener()
-    .then( () => {
-        console.log( '2. Started caching database' );
-    } )
-    .catch( ( error ) => {
-        logger.error( `Error starting cache fetch: ${error.message}` );
-    } );
+Promise.all([fetchChainData(), cacheListener()])
+    .then(() => {
+      console.log('2. Started fetching data from chain and caching database in parallel');
+    })
+    .catch((error) => {
+      logger.error(`Error starting fetch and caching: ${error.message}`);
+    });
 
 // Server run
 const PORT = process.env.PORT || 4000;

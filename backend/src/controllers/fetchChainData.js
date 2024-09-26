@@ -12,44 +12,32 @@ const BATCH_SIZE = parseInt(process.env.FETCHING_BATCH_SIZE || '10', 10);; // Nu
 const main = async () => {
   try {
     console.log('Starting main process...');
+
     // Create API instance
     const api = await ApiPromise.create({ provider: wsProvider });
 
-    // Get the latest block number
-    const latestHeader = await api.rpc.chain.getHeader();
-    const latestBlockNumber = latestHeader.number.toNumber();
-    console.log(`Latest block number: ${latestBlockNumber}`);
+      // Get the latest block number
+      const latestHeader = await api.rpc.chain.getHeader();
+      const latestBlockNumber = latestHeader.number.toNumber();
+      console.log(`Latest block number: ${latestBlockNumber}`);
 
-    const result = await pool.query('SELECT COALESCE(MAX(block_number), -1) as last_block_number FROM blocks');
-    const lastProcessedBlockNumber = result.rows[0].last_block_number;
+      // Fetch the last processed block from the database
+      const result = await pool.query('SELECT COALESCE(MAX(block_number), -1) as last_block_number FROM blocks');
+      const lastProcessedBlockNumber = result.rows[0].last_block_number;
+      console.log(`Last processed block number: ${lastProcessedBlockNumber}`);
 
-    // Ensure valid block number
-    let startBlockNumber = lastProcessedBlockNumber + 1;
-    if (lastProcessedBlockNumber < 0 || !Number.isFinite(lastProcessedBlockNumber)) {
-      console.error('Invalid last processed block number:', lastProcessedBlockNumber);
-      startBlockNumber = 0;  // Start from block 0 if invalid
-    }
+      // Start processing blocks in batches
+      let startBlockNumber = lastProcessedBlockNumber + 1;
+      for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
+        const endBlockNumber = Math.min(blockNumber + BATCH_SIZE - 1, latestBlockNumber);
+        console.log(`Processing block batch from ${blockNumber} to ${endBlockNumber}`);
+        await processBlockBatch(api, blockNumber, endBlockNumber);
+      }
 
-    console.log(`Starting from block number: ${startBlockNumber}`);
-
-    // Process blocks in batches
-    for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
-      const endBlockNumber = Math.min(blockNumber + BATCH_SIZE - 1, latestBlockNumber);
-      console.log(`Processing block batch from ${blockNumber} to ${endBlockNumber}`);
-      await processBlockBatch(api, blockNumber, endBlockNumber);
-    }
-
-    // Fetch and store all account balances
-    console.log('Fetching and storing all accounts...');
-    await fetchAndStoreAllAccounts(api);
-    console.log('Main process completed.');
-    main()
+      console.log('Batch processing completed. Checking for new blocks...');
   } catch (error) {
     console.error('Error in main process:', error);
-  } 
-  // finally {
-  //   await pool.end();
-  // }
+  }
 };
 
 // Process a batch of blocks
