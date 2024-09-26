@@ -60,6 +60,7 @@ const getLast10Blocks = async ( req, res ) => {
     } );
   }
 };
+
 // Function to get details for a specific block by block number
 const getBlockDetails = async ( req, res ) => {
   // Extract blocknumber from the request body
