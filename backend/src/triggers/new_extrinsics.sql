@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION notify_transaction_change() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION notify_extrinsic_change() RETURNS TRIGGER AS $$
 DECLARE
   payload JSON;
 BEGIN
@@ -16,8 +16,8 @@ BEGIN
     );
   END IF;
 
-  -- Notify the application with the channel 'transaction_change' and the payload
-  PERFORM pg_notify('transaction_change', payload::text);
+  -- Notify the application with the channel 'extrinsic_change' and the payload
+  PERFORM pg_notify('extrinsic_change', payload::text);
   
   -- Return the appropriate row for INSERT/UPDATE, NULL for DELETE
   IF (TG_OP = 'DELETE') THEN
@@ -29,6 +29,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger creation
-CREATE TRIGGER transaction_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON transactions
-FOR EACH ROW EXECUTE FUNCTION notify_transaction_change();
+CREATE TRIGGER extrinsic_change_trigger
+AFTER INSERT OR UPDATE OR DELETE ON extrinsics
+FOR EACH ROW EXECUTE FUNCTION notify_extrinsic_change();

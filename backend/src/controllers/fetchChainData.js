@@ -1,6 +1,6 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 require('dotenv').config();
-const pool = require('@config/connectDB');  
+const pool = require('../config/connectDB');  
 
 // Initialize WebSocket provider for the Substrate node
 const wsProvider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
