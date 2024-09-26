@@ -1,5 +1,5 @@
 const express = require('express');
-const { getLast10Blocks, getBlockDetails } = require('../controllers/block.controller');
+const { getLast10Blocks, getBlockDetails } = require('@controllers/block.controller');
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 const express = require( 'express' );
 const { body } = require( 'express-validator' );
-const { postTransactionMessage } = require( '../controllers/transactionMessages.controller' );
+const { postTransactionMessage } = require( '@controllers/transactionMessages.controller' );
 
 const router = express.Router();
 

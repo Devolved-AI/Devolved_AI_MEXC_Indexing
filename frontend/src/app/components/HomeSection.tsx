@@ -5,16 +5,22 @@ import TransactionImage from '../../../public/transactions-icon.png';
 import Link from 'next/link';
 
 interface Block {
-  block_number: number;
-  age: string;
-  validated_by: string;
+  block_number: string;
+  timestamp: string;
+  block_hash: string;
+  parent_hash: string;
+  extrinsics_root: string;
 }
 
 interface Transaction {
   tx_hash: string;
-  age: string;
+  amount: string;
   from_address: string;
   to_address: string;
+  block_number: string;
+  method: string;
+  gas_fee: string;
+  fee: string;
 }
 
 const HomeSection: React.FC = () => {
@@ -22,46 +28,45 @@ const HomeSection: React.FC = () => {
   const [latestTransactions, setLatestTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
-    fetch('/api/latest-blocks', {
+    // Fetch latest blocks
+    fetch('http://localhost:4000/block/getLast10Blocks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'next-action': 'search-latest-block'
       },
     })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        setLatestBlocks(data.result);
-      }
-    })
-    .catch((error) => {
-      console.error('Error fetching latest blocks:', error);
-    });
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.blocks) {
+          setLatestBlocks(data.blocks);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching latest blocks:', error);
+      });
 
-    fetch('/api/latest-transactions', {
+    // Fetch latest transactions
+    fetch('http://localhost:4000/transaction/getLast10Transactions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'next-action': 'search-latest-transaction'
       },
     })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        setLatestTransactions(data.result);
-      }
-    })
-    .catch((error) => {
-      console.error('Error fetching latest blocks:', error);
-    });
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.transactions) {
+          setLatestTransactions(data.transactions);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching latest transactions:', error);
+      });
   }, []);
 
   const shorten = (hash: string) => `${hash.slice(0, 4)}...${hash.slice(-5)}`;
 
   return (
     <div className="container mx-auto pt-6 lg:pt-20">
-
       {/* Latest Blocks and Transactions Sections */}
       <div className="flex flex-col md:flex-row justify-between space-y-8 md:space-y-0 md:space-x-8">
         {/* Latest Blocks Section */}
@@ -71,24 +76,29 @@ const HomeSection: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                {/* <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th> */}
-                <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8 h-8">icon</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                  {/* <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validated By</th> */}
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8 h-8">
+                    Icon
+                  </th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Block Number
+                  </th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Timestamp
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {latestBlocks.map((block, index) => (
                   <tr key={index}>
-                    <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={BlockImage} alt="block-icon" /></td>
+                    <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4">
+                      <Image priority src={BlockImage} alt="block-icon" />
+                    </td>
                     <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
                       <Link href={`/blocks/${block.block_number}`} className="text-[#D91A9C] hover:underline">
                         {block.block_number}
                       </Link>
                     </td>
-                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{block.age}</td>
-                    {/* <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{block.validated_by}</td> */}
+                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{new Date(block.timestamp).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -103,23 +113,31 @@ const HomeSection: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">icon</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Txn Hash</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
-                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Icon
+                  </th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Txn Hash
+                  </th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    From
+                  </th>
+                  <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    To
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {latestTransactions.map((txn, index) => (
                   <tr key={index}>
-                    <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={TransactionImage} alt="transaction-icon" /></td>
-                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
-                    <Link href={`/transactions/${txn.tx_hash}`} className="text-[#D91A9C] hover:underline">
-                      {shorten(txn.tx_hash)}
-                    </Link>
+                    <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4">
+                      <Image priority src={TransactionImage} alt="transaction-icon" />
                     </td>
-                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{txn.age}</td>
+                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
+                      <Link href={`/transactions/${txn.tx_hash}`} className="text-[#D91A9C] hover:underline">
+                        {shorten(txn.tx_hash)}
+                      </Link>
+                    </td>
                     <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
                       <Link href={`/address/${txn.from_address}`} className="text-[#D91A9C] hover:underline">
                         {shorten(txn.from_address)}

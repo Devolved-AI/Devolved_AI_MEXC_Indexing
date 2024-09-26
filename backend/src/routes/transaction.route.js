@@ -1,5 +1,5 @@
 const express = require( 'express' );
-const { getLast10Transactions, getTransactionDetailsByAddress, getTransactionByHash } = require( '../controllers/transaction.controller' );
+const { getLast10Transactions, getTransactionDetailsByAddress, getTransactionByHash } = require( '@controllers/transaction.controller' );
 
 const router = express.Router();
 
