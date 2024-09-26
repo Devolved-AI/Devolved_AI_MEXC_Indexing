@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import ClipboardJS from 'clipboard';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
+
 // Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
@@ -76,19 +77,18 @@ const BlocksDetailsByBlockNumber = () => {
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/block-details-by-block-number', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ blockNumber })
+        body: JSON.stringify({ blocknumber: blockNumber }) // Use blocknumber as per the API request
       });
 
       const data = await response.json();
-      // console.log(data);
 
-      if (data.success) {
-        setBlockData(data.result);
+      if (data.block) {
+        setBlockData(data.block); // Adjusted to the API response structure
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {
@@ -103,6 +103,22 @@ const BlocksDetailsByBlockNumber = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTimestamp = (timestamp: any) => {
+    // Create a new Date object from the timestamp string
+    const date = new Date(timestamp);
+  
+    // Use Intl.DateTimeFormat for formatting without the timezone part
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
   };
 
   if (loading) {
@@ -168,7 +184,7 @@ const BlocksDetailsByBlockNumber = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Timestamp:</span>
-                <span>{blockData.timestamp}</span>
+                <span>{formatTimestamp(blockData.timestamp)}</span>
               </div>
             </div>
           </div>
@@ -177,6 +193,5 @@ const BlocksDetailsByBlockNumber = () => {
     </div>
   );
 };
-
 
 export default BlocksDetailsByBlockNumber;

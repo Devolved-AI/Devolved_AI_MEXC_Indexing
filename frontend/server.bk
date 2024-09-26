@@ -45,6 +45,6 @@ app.prepare().then(() => {
 
   httpsServer.listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Ready on https://${dev ? "localhost" : process.env.POSTGRES_HOST}:${port}`);
+    console.log(`> Ready on https://${dev ? "localhost" : process.env.NEXT_PUBLIC_BASE_URL}:${port}`);
   });
 });

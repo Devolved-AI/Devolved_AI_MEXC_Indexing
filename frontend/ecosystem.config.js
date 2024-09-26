@@ -1,23 +1,30 @@
 module.exports = {
   apps: [
     {
-      name: "mexc_indexing_frontend",
+      name: "argochain_scanner_frontend",
       script: "npm",
       args: "start",
+      exec_mode: 'cluster',
       autorestart: true,
-      // max_restarts: 100,
       restart_delay: 3000,
       watch: true,
-      ignore_watch: ["node_modules", "logs"],
+      ignore_watch: ["node_modules", "logs", "public"],
       max_memory_restart: "1G",
       log_date_format: "YYYY-MM-DD HH:mm Z",
-      error_file: './logs/mexc_indexing_frontend-error.log',
-      out_file: './logs/mexc_indexing_frontend-out.log',
+      error_file: './logs/argochain_scanner_frontend-error.log',
+      out_file: './logs/argochain_scanner_frontend-out.log',
       combine_logs: true,
-      watch_options: {
-        followSymlinks: false,
-        usePolling: true,
-        interval: 1000,
+      env: {
+        NODE_ENV: "development",
+        RPC_NODE_URL: process.env.RPC_NODE_URL,
+        PORT: process.env.PORT,
+        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
+      },
+      env_production: {
+        NODE_ENV: "production",
+        RPC_NODE_URL: process.env.RPC_NODE_URL,
+        PORT: process.env.PORT,
+        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL
       },
     },
   ],
