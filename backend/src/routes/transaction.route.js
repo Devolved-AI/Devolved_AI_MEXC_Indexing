@@ -1,9 +1,10 @@
-// src/routes/transactionRoutes.js
 const express = require('express');
-const { getTransactionDetails } = require('@controllers/transactionController');
+const { getLast10Transactions, getTransactionDetails } = require('@controllers/transaction.controller');
 
 const router = express.Router();
 
-router.get('/:trxHash', getTransactionDetails);
+// Define the GET route for last 10 blocks
+router.post('/getLast10Transactions', getLast10Transactions);
+router.post('/getTransactionDetails', getTransactionDetails);
 
 module.exports = router;
