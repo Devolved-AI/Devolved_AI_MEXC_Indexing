@@ -3,13 +3,13 @@ let redisClient;
 
 // Initialize the Redis client
 const initRedis = async () => {
-  if (!redisClient || !redisClient.isOpen) {
+  if ( !redisClient || !redisClient.isOpen ) {
     try {
       redisClient = await initializeRedisClient();
-      console.log('✓ Redis is connected successfully');
-    } catch (error) {
-      console.error('Error connecting to Redis:', error.message);
-      throw new Error('Redis connection failed');
+      console.log( '✓ Redis is connected successfully' );
+    } catch ( error ) {
+      console.error( 'Error connecting to Redis:', error.message );
+      throw new Error( 'Redis connection failed' );
     }
   }
 };
@@ -21,75 +21,90 @@ const getLast10Blocks = async ( req, res ) => {
     await initRedis();
 
     // Check if the 'blocks' sorted set exists
-    const blocksExist = await redisClient.exists('blocks');
-    if (!blocksExist) {
-      return res.status(404).json({
+    const blocksExist = await redisClient.exists( 'blocks' );
+    if ( !blocksExist ) {
+      return res.status( 404 ).json( {
         message: 'No sorted set "blocks" found in Redis'
-      });
+      } );
     }
 
     // Retrieve the last 10 block keys from Redis sorted set 'blocks'
-    const blockKeys = await redisClient.zRange('blocks', 0, 9, { REV: true });
+    const blockKeys = await redisClient.zRange( 'blocks', 0, 9, { REV: true } );
 
-    if (!blockKeys || blockKeys.length === 0) {
-      return res.status(404).json({
+    if ( !blockKeys || blockKeys.length === 0 ) {
+      return res.status( 404 ).json( {
         message: 'No blocks found in Redis sorted set'
-      });
+      } );
     }
 
-    console.log('Retrieved block keys:', blockKeys);
+    console.log( 'Retrieved block keys:', blockKeys );
 
     // Fetch details for each block key from the Redis hash
     const blocks = await Promise.all(
-      blockKeys.map(async (key) => {
-        const block = await redisClient.hGetAll(`block:${key}`);
+      blockKeys.map( async ( key ) => {
+        const block = await redisClient.hGetAll( `block:${key}` );
         return block;
-      })
+      } )
     );
 
     // Return the blocks as a JSON response
-    return res.status(200).json({
+    return res.status( 200 ).json( {
       blocks,
       message: 'Successfully retrieved the latest 10 blocks'
-    });
-  } catch (error) {
-    console.error('Error retrieving blocks from Redis:', error.message);
-    return res.status(500).json({
+    } );
+  } catch ( error ) {
+    console.error( 'Error retrieving blocks from Redis:', error.message );
+    return res.status( 500 ).json( {
       message: 'Internal server error',
       error: error.message
-    });
+    } );
   }
 };
+// Function to get details for a specific block by block number
+const getBlockDetails = async ( req, res ) => {
+  // Extract blocknumber from the request body
+  const { blocknumber } = req.body;
 
-// Function to get specific block details from Redis cache or database
-const getBlockDetails = async ( req, res, next ) => {
-  const { blockNumber } = req.params;
+  // If blocknumber is not provided, return a 400 error
+  if ( !blocknumber ) {
+    return res.status( 400 ).json( {
+      message: 'Block number is required',
+    } );
+  }
+
   try {
-    // Ensure Redis client is initialized
+    // Initialize Redis client
     await initRedis();
 
-    const cacheKey = `block:${blockNumber}`;
-    let blockData = await redisClient.get( cacheKey );
-
-    if ( blockData ) {
-      return res.json( { success: true, result: JSON.parse( blockData ) } );
+    // Check if the block exists in Redis
+    const blockExists = await redisClient.exists( `block:${blocknumber}` );
+    if ( !blockExists ) {
+      return res.status( 404 ).json( {
+        message: `Block with number "${blocknumber}" not found in Redis`,
+      } );
     }
 
-    // Fallback to database if block is not found in Redis cache 
-    // @ts-ignore
-    const result = await db.query( 'SELECT * FROM blocks WHERE block_number = $1', [ blockNumber ] );
+    // Fetch the block data from Redis
+    const blockData = await redisClient.hGetAll( `block:${blocknumber}` );
 
-    if ( result.rows.length === 0 ) {
-      return res.status( 404 ).json( { success: false, message: 'Block not found' } );
+    // If no block data is found, return a 404 error
+    if ( !blockData || Object.keys( blockData ).length === 0 ) {
+      return res.status( 404 ).json( {
+        message: `No data found for block number "${blocknumber}" in Redis`,
+      } );
     }
 
-    // Cache the block data in Redis for future requests
-    blockData = result.rows[ 0 ];
-    await redisClient.set( cacheKey, JSON.stringify( blockData ) );
-
-    return res.json( { success: true, result: blockData } );
+    // Send the block data as a JSON response
+    return res.status( 200 ).json( {
+      block: blockData,
+      message: `Successfully retrieved block data for block number "${blocknumber}"`,
+    } );
   } catch ( error ) {
-    next( error );
+    console.error( `Error retrieving block data for number "${blocknumber}":`, error.message );
+    return res.status( 500 ).json( {
+      message: 'Internal server error',
+      error: error.message,
+    } );
   }
 };
 

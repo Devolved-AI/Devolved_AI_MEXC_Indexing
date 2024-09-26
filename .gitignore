@@ -552,3 +552,6 @@ MigrationBackup/
 
 # txt
 *.txt
+
+# vscode tools
+/.vscode
