@@ -1,5 +1,5 @@
-const pool = require( '../config/connectDB' ); // Importing pg client
-const initializeRedisClient = require( '../libs/redisClient' ); // Importing Redis client
+const pool = require( '@config/connectDB' ); // Importing pg client
+const initializeRedisClient = require( '@libs/redisClient' ); // Importing Redis client
 require( 'dotenv' ).config();
 
 let redisClient; // Global Redis client
@@ -29,7 +29,7 @@ const initialize = async () => {
           await cacheBlock( operation, record );
           break;
         case 'event_change':
-          await cacheEvent( operation, record ); // Ensure cacheEvent is defined
+          await cacheEvent( operation, record );
           break;
         case 'transaction_change':
           await cacheTransaction( operation, record );
@@ -90,14 +90,6 @@ const cacheEvent = async ( operation, event ) => {
   }
 };
 
-// Helper function to convert object into a Redis hash
-// const mapObjectToHash = (obj) => {
-//   return Object.entries(obj).reduce((acc, [key, value]) => {
-//     acc[key] = value !== null && value !== undefined ? value.toString() : '';
-//     return acc;
-//   }, {});
-// };
-
 // Function to reconnect to PostgreSQL in case of connection loss
 const reconnectPostgres = ( client ) => {
   console.log( 'Reconnecting to PostgreSQL...' );
@@ -114,13 +106,30 @@ const reconnectPostgres = ( client ) => {
 // Initialize Redis with all data from PostgreSQL
 const initializeRedisWithAllData = async () => {
   try {
-    console.log( '5. Initializing Redis with all data from PostgreSQL...' );
-    await initializeRedisBlocks();
-    await initializeRedisEvents();
-    await initializeRedisTransactions();
-    await initializeRedisAccounts();
-    await initializeRedisTransactionMessages();
-    console.log( '8. Redis initialization complete.' );
+    // console.log( '5. Initializing Redis with all data from PostgreSQL...' );
+    // await initializeRedisBlocks();
+    // await initializeRedisEvents();
+    // await initializeRedisTransactions();
+    // await initializeRedisAccounts();
+    // await initializeRedisTransactionMessages();
+    // console.log( '8. Redis initialization complete.' );
+
+    console.log('5. Initializing Redis with all data from PostgreSQL...');
+
+    // Cache block and transaction first, then cache the rest
+    await Promise.all([
+      initializeRedisBlocks(),      // Cache blocks first
+      initializeRedisTransactions() // Cache transactions second
+    ]);
+
+    // Then cache the rest (events, accounts, messages)
+    await Promise.all([
+      initializeRedisEvents(),
+      initializeRedisAccounts(),
+      initializeRedisTransactionMessages(),
+    ]);
+
+    console.log('8. Redis initialization complete.');
   } catch ( err ) {
     console.error( 'Error initializing Redis with all data:', err );
   }
@@ -236,8 +245,19 @@ const cacheTransaction = async ( operation, transaction ) => {
       await redisClient.del( `transaction:${txHash}` );
       console.log( `Deleted transaction ${txHash} from Redis.` );
     } else {
-      await redisClient.zAdd( 'transactions', [ { score: parseInt( blockNumber ), value: txHash } ] );
-      await redisClient.hSet( `transaction:${txHash}`, mapObjectToHash( transaction ) );
+      // await redisClient.zAdd( 'transactions', [ { score: parseInt( blockNumber ), value: txHash } ] );
+      // await redisClient.hSet( `transaction:${txHash}`, mapObjectToHash( transaction ) );
+
+      // Serialize the events array into a JSON string
+      const eventsString = JSON.stringify(transaction.events);
+
+      // Cache transaction details in Redis
+      await redisClient.zAdd('transactions', [{ score: parseInt(blockNumber), value: txHash }]);
+      await redisClient.hSet(`transaction:${txHash}`, {
+        ...mapObjectToHash(transaction),
+        events: eventsString, // Store the events as a serialized JSON string
+      });
+      
       console.log( `Transaction ${txHash} added to sorted set and cached successfully.` );
     }
   } catch ( error ) {

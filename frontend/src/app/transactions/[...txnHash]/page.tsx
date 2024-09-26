@@ -72,18 +72,18 @@ const TransactionDetails = () => {
   const fetchTransactionDetails = async (txHash: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/transaction-by-hash', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByHash', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ txHash })
+        body: JSON.stringify({ tx_hash: txHash })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setTransactionData(data.result);
+        setTransactionData(data.data);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {

@@ -10,17 +10,17 @@ const hpp = require( 'hpp' );
 const { createLogger, transports, format } = require( 'winston' );
 
 // Config
-const createTables = require( './config/initializeDB' );
+const createTables = require( '@config/initializeDB' );
 
 // Controllers
-const fetchChainData = require( './controllers/fetchChainData' );
-const cacheListener = require( './controllers/cacheListener' );
+const fetchChainData = require( '@controllers/fetchChainData' );
+const cacheListener = require( '@controllers/cacheListener' );
 
 // Routes
-const healthCheckRoute = require( './routes/healthCheck.route' );
-const transactionMessagesRoute = require( './routes/transactionMessages.route' );
-const blockRoute = require( './routes/block.route' );
-const transactionRoute = require( './routes/transaction.route' );
+const healthCheckRoute = require( '@routes/healthCheck.route' );
+const transactionMessagesRoute = require( '@routes/transactionMessages.route' );
+const blockRoute = require( '@routes/block.route' );
+const transactionRoute = require( '@routes/transaction.route' );
 
 const app = express();
 
@@ -68,7 +68,6 @@ app.use( rateLimit( {
 app.use( '/healthCheck', healthCheckRoute );
 app.use( '/block', blockRoute );
 app.use( '/transaction', transactionRoute );
-
 app.use( '/transactionMessages', transactionMessagesRoute );
 
 // Error handling middleware

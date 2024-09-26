@@ -3,6 +3,13 @@ import Image from 'next/image';
 import BlockImage from '../../../public/icon-block.png';
 import TransactionImage from '../../../public/transactions-icon.png';
 import Link from 'next/link';
+import dynamic from 'next/dynamic'; // For Lottie
+import LoadinJson from '../../../public/block.json'; // Your Lottie JSON file
+
+// Dynamically import the Lottie player
+const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
+  ssr: false,
+});
 
 interface Block {
   block_number: string;
@@ -26,41 +33,48 @@ interface Transaction {
 const HomeSection: React.FC = () => {
   const [latestBlocks, setLatestBlocks] = useState<Block[]>([]);
   const [latestTransactions, setLatestTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Fetch latest blocks
-    fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/getLast10Blocks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.blocks) {
-          setLatestBlocks(data.blocks);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching latest blocks:', error);
-      });
+    // Fetch latest blocks and transactions in parallel
+    const fetchData = async () => {
+      try {
+        setLoading(true); // Start loading
 
-    // Fetch latest transactions
-    fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getLast10Transactions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.transactions) {
-          setLatestTransactions(data.transactions);
+        const [blocksResponse, transactionsResponse] = await Promise.all([
+          fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/getLast10Blocks', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+          fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getLast10Transactions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+        ]);
+
+        const blocksData = await blocksResponse.json();
+        const transactionsData = await transactionsResponse.json();
+
+        if (blocksData.blocks) {
+          setLatestBlocks(blocksData.blocks);
         }
-      })
-      .catch((error) => {
-        console.error('Error fetching latest transactions:', error);
-      });
+
+        if (transactionsData.transactions) {
+          setLatestTransactions(transactionsData.transactions);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false); // Stop loading once data is fetched
+      }
+    };
+
+    fetchData();
   }, []);
 
   const shorten = (hash: string) => `${hash.slice(0, 4)}...${hash.slice(-5)}`;
@@ -80,6 +94,20 @@ const HomeSection: React.FC = () => {
       hour12: false,
     }).format(date);
   };
+
+  if (loading) {
+    // Show the Lottie animation while loading
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Player
+          autoplay
+          loop
+          src={LoadinJson}
+          style={{ height: '150px', width: '150px' }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto pt-6 lg:pt-20">

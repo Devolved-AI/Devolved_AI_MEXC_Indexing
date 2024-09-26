@@ -77,7 +77,7 @@ const TransactionDetailsByAddress = () => {
   const fetchTransactionDetails = async (address: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/transaction-by-address', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByAddress', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -88,7 +88,7 @@ const TransactionDetailsByAddress = () => {
       const data = await response.json();
 
       if (data.success) {
-        setTransactionData(data.result);
+        setTransactionData(data.data);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {
@@ -107,7 +107,7 @@ const TransactionDetailsByAddress = () => {
 
   const fetchBalance = async (address: string) => {
     try {
-      const response = await fetch('/api/get-balance', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getBalance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

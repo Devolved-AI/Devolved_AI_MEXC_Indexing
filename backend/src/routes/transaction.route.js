@@ -1,5 +1,5 @@
 const express = require( 'express' );
-const { getLast10Transactions, getTransactionDetailsByAddress, getTransactionByHash } = require( '@controllers/transaction.controller' );
+const { getLast10Transactions, getTransactionDetailsByAddress, getTransactionByHash, getBalance } = require( '@controllers/transaction.controller' );
 
 const router = express.Router();
 
@@ -7,5 +7,6 @@ const router = express.Router();
 router.post( '/getLast10Transactions', getLast10Transactions );
 router.post( '/getTransactionDetailsByAddress', getTransactionDetailsByAddress );
 router.post( '/getTransactionDetailsByHash', getTransactionByHash );
+router.post( '/getBalance', getBalance );
 
 module.exports = router;

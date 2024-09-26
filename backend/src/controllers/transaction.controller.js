@@ -1,4 +1,5 @@
-const initializeRedisClient = require( '../config/connectCache' );
+const { ApiPromise, WsProvider } = require('@polkadot/api');
+const initializeRedisClient = require( '@config/connectCache' );
 let redisClient;
 
 // Initialize the Redis client
@@ -168,6 +169,20 @@ const getTransactionByHash = async (req, res) => {
       });
     }
 
+    // Parse the `events` field if it exists (assuming events are stored as a JSON string)
+    if (transactionData.events) {
+      try {
+        transactionData.events = JSON.parse(transactionData.events); // Convert the JSON string back to an array of objects
+      } catch (err) {
+        console.error(`Error parsing events for transaction ${tx_hash}:`, err.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Error parsing transaction events.',
+          error: err.message,
+        });
+      }
+    }
+
     // Return the transaction data as a JSON response
     return res.status(200).json({
       success: true,
@@ -185,9 +200,64 @@ const getTransactionByHash = async (req, res) => {
   }
 };
 
+// Controller for fetching the balance without updating the database
+const getBalance = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed!"
+    });
+  }
+
+  try {
+    const { address } = req.body;
+
+    // Validate if the address is provided
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: "Address is required"
+      });
+    }
+
+    // Connect to the Polkadot API provider
+    const provider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
+    const api = await ApiPromise.create({ provider });
+
+    await api.isReady;  // Ensure the API is ready
+
+    // Fetch the account balance
+    const { data: balance } = await api.query.system.account(address);
+    const balanceValue = parseFloat(balance.free.toString()) / Math.pow(10, 18);
+
+    // Format balance to 4 decimal places and add commas
+    const balanceFormatted = balanceValue.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+
+    // Return the balance without updating it in the database
+    return res.status(200).json({
+      success: true,
+      balance: balanceFormatted
+    });
+
+  } catch (error) {
+    console.error("Error fetching balance:", error);
+    let errorMessage = 'An unknown error occurred';
+    if (error instanceof Error) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    return res.status(500).json({
+      success: false,
+      message: errorMessage
+    });
+  }
+};
 
 module.exports = {
   getLast10Transactions,
   getTransactionDetailsByAddress,
   getTransactionByHash,
+  getBalance
 };

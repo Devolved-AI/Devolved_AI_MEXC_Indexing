@@ -1,4 +1,4 @@
-const pool = require('../config/connectDB');
+const pool = require('@config/connectDB');
 require('dotenv').config();
 
 const createTables = async () => {
