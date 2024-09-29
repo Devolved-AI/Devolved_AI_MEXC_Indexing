@@ -1,5 +1,5 @@
-require( 'module-alias/register' ); // Always call on top
-require( 'dotenv' ).config(); // Load environment variables
+require( 'module-alias/register' );
+require( 'dotenv' ).config();
 
 const express = require( 'express' );
 const compression = require( 'compression' );
