@@ -44,9 +44,9 @@ async function main() {
     let startBlockNumber = lastProcessedBlockNumber + 1;
 
     // If lastProcessedBlockNumber is invalid or too old, start from block 0
-    if ( lastProcessedBlockNumber < 0 || !Number.isFinite( lastProcessedBlockNumber ) ) {
+    if ( lastProcessedBlockNumber < 18000 || !Number.isFinite( lastProcessedBlockNumber ) ) {
       console.warn( 'Starting from block 0 due to invalid or undefined lastProcessedBlockNumber' );
-      startBlockNumber = 0;
+      startBlockNumber = 18000;
     }
 
     console.log( `Starting from block number: ${startBlockNumber}` );
@@ -116,6 +116,14 @@ async function processBlock( api, blockNumber ) {
     return;
   }
 
+  // Insert the block data before proceeding
+  try {
+    await insertBlockData( blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp );
+  } catch ( error ) {
+    console.error( `Error inserting block data for block ${blockNum}:`, error );
+    return; // If inserting block data fails, don't proceed
+  }
+
   const extrinsics = [];
   const allEvents = await api.query.system.events.at( signedBlock.block.header.hash );
 
@@ -131,11 +139,12 @@ async function processBlock( api, blockNumber ) {
 
       if ( section === 'palletCounter' && method === 'TransferOfBalanceNew' ) {
         const [ from, toAddress, transferAmount, messageHex ] = args;
-        const message = Buffer.from( messageHex.replace( /^0x/, '' ), 'hex' ).toString( 'utf-8' ); // Convert to human-readable string
+        const message = Buffer.from( messageHex.replace( /^0x/, '' ), 'hex' ).toString( 'utf-8' );
         console.log( `Message in human-readable format: ${message}` );
 
         // Insert message into transactionmessages table
         await insertTransactionMessage( txHash, message );
+        await insertTransaction( txHash, blockNum, from.toString(), toAddress.toString(), transferAmount.toString() );
       }
 
       extrinsics.push( {
@@ -159,25 +168,30 @@ async function processBlock( api, blockNumber ) {
     }
   }
 
-  // Step 1: Insert the block data before inserting events
-  await insertBlockData( blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp );
+  // Process and insert events
+  try {
+    for ( const { event, phase } of allEvents ) {
+      const { section, method, data } = event;
+      const txIndex = phase.isApplyExtrinsic ? phase.asApplyExtrinsic.toNumber() : null;
+      const txHash = txIndex !== null ? txHashes[ txIndex ] : null;
 
-  // Step 2: Process and insert events after the block is inserted
-  for ( const { event, phase } of allEvents ) {
-    const { section, method, data } = event;
-    const txIndex = phase.isApplyExtrinsic ? phase.asApplyExtrinsic.toNumber() : null;
-    const txHash = txIndex !== null ? txHashes[ txIndex ] : null;
+      if ( section === 'palletCounter' && method === 'TransferOfBalanceNew' ) {
+        const [ fromAddress, toAddress, transferAmount, messageHex ] = data;
+        const message = Buffer.from( messageHex.toHex().replace( /^0x/, '' ), 'hex' ).toString( 'utf-8' );
+        console.log( `Message in human-readable format: ${message}` );
 
-    if ( section === 'balances' && method === 'Withdraw' ) {
-      const [ from, amount ] = data;
-      const to = null; // Since Withdraw events have no `to_address`
-      if ( txHash ) {
-        await insertTransaction( txHash, blockNum, from.toString(), to, amount.toString() ); // Pass null or appropriate value for toAddress
+        // Insert message into transactionmessages table
+        if ( txHash ) {
+          await insertTransactionMessage( txHash, message );
+          await insertTransaction( txHash, blockNum, fromAddress.toString(), toAddress.toString(), transferAmount.toString() );
+        }
       }
-    }
 
-    // Insert the entire event data
-    await insertEvent( blockNum, section, method, data.map( d => d.toString() ) );
+      // Insert the entire event data
+      await insertEvent( blockNum, section, method, data.map( d => d.toString() ) );
+    }
+  } catch ( error ) {
+    console.error( `Error inserting events for block ${blockNum}:`, error );
   }
 
   await insertExtrinsicData( extrinsics ); // Save extrinsics data to the database
@@ -201,6 +215,8 @@ async function processBlock( api, blockNumber ) {
   } );
 }
 
+
+
 // Save events to PostgreSQL
 async function insertEvent( blockNumber, section, method, data ) {
   const query = `
@@ -210,19 +226,18 @@ async function insertEvent( blockNumber, section, method, data ) {
   `;
   await pool.query( query, [ blockNumber, section, method, JSON.stringify( data ) ] );
 }
-
-// Save transaction to PostgreSQL when `balances.Withdraw` event is found
+// Ensure the `insertTransaction` function allows null values for `to_address`
 async function insertTransaction( txHash, blockNumber, fromAddress, toAddress, amount ) {
   const query = `
     INSERT INTO transactions (tx_hash, block_number, from_address, to_address, amount, fee, gas_fee, method, events)
-    VALUES ($1, $2, $3, $4, $5, '0', '0', 'balances.Withdraw', '[]')
+    VALUES ($1, $2, $3, $4, $5, '0', '0', 'palletCounter.TransferOfBalanceNew', '[]')
     ON CONFLICT (tx_hash) DO NOTHING;
   `;
 
-  // Use 'unknown' if toAddress is null
-  const toAddr = toAddress || 'unknown';
+  // Ensure to_address is not null
+  const safeToAddress = toAddress || 'unknown';
 
-  await pool.query( query, [ txHash, blockNumber, fromAddress, toAddr, amount ] );
+  await pool.query( query, [ txHash, blockNumber, fromAddress, safeToAddress, amount ] );
 }
 
 // Function to insert transaction message into the transactionmessages table
