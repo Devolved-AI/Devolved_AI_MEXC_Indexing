@@ -12,7 +12,7 @@
   "author": "tanvir@devolvedai.com",
   "license": "ISC",
   "dependencies": {
-    "@polkadot/api": "13.0.1",
+    "@polkadot/api": "^13.2.1",
     "@polkadot/util": "^13.0.2",
     "axios": "1.7.7",
     "child_process": "^1.0.2",

@@ -210,3 +210,75 @@ Block Data: {
       }
     ]
   }
+
+
+
+
+
+// async function processBlock( api, blockNumber ) {
+//   try {
+//     const hash = await api.rpc.chain.getBlockHash( blockNumber );
+//     const block = await api.rpc.chain.getBlock( hash );
+
+//     const blockData = {
+//       blockNumber: block.block.header.number.toNumber(),
+//       blockHash: block.block.header.hash.toString(),
+//       parentHash: block.block.header.parentHash.toString(),
+//       stateRoot: block.block.header.stateRoot.toString(),
+//       extrinsicsRoot: block.block.header.extrinsicsRoot.toString(),
+//       timestamp: getBlockTimestamp( block.block.extrinsics )
+//     };
+
+//     await insertBlockData( blockData );
+//     await updateRedisWithBlockData( blockData );
+
+//     for ( const [ index, extrinsic ] of block.block.extrinsics.entries() ) {
+//       const { isSigned, method, args } = extrinsic;
+//       const txHash = extrinsic.hash.toHex();
+//       const transactionData = {
+//         txHash,
+//         blockNumber: blockData.blockNumber,
+//         fromAddress: extrinsic.signer?.toString(),
+//         toAddress: args[ 0 ]?.toString(),
+//         amount: args[ 1 ]?.toString(),
+//         method: `${method.section}.${method.method}`,
+//         timestamp: blockData.timestamp
+//       };
+
+//       if ( isSigned ) {
+//         console.log( `Processing signed extrinsic with method: ${method.section}.${method.method}` );
+//         if ( method.section === 'balances' && method.method === 'transfer' ) {
+//           console.log( `Inserting transfer transaction: ${JSON.stringify( transactionData )}` );
+//           await insertTransaction( transactionData );
+//           await updateRedisWithTransaction( transactionData );
+//         } else if ( method.section === 'palletCounter' && method.method === 'TransferOfBalanceNew' ) {
+//           transactionData.message = args.slice( -1 )[ 0 ].toString(); // Assuming the message is the last argument
+//           console.log( `Inserting palletCounter transaction with message: ${JSON.stringify( transactionData )}` );
+//           await insertTransactionWithMessage( transactionData );
+//           await updateRedisWithTransaction( transactionData );
+//         }
+//       }
+
+//       const events = await api.query.system.events.at( hash );
+//       for ( const record of events ) {
+//         if ( record.phase.isApplyExtrinsic && record.phase.asApplyExtrinsic.toNumber() === index ) {
+//           const { event } = record;
+//           const eventData = {
+//             blockNumber: blockData.blockNumber,
+//             eventIndex: index,
+//             section: event.section,
+//             method: event.method,
+//             data: event.data.toString(),
+//             timestamp: blockData.timestamp
+//           };
+//           await insertEvent( eventData );
+//           await updateRedisWithEvent( eventData );
+//         }
+//       }
+//     }
+
+//     console.log( `Processed block ${blockNumber}` );
+//   } catch ( error ) {
+//     console.error( `Failed to process block ${blockNumber}:`, error );
+//   }
+// }

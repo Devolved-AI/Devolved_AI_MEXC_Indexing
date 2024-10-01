@@ -10,7 +10,7 @@ const hpp = require( 'hpp' );
 const { createLogger, transports, format } = require( 'winston' );
 
 // Config
-const createTables = require( './config/initializeDB' ); // Assuming aliases are correctly set
+const createTables = require( './config/initializeDB' );
 
 // Controllers
 const { fetchChainData } = require( './controllers/fetchChainData' ); // Corrected import with destructuring

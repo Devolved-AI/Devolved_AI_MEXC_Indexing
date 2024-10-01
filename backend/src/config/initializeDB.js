@@ -26,7 +26,8 @@ const createTables = async () => {
         block_number BIGINT REFERENCES blocks(block_number),
         section VARCHAR(255) NOT NULL,
         method VARCHAR(255) NOT NULL,
-        data JSONB NOT NULL
+        data JSONB NOT NULL,
+        timestamp TIMESTAMP NOT NULL
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_events_block_number ON events(block_number);`);
@@ -39,11 +40,9 @@ const createTables = async () => {
         block_number BIGINT REFERENCES blocks(block_number),
         from_address VARCHAR(66) NOT NULL,
         to_address VARCHAR(66) NOT NULL,
-        amount VARCHAR(255) NOT NULL,
-        fee VARCHAR(255) NOT NULL,
-        gas_fee VARCHAR(255) NOT NULL,
-        gas_value VARCHAR(255) NOT NULL,
+        amount NUMERIC NOT NULL,
         method VARCHAR(255) NOT NULL,
+        timestamp TIMESTAMP NOT NULL,
         events JSONB NOT NULL
       );
     `);
@@ -55,7 +54,7 @@ const createTables = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS accounts (
         address VARCHAR(66) PRIMARY KEY,
-        balance VARCHAR(255) NOT NULL
+        balance NUMERIC NOT NULL
       );
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_accounts_balance ON accounts(balance);`);
@@ -65,7 +64,8 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS transactionmessages (
         id SERIAL PRIMARY KEY,
         tx_hash VARCHAR(66) REFERENCES transactions(tx_hash),
-        message TEXT NOT NULL
+        message TEXT NOT NULL,
+        timestamp TIMESTAMP NOT NULL
       );
     `);
 
@@ -77,9 +77,7 @@ const createTables = async () => {
         block_number BIGINT REFERENCES blocks(block_number),
         from_address VARCHAR(66),
         to_address VARCHAR(66),
-        amount VARCHAR(255),
-        fee VARCHAR(255),
-        gas_fee VARCHAR(255),
+        amount NUMERIC,
         method VARCHAR(255) NOT NULL,
         timestamp TIMESTAMP NOT NULL,
         tx_hash VARCHAR(66) UNIQUE
