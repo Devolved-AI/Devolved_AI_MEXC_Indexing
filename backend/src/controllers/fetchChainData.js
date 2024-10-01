@@ -33,8 +33,8 @@ async function main() {
     const lastProcessedBlockNumber = result.rows[ 0 ].last_block_number;
 
     let startBlockNumber = lastProcessedBlockNumber - 1;
-    if ( startBlockNumber < 0 ) {
-      startBlockNumber = 0;
+    if ( startBlockNumber < 314620 ) {
+      startBlockNumber = 314620;
       console.log( 'Starting from block 0.' );
     }
 
@@ -209,6 +209,7 @@ async function updateRedisWithTransaction( transactionData ) {
     const redisKey = `transaction:${transactionData.txHash}`;
     // Ensure all values are either strings or numbers
     await redisClient.hSet( redisKey, {
+      txHash: transactionData.txHash,
       blockNumber: String( transactionData.blockNumber ),
       from_address: String( transactionData.fromAddress ),
       to_address: String( transactionData.toAddress ),
