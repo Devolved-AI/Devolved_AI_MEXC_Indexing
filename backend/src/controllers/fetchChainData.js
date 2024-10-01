@@ -127,8 +127,8 @@ async function processBlock( api, blockNumber ) {
         return {
           txHash: event.hash.toHex(),
           blockNumber: blockData.blockNumber,
-          from: fromAddress.toString(),
-          to: toAddress.toString(),
+          fromAddress: fromAddress.toString(),
+          toAddress: toAddress.toString(),
           amount: amount.toString(),
           method: `${event.section}.${event.method}`,
           message: messageHumanReadable,
@@ -204,19 +204,18 @@ async function updateRedisWithBlockData( blockData ) {
   }
 }
 
-
 async function updateRedisWithTransaction( transactionData ) {
   try {
     const redisKey = `transaction:${transactionData.txHash}`;
-    // Using hSet with an object to set multiple fields at once
+    // Ensure all values are either strings or numbers
     await redisClient.hSet( redisKey, {
-      'blockNumber': transactionData.blockNumber,
-      'from_address': transactionData.fromAddress, // Ensure property names match your data structure
-      'to_address': transactionData.toAddress,
-      'amount': transactionData.amount,
-      'method': transactionData.method,
-      'message': transactionData.message, // Only add this line if your transaction data includes a message
-      'timestamp': transactionData.timestamp
+      blockNumber: String( transactionData.blockNumber ),
+      from_address: String( transactionData.fromAddress ),
+      to_address: String( transactionData.toAddress ),
+      amount: String( transactionData.amount ),
+      method: String( transactionData.method ),
+      message: String( transactionData.message ), // Convert the message to string if not already
+      timestamp: transactionData.timestamp.toISOString(), // Convert timestamp to string
     } );
 
     console.log( `Transaction ${transactionData.txHash} data updated in Redis.` );
@@ -224,7 +223,6 @@ async function updateRedisWithTransaction( transactionData ) {
     console.error( 'Failed to update Redis with transaction data:', error );
   }
 }
-
 
 // Assuming updateRedisWithEvent is where the error occurs
 async function updateRedisWithEvent( eventData ) {
