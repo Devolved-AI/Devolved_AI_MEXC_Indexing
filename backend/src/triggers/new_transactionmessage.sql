@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION notify_transactionmessage_change() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION notify_transactionMessage_change() RETURNS TRIGGER AS $$
 DECLARE
   payload JSON;
 BEGIN
@@ -14,5 +14,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER transactionmessage_change_trigger
-AFTER INSERT OR UPDATE OR DELETE ON transactionmessages
-FOR EACH ROW EXECUTE FUNCTION notify_transactionmessage_change();
+AFTER INSERT OR UPDATE OR DELETE ON transactionMessages
+FOR EACH ROW EXECUTE FUNCTION notify_transactionMessage_change();
