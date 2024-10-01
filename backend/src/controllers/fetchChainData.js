@@ -27,9 +27,9 @@ async function main() {
     const result = await pool.query( 'SELECT COALESCE(MAX(block_number), 0) as last_block_number FROM blocks' );
     const lastProcessedBlockNumber = result.rows[ 0 ].last_block_number;
 
-    let startBlockNumber = lastProcessedBlockNumber + 1;
-    if ( startBlockNumber < 314620 ) {
-      startBlockNumber = 314620;
+    let startBlockNumber = lastProcessedBlockNumber - 1;
+    if ( startBlockNumber < 0 ) {
+      startBlockNumber = 0;
       console.log( 'Starting from block 0.' );
     }
 
