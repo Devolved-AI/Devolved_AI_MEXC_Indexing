@@ -6,6 +6,11 @@ const initializeRedisClient = require( '../libs/redisClient' );
 // Initialize WebSocket provider for the Substrate node
 const wsProvider = new WsProvider( process.env.ARGOCHAIN_RPC_URL );
 
+const RETRY_LIMIT = 5; // Number of retries for block processing
+const RETRY_DELAY = 5000; // Delay between retries (in milliseconds)
+const BATCH_SIZE = parseInt( process.env.FETCHING_BATCH_SIZE || '10', 10 );; // Number of blocks to process in a batch
+
+
 let redisClient;
 
 // Function to initialize Redis client
@@ -33,6 +38,13 @@ async function main() {
       console.log( 'Starting from block 0.' );
     }
 
+    // Process blocks in batches
+    for ( let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE ) {
+      const endBlockNumber = Math.min( blockNumber + BATCH_SIZE - 1, latestBlockNumber );
+      console.log( `Processing block batch from ${blockNumber} to ${endBlockNumber}` );
+      await processBlockBatch( api, blockNumber, endBlockNumber );
+    }
+
     console.log( `Processing from block ${startBlockNumber} to ${latestBlockNumber}` );
     for ( let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber++ ) {
       await processBlock( api, blockNumber );
@@ -43,6 +55,41 @@ async function main() {
     console.error( 'Error in main function:', error );
   }
 }
+
+// Process a batch of blocks
+const processBlockBatch = async ( api, startBlockNumber, endBlockNumber ) => {
+  const blockNumbers = [];
+  for ( let blockNumber = startBlockNumber; blockNumber <= endBlockNumber; blockNumber++ ) {
+    blockNumbers.push( blockNumber );
+  }
+
+  console.log( `Processing blocks: ${blockNumbers.join( ', ' )}` );
+  const blockPromises = blockNumbers.map( blockNumber => processBlockWithRetries( api, blockNumber ) );
+  // const blockPromises = blockNumbers.map(blockNumber => processBlockWithTimeout(api, blockNumber));
+  await Promise.all( blockPromises );
+};
+
+// Retry processing a block up to the RETRY_LIMIT
+const processBlockWithRetries = async ( api, blockNumber ) => {
+  let retries = 0;
+  while ( retries < RETRY_LIMIT ) {
+    try {
+      console.log( `Processing block ${blockNumber}` );
+      await processBlock( api, blockNumber );
+      console.log( `Successfully processed block ${blockNumber}` );
+      break;
+    } catch ( error ) {
+      retries++;
+      console.error( `Error processing block ${blockNumber}:`, error );
+      if ( retries < RETRY_LIMIT ) {
+        console.log( `Retrying block ${blockNumber} (${retries}/${RETRY_LIMIT})...` );
+        await new Promise( resolve => setTimeout( resolve, RETRY_DELAY ) );
+      } else {
+        console.error( `Failed to process block ${blockNumber} after ${RETRY_LIMIT} retries.` );
+      }
+    }
+  }
+};
 
 function getBlockTimestamp( extrinsics ) {
   for ( const extrinsic of extrinsics ) {
@@ -161,13 +208,23 @@ async function updateRedisWithBlockData( blockData ) {
 async function updateRedisWithTransaction( transactionData ) {
   try {
     const redisKey = `transaction:${transactionData.txHash}`;
-    const serializedData = JSON.stringify( transactionData );
-    await redisClient.hSet( redisKey, 'data', serializedData );
+    // Using hSet with an object to set multiple fields at once
+    await redisClient.hSet( redisKey, {
+      'blockNumber': transactionData.blockNumber,
+      'from_address': transactionData.fromAddress, // Ensure property names match your data structure
+      'to_address': transactionData.toAddress,
+      'amount': transactionData.amount,
+      'method': transactionData.method,
+      'message': transactionData.message, // Only add this line if your transaction data includes a message
+      'timestamp': transactionData.timestamp
+    } );
+
     console.log( `Transaction ${transactionData.txHash} data updated in Redis.` );
   } catch ( error ) {
     console.error( 'Failed to update Redis with transaction data:', error );
   }
 }
+
 
 // Assuming updateRedisWithEvent is where the error occurs
 async function updateRedisWithEvent( eventData ) {
