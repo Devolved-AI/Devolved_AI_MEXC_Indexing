@@ -1,5 +1,5 @@
-const pool = require( '../config/connectDB' ); // Importing pg client
-const initializeRedisClient = require( '../libs/redisClient' ); // Importing Redis client
+const pool = require( '@config/connectDB' ); // Importing pg client
+const initializeRedisClient = require( '@libs/redisClient' ); // Importing Redis client
 require( 'dotenv' ).config();
 
 let redisClient; // Global Redis client

@@ -1,6 +1,6 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 require('dotenv').config();
-const pool = require('../config/connectDB');
+const pool = require('@config/connectDB');
 const { validationResult } = require('express-validator');
 
 // Setup the Polkadot.js API provider

@@ -1,5 +1,5 @@
 const { ApiPromise, WsProvider } = require( '@polkadot/api' );
-const initializeRedisClient = require( '../config/connectCache' );
+const initializeRedisClient = require( '@config/connectCache' );
 let redisClient;
 
 // Initialize the Redis client

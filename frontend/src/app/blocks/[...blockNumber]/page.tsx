@@ -76,19 +76,19 @@ const BlocksDetailsByBlockNumber = () => {
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/block-details-by-block-number', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ blockNumber })
+        body: JSON.stringify({ blocknumber: blockNumber })
       });
 
       const data = await response.json();
-      // console.log(data);
+      console.log(data);
 
-      if (data.success) {
-        setBlockData(data.result);
+      if (response.ok) {
+        setBlockData(data.block);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {
@@ -103,6 +103,22 @@ const BlocksDetailsByBlockNumber = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTimestamp = (timestamp: any) => {
+    // Create a new Date object from the timestamp string
+    const date = new Date(timestamp);
+  
+    // Use Intl.DateTimeFormat for formatting without the timezone part
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
   };
 
   if (loading) {
@@ -168,7 +184,7 @@ const BlocksDetailsByBlockNumber = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Timestamp:</span>
-                <span>{blockData.timestamp}</span>
+                <span>{formatTimestamp(blockData.timestamp)}</span>
               </div>
             </div>
           </div>

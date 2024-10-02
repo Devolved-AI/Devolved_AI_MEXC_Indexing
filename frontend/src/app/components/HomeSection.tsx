@@ -29,7 +29,7 @@ const HomeSection: React.FC = () => {
 
   useEffect(() => {
     // Fetch latest blocks
-    fetch('http://localhost:4000/block/getLast10Blocks', {
+    fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/getLast10Blocks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ const HomeSection: React.FC = () => {
       });
 
     // Fetch latest transactions
-    fetch('http://localhost:4000/transaction/getLast10Transactions', {
+    fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getLast10Transactions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,6 +64,22 @@ const HomeSection: React.FC = () => {
   }, []);
 
   const shorten = (hash: string) => `${hash.slice(0, 4)}...${hash.slice(-5)}`;
+
+  const formatTimestamp = (timestamp: any) => {
+    // Create a new Date object from the timestamp string
+    const date = new Date(timestamp);
+  
+    // Use Intl.DateTimeFormat for formatting without the timezone part
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
+  };
 
   return (
     <div className="container mx-auto pt-6 lg:pt-20">
@@ -98,7 +114,7 @@ const HomeSection: React.FC = () => {
                         {block.block_number}
                       </Link>
                     </td>
-                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{new Date(block.timestamp).toLocaleString()}</td>
+                    <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">{formatTimestamp(block.timestamp)}</td>
                   </tr>
                 ))}
               </tbody>
