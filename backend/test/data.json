@@ -1,0 +1,284 @@
+Block Data: {
+    "blockNumber": 314626,
+    "blockHash": "0x6b59795c08f941f1976062ec251aa884ce305e1326ce0880f299c79a3690eca4",
+    "parentHash": "0x87bbf1425aff1f661a1c8a84d33f51e66a1c79a28e1977e49a24c3c006ef5d3f",
+    "stateRoot": "0x191dae873676d5b2aaf4a0b8bf3b99f54a2e04dc5ef0d19cda773d6e0a512fc3",
+    "extrinsicsRoot": "0xef0ca40f0227aa2346805eb67faa6a3b0c1b9b5f3a1b18e9343d255aa11a270d",
+    "timestamp": "2024-09-24T09:12:54.002Z",
+    "extrinsics": [
+      {
+        "extrinsicIndex": 0,
+        "isSigned": false,
+        "method": "timestamp.set",
+        "args": [
+          "1727169174002"
+        ],
+        "signer": null,
+        "events": [
+          {
+            "section": "system",
+            "method": "ExtrinsicSuccess",
+            "data": [
+              "{\"weight\":{\"refTime\":284906000,\"proofSize\":1493},\"class\":\"Mandatory\",\"paysFee\":\"Yes\"}"
+            ]
+          }
+        ]
+      },
+      {
+        "extrinsicIndex": 1,
+        "isSigned": true,
+        "method": "palletCounter.balanceTransferNew",
+        "args": [
+          "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+          "20000000000000000000",
+          "0x546573742073656e6420746f204e617a6d756c207369722e20"
+        ],
+        "signer": "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+        "events": [
+          {
+            "section": "balances",
+            "method": "Withdraw",
+            "data": [
+              "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+              "18100000124416277"
+            ]
+          },
+          {
+            "section": "system",
+            "method": "NewAccount",
+            "data": [
+              "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn"
+            ]
+          },
+          {
+            "section": "balances",
+            "method": "Endowed",
+            "data": [
+              "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+              "20000000000000000000"
+            ]
+          },
+          {
+            "section": "balances",
+            "method": "Transfer",
+            "data": [
+              "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+              "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+              "20000000000000000000"
+            ]
+          },
+          {
+            "section": "palletCounter",
+            "method": "TransferOfBalanceNew",
+            "data": [
+              "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+              "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+              "20000000000000000000",
+              "0x546573742073656e6420746f204e617a6d756c207369722e20"
+            ]
+          },
+          {
+            "section": "balances",
+            "method": "Deposit",
+            "data": [
+              "5EYCAe5ijiYfyeZ2JJCGq56LmPyNRAKzpG4QkoQkkQNB5e6Z",
+              "14480000099533021"
+            ]
+          },
+          {
+            "section": "treasury",
+            "method": "Deposit",
+            "data": [
+              "14480000099533021"
+            ]
+          },
+          {
+            "section": "balances",
+            "method": "Deposit",
+            "data": [
+              "5Cct2po3wyn4VbQ3jLAyttkBmuazxFBE1x7LLyTW5y9e93BT",
+              "3620000024883256"
+            ]
+          },
+          {
+            "section": "transactionPayment",
+            "method": "TransactionFeePaid",
+            "data": [
+              "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+              "18100000124416277",
+              "0"
+            ]
+          },
+          {
+            "section": "system",
+            "method": "ExtrinsicSuccess",
+            "data": [
+              "{\"weight\":{\"refTime\":124419000,\"proofSize\":0},\"class\":\"Normal\",\"paysFee\":\"Yes\"}"
+            ]
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "section": "system",
+        "method": "ExtrinsicSuccess",
+        "data": [
+          "{\"weight\":{\"refTime\":284906000,\"proofSize\":1493},\"class\":\"Mandatory\",\"paysFee\":\"Yes\"}"
+        ]
+      },
+      {
+        "section": "balances",
+        "method": "Withdraw",
+        "data": [
+          "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+          "18100000124416277"
+        ]
+      },
+      {
+        "section": "system",
+        "method": "NewAccount",
+        "data": [
+          "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn"
+        ]
+      },
+      {
+        "section": "balances",
+        "method": "Endowed",
+        "data": [
+          "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+          "20000000000000000000"
+        ]
+      },
+      {
+        "section": "balances",
+        "method": "Transfer",
+        "data": [
+          "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+          "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+          "20000000000000000000"
+        ]
+      },
+      {
+        "section": "palletCounter",
+        "method": "TransferOfBalanceNew",
+        "data": [
+          "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+          "5Exgm6CzdiGqKZ2bv8LDc2LL2SHa1Xtp8xZMhYyHx629Bimn",
+          "20000000000000000000",
+          "0x546573742073656e6420746f204e617a6d756c207369722e20"
+        ]
+      },
+      {
+        "section": "balances",
+        "method": "Deposit",
+        "data": [
+          "5EYCAe5ijiYfyeZ2JJCGq56LmPyNRAKzpG4QkoQkkQNB5e6Z",
+          "14480000099533021"
+        ]
+      },
+      {
+        "section": "treasury",
+        "method": "Deposit",
+        "data": [
+          "14480000099533021"
+        ]
+      },
+      {
+        "section": "balances",
+        "method": "Deposit",
+        "data": [
+          "5Cct2po3wyn4VbQ3jLAyttkBmuazxFBE1x7LLyTW5y9e93BT",
+          "3620000024883256"
+        ]
+      },
+      {
+        "section": "transactionPayment",
+        "method": "TransactionFeePaid",
+        "data": [
+          "5HnLCgvExkteLFopwyNgZYMxkJnJvT3Fm49gPrFPEU8FV8Cb",
+          "18100000124416277",
+          "0"
+        ]
+      },
+      {
+        "section": "system",
+        "method": "ExtrinsicSuccess",
+        "data": [
+          "{\"weight\":{\"refTime\":124419000,\"proofSize\":0},\"class\":\"Normal\",\"paysFee\":\"Yes\"}"
+        ]
+      }
+    ]
+  }
+
+
+
+
+
+// async function processBlock( api, blockNumber ) {
+//   try {
+//     const hash = await api.rpc.chain.getBlockHash( blockNumber );
+//     const block = await api.rpc.chain.getBlock( hash );
+
+//     const blockData = {
+//       blockNumber: block.block.header.number.toNumber(),
+//       blockHash: block.block.header.hash.toString(),
+//       parentHash: block.block.header.parentHash.toString(),
+//       stateRoot: block.block.header.stateRoot.toString(),
+//       extrinsicsRoot: block.block.header.extrinsicsRoot.toString(),
+//       timestamp: getBlockTimestamp( block.block.extrinsics )
+//     };
+
+//     await insertBlockData( blockData );
+//     await updateRedisWithBlockData( blockData );
+
+//     for ( const [ index, extrinsic ] of block.block.extrinsics.entries() ) {
+//       const { isSigned, method, args } = extrinsic;
+//       const txHash = extrinsic.hash.toHex();
+//       const transactionData = {
+//         txHash,
+//         blockNumber: blockData.blockNumber,
+//         fromAddress: extrinsic.signer?.toString(),
+//         toAddress: args[ 0 ]?.toString(),
+//         amount: args[ 1 ]?.toString(),
+//         method: `${method.section}.${method.method}`,
+//         timestamp: blockData.timestamp
+//       };
+
+//       if ( isSigned ) {
+//         console.log( `Processing signed extrinsic with method: ${method.section}.${method.method}` );
+//         if ( method.section === 'balances' && method.method === 'transfer' ) {
+//           console.log( `Inserting transfer transaction: ${JSON.stringify( transactionData )}` );
+//           await insertTransaction( transactionData );
+//           await updateRedisWithTransaction( transactionData );
+//         } else if ( method.section === 'palletCounter' && method.method === 'TransferOfBalanceNew' ) {
+//           transactionData.message = args.slice( -1 )[ 0 ].toString(); // Assuming the message is the last argument
+//           console.log( `Inserting palletCounter transaction with message: ${JSON.stringify( transactionData )}` );
+//           await insertTransactionWithMessage( transactionData );
+//           await updateRedisWithTransaction( transactionData );
+//         }
+//       }
+
+//       const events = await api.query.system.events.at( hash );
+//       for ( const record of events ) {
+//         if ( record.phase.isApplyExtrinsic && record.phase.asApplyExtrinsic.toNumber() === index ) {
+//           const { event } = record;
+//           const eventData = {
+//             blockNumber: blockData.blockNumber,
+//             eventIndex: index,
+//             section: event.section,
+//             method: event.method,
+//             data: event.data.toString(),
+//             timestamp: blockData.timestamp
+//           };
+//           await insertEvent( eventData );
+//           await updateRedisWithEvent( eventData );
+//         }
+//       }
+//     }
+
+//     console.log( `Processed block ${blockNumber}` );
+//   } catch ( error ) {
+//     console.error( `Failed to process block ${blockNumber}:`, error );
+//   }
+// }

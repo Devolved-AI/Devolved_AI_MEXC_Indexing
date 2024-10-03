@@ -10,9 +10,9 @@ module.exports = {
       ignore_watch: ["node_modules", "logs", "src/public"],
       max_memory_restart: "1G",
       log_date_format: "YYYY-MM-DD HH:mm Z",
-      node_args: "--max-old-space-size=4096",
-      error_file: "./logs/argochain_scanner_backend-error.log",
-      out_file: "./logs/argochain_scanner_backend-out.log",
+      node_args: "--max-old-space-size=10240",
+      error_file: './logs/argochain_scanner_backend-error.log',
+      out_file: './logs/argochain_scanner_backend-out.log',
       combine_logs: true,
       env: {
         NODE_ENV: "development",

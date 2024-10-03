@@ -82,13 +82,14 @@ const BlocksDetailsByBlockNumber = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ blocknumber: blockNumber }) // Use blocknumber as per the API request
+        body: JSON.stringify({ blocknumber: blockNumber })
       });
 
       const data = await response.json();
+      console.log(data);
 
-      if (data.block) {
-        setBlockData(data.block); // Adjusted to the API response structure
+      if (response.ok) {
+        setBlockData(data.block);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {

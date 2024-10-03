@@ -1,7 +1,7 @@
 require('module-alias/register'); // Always call on top
 const express = require('express');
-const pool = require('@config/connectDB');
-const initializeRedisClient = require('@config/connectCache');
+const pool = require('../config/connectDB');
+const initializeRedisClient = require('../config/connectCache');
 const router = express.Router();
 
 let redisClient;
