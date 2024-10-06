@@ -22,7 +22,9 @@ module.exports = {
           POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
           POSTGRES_HOST: process.env.POSTGRES_HOST,
           POSTGRES_PORT: process.env.POSTGRES_PORT,
-          PORT: process.env.PORT
+          PORT: process.env.PORT,
+          REDIS_HOST: process.env.REDIS_HOST,
+          REDIS_PORT: process.env.REDIS_PORT
         },
         env_production: {
           NODE_ENV: 'production',
@@ -31,7 +33,9 @@ module.exports = {
           POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
           POSTGRES_HOST: process.env.POSTGRES_HOST,
           POSTGRES_PORT: process.env.POSTGRES_PORT,
-          PORT: process.env.PORT
+          PORT: process.env.PORT,
+          REDIS_HOST: process.env.REDIS_HOST,
+          REDIS_PORT: process.env.REDIS_PORT
         }
       }
     ]

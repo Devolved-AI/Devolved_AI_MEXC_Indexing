@@ -5,6 +5,7 @@ import ClipboardJS from 'clipboard';
 import { FiClipboard } from 'react-icons/fi';
 import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
+import Link from 'next/link';
 // Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
@@ -13,6 +14,7 @@ import LoadinJson from '../../../../public/block.json';
 
 const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [transactionMessage, setTransactionMessage] = useState<string | null>(null); // State to store the message
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
@@ -48,6 +50,7 @@ const TransactionDetails = () => {
         try {
           setLoading(true);
           await fetchTransactionDetails(txnHash as string);
+          await fetchTransactionMessage(txnHash as string); //
           setLoading(false);
         } catch (err) {
           if (retries > 0) {
@@ -72,18 +75,18 @@ const TransactionDetails = () => {
   const fetchTransactionDetails = async (txHash: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/transaction-by-hash', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByHash', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ txHash })
+        body: JSON.stringify({ tx_hash: txHash })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setTransactionData(data.result);
+        setTransactionData(data.transaction);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {
@@ -97,6 +100,30 @@ const TransactionDetails = () => {
       throw err; // Throw the error to trigger retry logic
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch transaction message by tx_hash
+  const fetchTransactionMessage = async (txHash: string) => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transactionMessage/getTransactionMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tx_hash: txHash }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTransactionMessage(data.message); // Set the fetched message
+      } else {
+        setTransactionMessage('No message');
+      }
+    } catch (err) {
+      console.error('Error fetching transaction message:', err);
+      setTransactionMessage('Error fetching message');
     }
   };
 
@@ -138,10 +165,20 @@ const TransactionDetails = () => {
 
   const statusInfo = transactionData ? getTransactionStatus(transactionData.events) : null;
 
+  if (error) {
+    return (
+      <div className="p-4 bg-white text-gray-700 shadow text-center">
+        <h1 className="text-4xl font-bold text-red-500">404</h1>
+        <p className="mt-2 text-gray-600">The transaction details for the specified address were not found.</p>
+        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
+          Return to Home
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-
       { transactionData && (
         <div className="mt-6">
           <div className="bg-white shadow-md rounded-lg p-4">
@@ -231,6 +268,13 @@ const TransactionDetails = () => {
                     <span>Unknown</span>
                   )}
                 </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">Message:</span>
+                <span>{transactionMessage ? transactionMessage : 'No message'}</span>
               </div>
 
             </div>

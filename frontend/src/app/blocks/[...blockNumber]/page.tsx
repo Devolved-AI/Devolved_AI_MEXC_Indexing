@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import ClipboardJS from 'clipboard';
+import Link from 'next/link';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 // Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
@@ -76,7 +77,7 @@ const BlocksDetailsByBlockNumber = () => {
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByHash', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -88,7 +89,7 @@ const BlocksDetailsByBlockNumber = () => {
       // console.log(data);
 
       if (data.success) {
-        setBlockData(data.result);
+        setBlockData(data.block);
         setError(null);
         setRetryCount(0); // Reset the retry count on success
       } else {
@@ -103,6 +104,22 @@ const BlocksDetailsByBlockNumber = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTimestamp = (timestamp: any) => {
+    // Create a new Date object from the timestamp string
+    const date = new Date(timestamp);
+  
+    // Use Intl.DateTimeFormat for formatting without the timezone part
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
   };
 
   if (loading) {
@@ -122,10 +139,20 @@ const BlocksDetailsByBlockNumber = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-4 bg-white text-gray-700 shadow text-center">
+        <h1 className="text-4xl font-bold text-red-500">404</h1>
+        <p className="mt-2 text-gray-600">The transaction details for the specified address were not found.</p>
+        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
+          Return to Home
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-
       {blockData && (
         <div className="mt-6">
           <div className="bg-white shadow-md rounded-lg p-4">
@@ -168,7 +195,7 @@ const BlocksDetailsByBlockNumber = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Timestamp:</span>
-                <span>{blockData.timestamp}</span>
+                <span>{formatTimestamp(blockData.timestamp)}</span>
               </div>
             </div>
           </div>
