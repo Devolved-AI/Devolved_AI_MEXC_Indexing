@@ -1,18 +1,17 @@
 module.exports = {
     apps: [
       {
-        name: 'fetchChainData',
+        name: 'argochain-scanner-backend-fetchdata',
         script: 'fetchChainData.js',
         node_args: '--max-old-space-size=2048',
         watch: false,
         autorestart: true,
-        // max_restarts: 10,
         restart_delay: 5000,
         min_uptime: 10000,
         exec_mode: 'cluster',
         instances: 1,
-        error_file: './logs/fetchChainData-error.log',
-        out_file: './logs/fetchChainData-out.log',
+        error_file: './logs/argochain-scanner-backend-fetchdata-error.log',
+        out_file: './logs/argochain-scanner-backend-fetchdata-out.log',
         combine_logs: true,
         env: {
           NODE_ENV: 'development',

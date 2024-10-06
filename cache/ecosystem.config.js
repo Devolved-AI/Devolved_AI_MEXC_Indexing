@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
       {
-        name: 'listener',
+        name: 'argochain-scanner-cache-listener',
         script: "npm",
         args: "start",
         watch: true,
@@ -11,8 +11,8 @@ module.exports = {
         min_uptime: 10000,
         exec_mode: 'cluster',
         instances: 1,
-        error_file: './logs/listner-error.log',
-        out_file: './logs/listner-out.log',
+        error_file: './logs/argochain-scanner-cache-listener-error.log',
+        out_file: './logs/argochain-scanner-cache-listener-out.log',
         combine_logs: true,
         env: {
           NODE_ENV: 'development',
