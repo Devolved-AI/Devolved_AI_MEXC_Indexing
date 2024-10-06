@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
 import React, { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import ClipboardJS from 'clipboard';
 import Link from 'next/link';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
+
 // Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
@@ -24,10 +25,8 @@ const BlocksDetailsByBlockNumber = () => {
   const [blockData, setBlockData] = useState<Block | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState<number>(0);
   const pathname = usePathname();
-  const blockNumber = pathname.split('/').pop();
-  const router = useRouter();
+  const blockNumber = pathname?.split('/').pop();
 
   useEffect(() => {
     // Initialize ClipboardJS
@@ -49,33 +48,12 @@ const BlocksDetailsByBlockNumber = () => {
 
   useEffect(() => {
     if (blockNumber) {
-      const fetchWithRetry = async (retries: number) => {
-        try {
-          setLoading(true);
-          await fetchBlockDetails(blockNumber as string);
-          setLoading(false);
-        } catch (err) {
-          if (retries > 0) {
-            setRetryCount(prev => prev + 1);
-            if (retryCount < 5) {
-              window.location.reload(); // Reload the browser window if an error occurs
-            } else {
-              router.push('/'); // Redirect to the homepage if the error occurs for the 6th time
-            }
-          } else {
-            setError('Transaction not found or an error occurred.');
-            setBlockData(null);
-            router.push('/'); // Redirect to the homepage after retries fail
-          }
-        }
-      };
-
-      fetchWithRetry(5); // Attempt to fetch data with 5 retries
+      fetchBlockDetails(blockNumber);
     }
-  }, [blockNumber, retryCount, router]);
+  }, [blockNumber]);
 
   const fetchBlockDetails = async (blockNumber: string) => {
-    setLoading(true);
+    setLoading(true); // Start loading
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails', {
         method: 'POST',
@@ -86,31 +64,24 @@ const BlocksDetailsByBlockNumber = () => {
       });
 
       const data = await response.json();
-      // console.log(data);
 
       if (data.success) {
         setBlockData(data.block);
-        setError(null);
-        setRetryCount(0); // Reset the retry count on success
+        setError(null); // Clear any errors
       } else {
-        setError(data.message);
         setBlockData(null);
-        throw new Error(data.message);
+        setError('Block not found or an error occurred.');
       }
     } catch (err) {
-      setError('Transaction not found or an error occurred.');
       setBlockData(null);
-      throw err; // Throw the error to trigger retry logic
+      setError('Block not found or an error occurred.');
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading when fetch is complete
     }
   };
 
   const formatTimestamp = (timestamp: any) => {
-    // Create a new Date object from the timestamp string
     const date = new Date(timestamp);
-  
-    // Use Intl.DateTimeFormat for formatting without the timezone part
     return new Intl.DateTimeFormat('en-GB', {
       year: 'numeric',
       month: 'short',
@@ -122,6 +93,7 @@ const BlocksDetailsByBlockNumber = () => {
     }).format(date);
   };
 
+  // Show loading screen while data is being fetched
   if (loading) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow">
@@ -139,11 +111,12 @@ const BlocksDetailsByBlockNumber = () => {
     );
   }
 
+  // Show error if any occurs
   if (error) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow text-center">
         <h1 className="text-4xl font-bold text-red-500">404</h1>
-        <p className="mt-2 text-gray-600">The transaction details for the specified address were not found.</p>
+        <p className="mt-2 text-gray-600">{error}</p>
         <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
           Return to Home
         </Link>
@@ -151,6 +124,7 @@ const BlocksDetailsByBlockNumber = () => {
     );
   }
 
+  // Show block details once data is fetched and no error occurs
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {blockData && (
@@ -204,6 +178,5 @@ const BlocksDetailsByBlockNumber = () => {
     </div>
   );
 };
-
 
 export default BlocksDetailsByBlockNumber;

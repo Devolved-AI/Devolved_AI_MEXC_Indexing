@@ -70,7 +70,7 @@ const TransactionDetailsByAddress = () => {
         setError(null);
       } else {
         setTransactionData(null);
-        setError(data.message);
+        setError('Transaction not found.');
       }
     } catch (err) {
       setTransactionData(null);
@@ -95,11 +95,10 @@ const TransactionDetailsByAddress = () => {
         setBalance(data.balance);
         setError(null);
       } else {
-        setBalance(null);
-        setError(data.message);
+        setBalance('Balance not found');
       }
     } catch (err) {
-      setBalance(null);
+      setBalance('Balance not found');
       setError('Balance not found or an error occurred.');
     }
   };
@@ -125,11 +124,11 @@ const TransactionDetailsByAddress = () => {
     );
   }
 
-  if (error) {
+  if ((!balance && !transactionData ) || error) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow text-center">
         <h1 className="text-4xl font-bold text-red-500">404</h1>
-        <p className="mt-2 text-gray-600">The transaction details for the specified address were not found.</p>
+        <p className="mt-2 text-gray-600">The balance and transaction details for the specified address were not found.</p>
         <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
           Return to Home
         </Link>
@@ -141,7 +140,7 @@ const TransactionDetailsByAddress = () => {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (
         <div className="text-center mb-4">
-          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {convertTo18Precision(balance)} AGC</h4>
+          <h4 className="text-md sm:text-md font-medium mb-4">{balance !== 'Balance not found' ? `Balance: ${convertTo18Precision(balance)} AGC` : 'Balance not found'}</h4>
         </div>
       )}
 
@@ -212,10 +211,6 @@ const TransactionDetailsByAddress = () => {
         </div>
       ) : (
         <div className="text-center text-red-500 mt-6">Transaction details not found.</div>
-      )}
-
-      {!balance && !transactionData && (
-        <div className="text-center text-red-500 mt-6">Balance and transaction details not found.</div>
       )}
     </div>
   );
