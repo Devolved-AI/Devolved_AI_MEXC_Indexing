@@ -76,7 +76,7 @@ const BlocksDetailsByBlockNumber = () => {
   const fetchBlockDetails = async (blockNumber: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/block-details-by-block-number', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByHash', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
