@@ -13,8 +13,8 @@ import LoadinJson from '../../../../public/block.json';
 
 interface Transaction {
   tx_hash: string;
-  block_number: number;
-  age: number;
+  block_number: string;
+  timestamp: string;
   from_address: string;
   to_address: string;
   amount: string;
@@ -107,6 +107,19 @@ const TransactionDetailsByAddress = () => {
     return (parseFloat(amount) / 1e18).toFixed(18);
   };
 
+  const formatTimestamp = (timestamp: any) => {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
+  };
+
   if (loading) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow">
@@ -179,7 +192,7 @@ const TransactionDetailsByAddress = () => {
                           {transaction.block_number}
                         </Link>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.age}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(transaction.timestamp)}</td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                         <Link href={`/address/${transaction.from_address}`} className="hover:underline">
                           {transaction.from_address.slice(0, 10) + '...' + transaction.from_address.slice(-5)}
