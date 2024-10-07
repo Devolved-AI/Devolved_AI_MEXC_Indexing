@@ -1,0 +1,237 @@
+Block number is increasing: 1388827
+Block number is increasing: 1388829
+Block number is increasing: 1388830
+Block number is increasing: 1388832
+Block number is increasing: 1388834
+Block number is increasing: 1388836
+Block number is increasing: 1388837
+Block number is increasing: 1388843
+Block number is increasing: 1388844
+Block number is increasing: 1388848
+Block number is increasing: 1388850
+Block number is increasing: 1388851
+Block number is increasing: 1388853
+Block number is increasing: 1388855
+Block number is increasing: 1388856
+Block number is increasing: 1388858
+Block number is increasing: 1388860
+Block number is increasing: 1388861
+Block number is increasing: 1388863
+Block number is increasing: 1388865
+Block number is increasing: 1388866
+Block number is increasing: 1388868
+Block number is increasing: 1388870
+Block number is increasing: 1388871
+Block number is increasing: 1388873
+Block number is increasing: 1388875
+Block number is increasing: 1388877
+No change detected in block number. Initial: 1388877, Current: 1388877
+Block number is not increasing. Restarting PM2 services...
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-backend-fetchdata](ids: [ 0 ])
+[PM2] [argochain-scanner-backend-fetchdata](0) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 387391   │ 29m    │ 36   │ online    │ 0%       │ 56.5mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 402117   │ 0s     │ 389… │ online    │ 0%       │ 41.4mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 392651   │ 17m    │ 306  │ online    │ 0%       │ 56.3mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-backend-fetchdata
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-api](ids: [ 8 ])
+[PM2] [argochain-scanner-api](8) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 402142   │ 0s     │ 37   │ online    │ 0%       │ 39.5mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 402117   │ 0s     │ 389… │ online    │ 143.3%   │ 75.8mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 392651   │ 17m    │ 306  │ online    │ 0%       │ 56.3mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-api
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-frontend](ids: [ 3 ])
+[PM2] [argochain-scanner-frontend](3) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 402142   │ 0s     │ 37   │ online    │ 60%      │ 64.2mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 402117   │ 1s     │ 389… │ online    │ 110%     │ 90.5mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 402175   │ 0s     │ 307  │ online    │ 0%       │ 24.9mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-frontend
+PM2 services restarted.
+Block number is increasing: 1388880
+Block number is increasing: 1388882
+Block number is increasing: 1388883
+Block number is increasing: 1388885
+Block number is increasing: 1388887
+Block number is increasing: 1388888
+Block number is increasing: 1388890
+Block number is increasing: 1388891
+Block number is increasing: 1388893
+Block number is increasing: 1388894
+Block number is increasing: 1388896
+Block number is increasing: 1388898
+No change detected in block number. Initial: 1388898, Current: 1388898
+Block number is not increasing. Restarting PM2 services...
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-backend-fetchdata](ids: [ 0 ])
+[PM2] [argochain-scanner-backend-fetchdata](0) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 402142   │ 2m     │ 37   │ online    │ 0%       │ 57.9mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 403168   │ 0s     │ 389… │ online    │ 0%       │ 41.4mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 402175   │ 2m     │ 307  │ online    │ 0%       │ 55.1mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-backend-fetchdata
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-api](ids: [ 8 ])
+[PM2] [argochain-scanner-api](8) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 403193   │ 0s     │ 38   │ online    │ 0%       │ 45.1mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 403168   │ 0s     │ 389… │ online    │ 129.2%   │ 75.9mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 402175   │ 2m     │ 307  │ online    │ 0%       │ 55.3mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-api
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [argochain-scanner-frontend](ids: [ 3 ])
+[PM2] [argochain-scanner-frontend](3) ✓
+┌────┬────────────────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                                   │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 8  │ argochain-scanner-api                  │ default     │ 0.39.3  │ cluster │ 403193   │ 0s     │ 38   │ online    │ 22.7%    │ 63.7mb   │ tanvir   │ disabled │
+│ 0  │ argochain-scanner-backend-fetchdata    │ default     │ 1.0.0   │ cluster │ 403168   │ 1s     │ 389… │ online    │ 113.6%   │ 91.9mb   │ tanvir   │ disabled │
+│ 3  │ argochain-scanner-frontend             │ default     │ 0.39.3  │ fork    │ 403226   │ 0s     │ 308  │ online    │ 0%       │ 21.8mb   │ tanvir   │ disabled │
+└────┴────────────────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+Restarted PM2 service: argochain-scanner-frontend
+PM2 services restarted.
+Block number is increasing: 1388901
+Block number is increasing: 1388903
+Block number is increasing: 1388904
+Block number is increasing: 1388905
+Block number is increasing: 1388908
+Block number is increasing: 1388909
+Block number is increasing: 1388911
+Block number is increasing: 1388912
+Block number is increasing: 1388914
+Block number is increasing: 1388915
+Block number is increasing: 1388917
+Block number is increasing: 1388919
+Block number is increasing: 1388920
+Block number is increasing: 1388922
+Block number is increasing: 1388924
+Block number is increasing: 1388925
+Block number is increasing: 1388927
+Block number is increasing: 1388929
+Block number is increasing: 1388931
+Block number is increasing: 1388932
+Block number is increasing: 1388934
+Block number is increasing: 1388936
+Block number is increasing: 1388937
+Block number is increasing: 1388939
+Block number is increasing: 1388941
+Block number is increasing: 1388942
+Block number is increasing: 1388944
+Block number is increasing: 1388946
+Block number is increasing: 1388948
+Block number is increasing: 1388949
+Block number is increasing: 1388951
+Block number is increasing: 1388953
+Block number is increasing: 1388954
+Block number is increasing: 1388956
+Block number is increasing: 1388957
+Block number is increasing: 1388958
+Block number is increasing: 1388959
+Block number is increasing: 1388961
+Block number is increasing: 1388963
+Block number is increasing: 1388964
+Block number is increasing: 1388966
+Block number is increasing: 1388968
+Block number is increasing: 1388969
+Block number is increasing: 1388971
+Block number is increasing: 1388973
+Block number is increasing: 1388974
+Block number is increasing: 1388976
+Block number is increasing: 1388978
+Block number is increasing: 1388980
+Block number is increasing: 1388981
+Block number is increasing: 1388983
+Block number is increasing: 1388985
+Block number is increasing: 1388986
+Block number is increasing: 1388988
+Block number is increasing: 1388990
+Block number is increasing: 1388992
+Block number is increasing: 1388993
+Block number is increasing: 1388995
+Block number is increasing: 1388997
+Block number is increasing: 1388998
+Block number is increasing: 1389000
+Block number is increasing: 1389001
+Block number is increasing: 1389002
+Block number is increasing: 1389004
+Block number is increasing: 1389006
+Block number is increasing: 1389007
+Block number is increasing: 1389008
+Block number is increasing: 1389010
+Block number is increasing: 1389012
+Block number is increasing: 1389013
+Block number is increasing: 1389015
+Block number is increasing: 1389017
+Block number is increasing: 1389018
+Block number is increasing: 1389020
+Block number is increasing: 1389022
+Block number is increasing: 1389023
+Block number is increasing: 1389025
+Block number is increasing: 1389027
+Block number is increasing: 1389028
+Block number is increasing: 1389030
+Block number is increasing: 1389032
+Block number is increasing: 1389034
+Block number is increasing: 1389035
+Block number is increasing: 1389037
+Block number is increasing: 1389039
+Block number is increasing: 1389040
+Block number is increasing: 1389042
+Block number is increasing: 1389044
+Block number is increasing: 1389046
+Block number is increasing: 1389047
+Block number is increasing: 1389049
+Block number is increasing: 1389051
+Block number is increasing: 1389052
+Block number is increasing: 1389054
+Block number is increasing: 1389055
+Block number is increasing: 1389056
+Block number is increasing: 1389058
+Block number is increasing: 1389060
+Block number is increasing: 1389062
+Block number is increasing: 1389063
+Block number is increasing: 1389064
+Block number is increasing: 1389066
+Block number is increasing: 1389067
+Block number is increasing: 1389069
+Block number is increasing: 1389071
+Block number is increasing: 1389072
+Block number is increasing: 1389074
+Block number is increasing: 1389076
+Block number is increasing: 1389078
+Block number is increasing: 1389079
+Block number is increasing: 1389081
+Block number is increasing: 1389083
+Block number is increasing: 1389084
+Block number is increasing: 1389086
+Block number is increasing: 1389088
+Block number is increasing: 1389089
+Block number is increasing: 1389091
+Block number is increasing: 1389093
+Block number is increasing: 1389094
+Block number is increasing: 1389096
+Block number is increasing: 1389098
+Block number is increasing: 1389100
+Block number is increasing: 1389101
+Block number is increasing: 1389103
+Block number is increasing: 1389105
+Block number is increasing: 1389106

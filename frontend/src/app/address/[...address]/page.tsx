@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import ClipboardJS from 'clipboard';
 import { FiClipboard } from 'react-icons/fi';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
-// Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
@@ -27,10 +26,8 @@ const TransactionDetailsByAddress = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [balance, setBalance] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState<number>(0);
   const pathname = usePathname();
   const address = pathname?.split('/').pop();
-  const router = useRouter();
 
   useEffect(() => {
     // Initialize ClipboardJS
@@ -44,7 +41,6 @@ const TransactionDetailsByAddress = () => {
       console.log(e);
     });
 
-    // Cleanup
     return () => {
       clipboard.destroy();
     };
@@ -52,54 +48,33 @@ const TransactionDetailsByAddress = () => {
 
   useEffect(() => {
     if (address) {
-      const fetchWithRetry = async (fn: Function, retries: number) => {
-        try {
-          await fn();
-        } catch (err) {
-          if (retries > 0) {
-            setRetryCount((prevRetryCount) => prevRetryCount + 1);
-            if (retryCount < 5) {
-              window.location.reload(); // Reload the browser window if an error occurs
-            } else {
-              router.push('/'); // Redirect to the homepage if the error occurs for the 6th time
-            }
-          } else {
-            setRetryCount(0); // Reset the retry count if successful
-          }
-        }
-      };
-
-      fetchWithRetry(() => fetchTransactionDetails(address as string), 5);
-      fetchWithRetry(() => fetchBalance(address as string), 5);
+      fetchTransactionDetails(address);
+      fetchBalance(address);
     }
-  }, [address, retryCount, router]);
+  }, [address]);
 
   const fetchTransactionDetails = async (address: string) => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByAddress', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address })
+        body: JSON.stringify({ address }),
       });
 
       const data = await response.json();
-
       if (data.success) {
-        setTransactionData(data.data);
+        setTransactionData(data.transactions);
         setError(null);
-        setRetryCount(0); // Reset the retry count on success
       } else {
         setTransactionData(null);
-        setError(data.message);
-        throw new Error(data.message);
+        setError('Transaction not found.');
       }
     } catch (err) {
       setTransactionData(null);
       setError('Transaction not found or an error occurred.');
-      throw err; // Throw the error to trigger retry logic
     } finally {
       setLoading(false);
     }
@@ -110,26 +85,21 @@ const TransactionDetailsByAddress = () => {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getBalance', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address })
+        body: JSON.stringify({ address }),
       });
 
       const data = await response.json();
-
       if (data.success) {
         setBalance(data.balance);
         setError(null);
-        setRetryCount(0); // Reset the retry count on success
       } else {
-        setBalance(null);
-        setError(data.message);
-        throw new Error(data.message);
+        setBalance('Balance not found');
       }
     } catch (err) {
-      setBalance(null);
+      setBalance('Balance not found');
       setError('Balance not found or an error occurred.');
-      throw err; // Throw the error to trigger retry logic
     }
   };
 
@@ -145,7 +115,7 @@ const TransactionDetailsByAddress = () => {
             <Player
               autoplay
               loop
-              src={LoadinJson} // Ensure you have this JSON file in your public directory or adjust the path accordingly
+              src={LoadinJson}
               style={{ height: '150px', width: '150px' }}
             />
           </div>
@@ -154,11 +124,23 @@ const TransactionDetailsByAddress = () => {
     );
   }
 
+  if ((!balance && !transactionData ) || error) {
+    return (
+      <div className="p-4 bg-white text-gray-700 shadow text-center">
+        <h1 className="text-4xl font-bold text-red-500">404</h1>
+        <p className="mt-2 text-gray-600">The balance and transaction details for the specified address were not found.</p>
+        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
+          Return to Home
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (
         <div className="text-center mb-4">
-          <h4 className="text-md sm:text-md font-medium mb-4">Balance: {balance} AGC</h4>
+          <h4 className="text-md sm:text-md font-medium mb-4">{balance !== 'Balance not found' ? `Balance: ${convertTo18Precision(balance)} AGC` : 'Balance not found'}</h4>
         </div>
       )}
 
@@ -229,10 +211,6 @@ const TransactionDetailsByAddress = () => {
         </div>
       ) : (
         <div className="text-center text-red-500 mt-6">Transaction details not found.</div>
-      )}
-
-      {!balance && !transactionData && (
-        <div className="text-center text-red-500 mt-6">Balance and transaction details not found.</div>
       )}
     </div>
   );
