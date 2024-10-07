@@ -554,5 +554,5 @@ MigrationBackup/
 *.txt
 
 # backend/
-cache/
-api/
+# cache/
+# api/
