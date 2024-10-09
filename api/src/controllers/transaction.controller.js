@@ -6,13 +6,13 @@ const getLast10Transactions = async (req, res) => {
   try {
     // SQL query to get the last 10 transactions along with their block timestamp
     const result = await query(
-      `SELECT 
-        tx.tx_hash, 
-        tx.from_address, 
-        tx.to_address, 
-        tx.amount, 
-        tx.fee, 
-        tx.gas_fee, 
+      `SELECT
+        tx.tx_hash,
+        tx.from_address,
+        tx.to_address,
+        tx.amount,
+        tx.fee,
+        tx.gas_fee,
         b.timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
@@ -41,7 +41,6 @@ const getLast10Transactions = async (req, res) => {
   }
 };
 
-// Function to get transaction details by tx_hash from the database
 const getTransactionDetailsByHash = async (req, res) => {
   const { tx_hash } = req.body;
 
@@ -57,7 +56,7 @@ const getTransactionDetailsByHash = async (req, res) => {
     const result = await query(
       `SELECT 
         tx.tx_hash, 
-        tx.block_number,   -- Include block_number in the response
+        tx.block_number,  -- Include block number
         tx.from_address, 
         tx.to_address, 
         tx.amount, 
@@ -65,7 +64,7 @@ const getTransactionDetailsByHash = async (req, res) => {
         tx.gas_fee, 
         tx.method,
         tx.events,
-        b.timestamp
+        b.timestamp  -- Include block timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
       WHERE tx.tx_hash = $1`,
@@ -79,10 +78,13 @@ const getTransactionDetailsByHash = async (req, res) => {
       });
     }
 
-    // Return the transaction details including the block number
+    // Return the transaction details including the block timestamp
     return res.status(200).json({
       success: true,
-      transaction: result.rows[0],  // Returning the first row (assuming one transaction)
+      transaction: {
+        ...result.rows[0], // Transaction details
+        timestamp: result.rows[0].timestamp // Include the block timestamp
+      }
     });
   } catch (error) {
     console.error('Error retrieving transaction by tx_hash from PostgreSQL:', error.message);
@@ -94,7 +96,8 @@ const getTransactionDetailsByHash = async (req, res) => {
   }
 };
 
-// Function to get specific transaction details by address from the database
+
+
 const getTransactionDetailsByAddress = async (req, res) => {
   try {
     // Extract the address from the request body
@@ -110,18 +113,20 @@ const getTransactionDetailsByAddress = async (req, res) => {
     // SQL query to retrieve transactions where the given address is either from_address or to_address
     const result = await query(
       `SELECT 
-        tx_hash, 
-        from_address, 
-        to_address, 
-        amount, 
-        fee, 
-        gas_fee, 
-        gas_value, 
-        method, 
-        events, 
-        block_number 
-      FROM transactions 
-      WHERE from_address = $1 OR to_address = $1`,
+        tx.tx_hash, 
+        tx.from_address, 
+        tx.to_address, 
+        tx.amount, 
+        tx.fee, 
+        tx.gas_fee, 
+        tx.gas_value, 
+        tx.method, 
+        tx.events, 
+        tx.block_number, 
+        b.timestamp  -- Include block timestamp
+      FROM transactions tx
+      JOIN blocks b ON tx.block_number = b.block_number
+      WHERE tx.from_address = $1 OR tx.to_address = $1`,
       [address]
     );
 
@@ -133,11 +138,14 @@ const getTransactionDetailsByAddress = async (req, res) => {
       });
     }
 
-    // Return the matched transactions
+    // Return the matched transactions, including the block timestamp
     return res.status(200).json({
       success: true,
       message: `Transactions retrieved for address ${address}.`,
-      transactions: result.rows,
+      transactions: result.rows.map(row => ({
+        ...row,
+        timestamp: row.timestamp, // Include timestamp in the response
+      })),
     });
 
   } catch (error) {
@@ -194,3 +202,4 @@ module.exports = {
   getTransactionDetailsByAddress,
   getBalance
 };
+
