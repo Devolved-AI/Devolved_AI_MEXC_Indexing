@@ -13,7 +13,7 @@ export default function Home() {
     e.preventDefault();
     if (searchQuery) {
       if (filter === 'txnHash') {
-        router.push(`/transactions/${searchQuery}`);
+        router.push(`/tx/${searchQuery}`);
       }
       if (filter === 'block') {
         router.push(`/blocks/${searchQuery}`);

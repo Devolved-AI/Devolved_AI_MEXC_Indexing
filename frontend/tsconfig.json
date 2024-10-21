@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "globals.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/lib/redisClient.ts", "src/app/transactions/[...txnHash]"],
+  "include": ["next-env.d.ts", "globals.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/lib/redisClient.ts", "src/app/tx/[...txnHash]"],
   "exclude": ["node_modules"]
 }

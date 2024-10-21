@@ -162,7 +162,7 @@ const HomeSection: React.FC = () => {
                     <tr key={index}>
                       <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={TransactionImage} alt="transaction-icon" /></td>
                       <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
-                        <Link href={`/transactions/${txn.tx_hash}`} className="text-[#D91A9C] hover:underline">
+                        <Link href={`/tx/${txn.tx_hash}`} className="text-[#D91A9C] hover:underline">
                           {shorten(txn.tx_hash)}
                         </Link>
                       </td>
