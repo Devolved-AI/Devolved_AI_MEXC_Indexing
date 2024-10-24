@@ -96,8 +96,6 @@ const getTransactionDetailsByHash = async (req, res) => {
   }
 };
 
-
-
 const getTransactionDetailsByAddress = async (req, res) => {
   try {
     // Extract the address from the request body
@@ -196,10 +194,98 @@ const getBalance = async ( req, res ) => {
   }
 };
 
+const fetchTransactionData = async (req, res) => {
+  try {
+    const { blockHash } = req.body;
+
+    // Validate request payload
+    if (!blockHash) {
+      return res.status(400).json({ 
+        status: 400,
+        success: false,
+        error: "Block hash is required." 
+      });
+    }
+
+    // Initialize the connection to the blockchain
+    const wsProvider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
+    const api = await ApiPromise.create({ provider: wsProvider });
+
+    try {
+      // Get the block details using the block hash
+      const blockDetails = await api.rpc.chain.getBlock(blockHash);
+      const events = await api.query.system.events.at(blockHash);
+
+      // Extract block number from the block header
+      const blockNumber = blockDetails.block.header.number.toNumber();
+
+      // Loop through the block's extrinsics and filter those that match `palletCounter.includeIpfsHash`
+      const extrinsics = blockDetails.block.extrinsics.map((extrinsic, index) => {
+        const extrinsicMethod = `${extrinsic.method.section}.${extrinsic.method.method}`;
+
+        if (extrinsicMethod === "palletCounter.includeIpfsHash") {
+          const relatedEvents = events
+            .filter(({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index))
+            .map(({ event }) => ({
+              section: event.section,
+              method: event.method,
+              data: event.data.toHuman(),
+            }));
+
+          return {
+            blockNumber,
+            blockHash: blockHash.toString(),
+            extrinsicIndex: index,
+            hash: extrinsic.hash.toHex(),
+            method: extrinsicMethod,
+            signer: extrinsic.signer?.toString(),
+            args: extrinsic.args.map((arg) => arg.toHuman()),
+            events: relatedEvents.filter(
+              (e) => e.section === "palletCounter" && e.method === "IPFSHashIncluded"
+            ),
+          };
+        }
+
+        return null;
+      }).filter(Boolean);
+
+      // Check if any extrinsics were found
+      if (extrinsics.length > 0) {
+        return res.status(200).json({ 
+          status: 200,
+          success: true,
+          data: extrinsics
+        });
+      } else {
+        return res.status(404).json({
+          status: 404,
+          success: false,
+          error: "No relevant extrinsics found for the provided block hash."
+        });
+      }
+    } catch (error) {
+      console.error(`Error fetching block with hash ${blockHash}:`, error);
+      return res.status(500).json({ 
+        status: 500,
+        success: false,
+        error: `Internal server error: ${error.message}`
+      });
+    }
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return res.status(500).json({ 
+      status: 400,
+      success: false,
+      error: `Internal server error: ${error.message}` 
+    });
+  }
+};
+
 module.exports = {
   getLast10Transactions,
   getTransactionDetailsByHash,
   getTransactionDetailsByAddress,
-  getBalance
+  getBalance,
+  fetchTransactionData
 };
 

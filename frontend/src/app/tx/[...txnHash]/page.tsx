@@ -15,6 +15,7 @@ import LoadinJson from '../../../../public/block.json';
 
 const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [transactionDataBlockHash, setTransactionDataBlockHash] = useState<any>(null);
   const [transactionMessage, setTransactionMessage] = useState<string | null>(null); // State to store the message
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,14 +65,47 @@ const TransactionDetails = () => {
         setTransactionData(data.transaction);
         setError(null);
       } else {
-        setTransactionData(null);
-        setError(data.message);
+        // Try to fetch from the alternative URL if the primary fetch fails
+        await fetchFromAlternativeUrl(txHash);
       }
     } catch (err) {
-      setTransactionData(null);
-      setError('Transaction not found or an error occurred.');
+      // If any error occurs, attempt to fetch from the alternative URL
+      await fetchFromAlternativeUrl(txHash);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFromAlternativeUrl = async (txHash: string) => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/fetchTransactionData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ blockHash: txHash }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data && data.data.length > 0) {
+        // Extract the required fields
+        const extrinsic = data.data[0];
+        const extractedData = {
+          blockNumber: extrinsic.blockNumber,
+          transactionHash: extrinsic.blockHash,
+          toAddress: extrinsic.signer,
+          ipfsHash: extrinsic.events[0]?.data[1], // Assuming the 2nd value is the IPFS Hash
+        };
+        setTransactionDataBlockHash(extractedData);
+        setError(null);
+      } else {
+        setTransactionDataBlockHash(null);
+        setError('Transaction not found or an error occurred.');
+      }
+    } catch (err) {
+      setTransactionDataBlockHash(null);
+      setError('Transaction not found or an error occurred.');
     }
   };
 
@@ -275,6 +309,59 @@ const TransactionDetails = () => {
               <div className="flex justify-between">
                 <span className="font-semibold">Message:</span>
                 <span>{transactionMessage ? transactionMessage : 'No message'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {transactionDataBlockHash && (
+        <div className="mt-6">
+          <div className="bg-white shadow-md rounded-lg p-4">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              <div className="flex justify-between">
+                <span className="font-semibold">Transaction Hash:</span>
+                <span className="flex items-center">
+                  {transactionDataBlockHash.transactionHash.slice(0, 10) + '...' + transactionDataBlockHash.transactionHash.slice(-5)}
+                  <button
+                    className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                    data-clipboard-text={transactionDataBlockHash.transactionHash}
+                    title="Copy transaction hash to clipboard"
+                  >
+                    <FiClipboard />
+                  </button>
+                </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">Block Number:</span>
+                <span>{transactionDataBlockHash.blockNumber}</span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">From Address:</span>
+                <span className="flex items-center">
+                  {transactionDataBlockHash.toAddress}
+                  <button
+                    className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                    data-clipboard-text={transactionDataBlockHash.toAddress}
+                    title="Copy to address to clipboard"
+                  >
+                    <FiClipboard />
+                  </button>
+                </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">IPFS Hash:</span>
+                <span>{transactionDataBlockHash.ipfsHash}</span>
               </div>
             </div>
           </div>
