@@ -23,6 +23,7 @@ module.exports = {
           POSTGRES_HOST: process.env.POSTGRES_HOST,
           POSTGRES_PORT: process.env.POSTGRES_PORT,
           PORT: process.env.PORT,
+          ARGOCHAIN_RPC_URL: process.env.ARGOCHAIN_RPC_URL,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT
         },
@@ -33,6 +34,7 @@ module.exports = {
           POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
           POSTGRES_HOST: process.env.POSTGRES_HOST,
           POSTGRES_PORT: process.env.POSTGRES_PORT,
+          ARGOCHAIN_RPC_URL: process.env.ARGOCHAIN_RPC_URL,
           PORT: process.env.PORT,
           REDIS_HOST: process.env.REDIS_HOST,
           REDIS_PORT: process.env.REDIS_PORT

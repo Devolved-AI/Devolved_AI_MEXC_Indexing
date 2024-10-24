@@ -120,25 +120,6 @@ const processBlockWithRetries = async (api, blockNumber) => {
   }
 };
 
-const processBlockWithTimeout = (api, blockNumber, timeout = 60000) => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`Processing block ${blockNumber} timed out`));
-    }, timeout);
-
-    processBlock(api, blockNumber).then(
-      (result) => {
-        clearTimeout(timer);
-        resolve(result);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
-};
-
 // Process a single block
 const processBlock = async (api, blockNumber) => {
   try {
@@ -146,6 +127,7 @@ const processBlock = async (api, blockNumber) => {
     const blockInsertData = [];
     const transactionInsertData = [];
     const eventInsertData = [];
+    const ipfsInsertData = [];
 
     const hash = await api.rpc.chain.getBlockHash(blockNumber);
     const signedBlock = await api.rpc.chain.getBlock(hash);
@@ -180,6 +162,7 @@ const processBlock = async (api, blockNumber) => {
 
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
+      const extrinsicMethod = `${section}.${method}`;
 
       if (isSigned) {
         const [to, amount] = args;
@@ -201,6 +184,31 @@ const processBlock = async (api, blockNumber) => {
             gasFee = event.data[1].toString();
           }
         }
+
+        // Check if the extrinsic is the one we're interested in
+      if (extrinsicMethod === "palletCounter.includeIpfsHash") {
+        // Filter events related to this extrinsic index
+        const relatedEvents = allEvents.filter(({ phase }) =>
+          phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
+        );
+
+        // Find the event for IPFSHashIncluded within palletCounter
+        for (const { event } of relatedEvents) {
+          if (event.section === "palletCounter" && event.method === "IPFSHashIncluded") {
+            const data = event.data.toHuman(); // This gives us the event's data in human-readable format
+
+            // Prepare data to be inserted into the ipfs_hash_data table
+            ipfsInsertData.push([
+              blockNumber,
+              blockHash,
+              extrinsicIndex,
+              signer ? signer.toString() : null,
+              data[1], // IPFS hash
+              JSON.stringify(data) // Store the entire data for reference
+            ]);
+          }
+        }
+      }
 
         transactions.push({
           extrinsic_index: extrinsicIndex,
@@ -281,6 +289,22 @@ const processBlock = async (api, blockNumber) => {
       await pool.query(eventQuery, eventInsertData.flat());
       console.log(`Inserted event data for block ${blockNumber}`);
     }
+
+    // Perform bulk insert into ipfs_hash_data table
+    if (ipfsInsertData.length > 0) {
+      const ipfsQuery = `
+        INSERT INTO ipfs_hash_data (
+          block_number, block_hash, extrinsic_index, signer, ipfs_hash, associated_data
+        ) VALUES ${ipfsInsertData.map((_, i) => `
+          ($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})
+        `).join(', ')}
+        ON CONFLICT DO NOTHING;
+      `;
+
+      await pool.query(ipfsQuery, ipfsInsertData.flat());
+      console.log(`Inserted ${ipfsInsertData.length} IPFS hash entries for block ${blockNumber}`);
+    }
+    
     console.log(`Successfully processed block ${blockNumber}`);
   } catch (error) {
     console.error(`Error processing block ${blockNumber}:`, error);
