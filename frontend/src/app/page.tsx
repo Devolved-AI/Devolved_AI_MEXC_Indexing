@@ -21,6 +21,9 @@ export default function Home() {
       if (filter === 'address') {
         router.push(`/address/${searchQuery}`);
       }
+      if (filter === 'token') {
+        router.push(`/token/${searchQuery}`);
+      }
     }
   };
 
@@ -39,6 +42,7 @@ export default function Home() {
               <option value="txnHash">Txn Hash</option>
               <option value="address">Address</option>
               <option value="block">Block</option>
+              <option value="token">Token</option>
             </select>
             <input
               type="text"
