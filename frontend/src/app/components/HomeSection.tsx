@@ -128,7 +128,7 @@ const HomeSection: React.FC = () => {
                     <tr key={index}>
                       <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={BlockImage} alt="block-icon" /></td>
                       <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
-                        <Link href={`/blocks/${block.block_number}`} className="text-[#D91A9C] hover:underline">
+                        <Link href={`/block/${block.block_number}`} className="text-[#D91A9C] hover:underline">
                           {block.block_number}
                         </Link>
                       </td>

@@ -16,7 +16,7 @@ export default function Home() {
         router.push(`/tx/${searchQuery}`);
       }
       if (filter === 'block') {
-        router.push(`/blocks/${searchQuery}`);
+        router.push(`/block/${searchQuery}`);
       } 
       if (filter === 'address') {
         router.push(`/address/${searchQuery}`);
