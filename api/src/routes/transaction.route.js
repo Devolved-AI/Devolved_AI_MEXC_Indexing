@@ -4,7 +4,8 @@ const {
     getTransactionDetailsByHash, 
     getTransactionDetailsByAddress, 
     getBalance, 
-    fetchTransactionData 
+    fetchTransactionData,
+    transactionDetailsEVM
 } = require('@controllers/transaction.controller');
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.post('/getTransactionDetailsByHash', getTransactionDetailsByHash);
 router.post('/getTransactionDetailsByAddress', getTransactionDetailsByAddress);
 router.post('/getBalance', getBalance);
 router.post('/fetchTransactionData', fetchTransactionData);
+router.post('/transactionDetailsEVM', transactionDetailsEVM);
 
 module.exports = router;

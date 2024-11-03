@@ -148,13 +148,11 @@ const processBlock = async (api, blockNumber) => {
       }
     }
 
-    // Ensure timestamp is not null
     if (!timestamp) {
       console.error(`No timestamp found for block ${blockNumber}`);
       return;
     }
 
-    // Accumulate block data
     blockInsertData.push([blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp]);
 
     const allEvents = await api.query.system.events.at(signedBlock.block.header.hash);
@@ -163,74 +161,58 @@ const processBlock = async (api, blockNumber) => {
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
       const extrinsicMethod = `${section}.${method}`;
-
+      
       if (isSigned) {
-        const [to, amount] = args;
-        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
-
+        let from = signer.toString();
+        let to = null;
         let gasFee = '0';
+        let amount = '0';
         const extrinsicEvents = allEvents.filter(
           ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
         );
 
-        const events = extrinsicEvents.map(({ event }) => ({
-          section: event.section,
-          method: event.method,
-          data: event.data.map((data) => data.toString()),
-        }));
-
-        for (const { event } of extrinsicEvents) {
+        extrinsicEvents.forEach(({ event }) => {
+          if (event.section === 'ethereum' && event.method === 'Executed') {
+            to = event.data[1] ? event.data[1].toString() : 'Contract Creation';
+          }
+          
           if (event.section === 'balances' && event.method === 'Withdraw') {
-            gasFee = event.data[1].toString();
+            const rawGasFee = event.data[1].toString();
+            gasFee = (parseFloat(rawGasFee) / 1e18).toFixed(18);
           }
-        }
 
-        // Check if the extrinsic is the one we're interested in
-      if (extrinsicMethod === "palletCounter.includeIpfsHash") {
-        // Filter events related to this extrinsic index
-        const relatedEvents = allEvents.filter(({ phase }) =>
-          phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
-        );
-
-        // Find the event for IPFSHashIncluded within palletCounter
-        for (const { event } of relatedEvents) {
-          if (event.section === "palletCounter" && event.method === "IPFSHashIncluded") {
-            const data = event.data.toHuman(); // This gives us the event's data in human-readable format
-
-            // Prepare data to be inserted into the ipfs_hash_data table
-            ipfsInsertData.push([
-              blockNumber,
-              blockHash,
-              extrinsicIndex,
-              signer ? signer.toString() : null,
-              data[1], // IPFS hash
-              JSON.stringify(data) // Store the entire data for reference
-            ]);
+          if (event.section === 'balances' && event.method === 'Transfer') {
+            const rawAmount = event.data[2].toString();
+            amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
           }
-        }
-      }
+        });
+
+        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
 
         transactions.push({
           extrinsic_index: extrinsicIndex,
           hash: hash.toHex(),
           block_number: blockNum,
-          from_address: signer.toString(),
-          to_address: to.toString(),
-          amount: amount.toString(),
+          from_address: from,
+          to_address: to,
+          amount,
           fee: tip,
           gas_fee: gasFee,
-          gas_value: '0', // Assuming gas value is not available
-          method: `${section}.${method}`,
-          events: events
+          gas_value: '0',
+          method: extrinsicMethod,
+          events: extrinsicEvents.map(({ event }) => ({
+            section: event.section,
+            method: event.method,
+            data: event.data.map((data) => data.toString()),
+          }))
         });
 
-        // Update account balances
-        await updateAccountBalance(api, signer.toString());
-        await updateAccountBalance(api, to.toString());
-      } 
+        await updateAccountBalance(api, from);
+        if (to) await updateAccountBalance(api, to);
+      }
     }
 
-    // Accumulate transaction data
+    // Accumulate transaction data for insertion
     for (const transaction of transactions) {
       transactionInsertData.push([
         transaction.hash,
@@ -290,21 +272,6 @@ const processBlock = async (api, blockNumber) => {
       console.log(`Inserted event data for block ${blockNumber}`);
     }
 
-    // Perform bulk insert into ipfs_hash_data table
-    if (ipfsInsertData.length > 0) {
-      const ipfsQuery = `
-        INSERT INTO ipfs_hash_data (
-          block_number, block_hash, extrinsic_index, signer, ipfs_hash, associated_data
-        ) VALUES ${ipfsInsertData.map((_, i) => `
-          ($${i * 6 + 1}, $${i * 6 + 2}, $${i * 6 + 3}, $${i * 6 + 4}, $${i * 6 + 5}, $${i * 6 + 6})
-        `).join(', ')}
-        ON CONFLICT DO NOTHING;
-      `;
-
-      await pool.query(ipfsQuery, ipfsInsertData.flat());
-      console.log(`Inserted ${ipfsInsertData.length} IPFS hash entries for block ${blockNumber}`);
-    }
-    
     console.log(`Successfully processed block ${blockNumber}`);
   } catch (error) {
     console.error(`Error processing block ${blockNumber}:`, error);
