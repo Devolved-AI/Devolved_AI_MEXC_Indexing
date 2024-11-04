@@ -21,8 +21,19 @@ interface Block {
   timestamp: string;
 }
 
+interface BlockEVM {
+  blockNumber: string;
+  transactionHash: string;
+  from: string;
+  to: string;
+  gasFee: string;
+  amount: string;
+  timestamp: string;
+}
+
 const BlocksDetailsByBlockNumber = () => {
   const [blockData, setBlockData] = useState<Block | null>(null);
+  const [blockDataEVM, setBlockDataEVM] = useState<BlockEVM[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
@@ -70,10 +81,38 @@ const BlocksDetailsByBlockNumber = () => {
         setError(null); // Clear any errors
       } else {
         setBlockData(null);
-        setError('Block not found or an error occurred.');
+        fetchBlockDetailsEVM(blockNumber);
       }
     } catch (err) {
       setBlockData(null);
+      fetchBlockDetailsEVM(blockNumber);
+    } finally {
+      setLoading(false); // Stop loading when fetch is complete
+    }
+  };
+
+  const fetchBlockDetailsEVM = async (blockNumber: string) => {
+    setLoading(true); // Start loading
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetailsEVM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ blockNumber })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.block.length > 0) {
+        setBlockDataEVM(data.block);
+        setError(null);
+      } else {
+        setBlockDataEVM([]);
+        setError('Block not found or an error occurred.');
+      }
+    } catch (err) {
+      setBlockDataEVM([]);
       setError('Block not found or an error occurred.');
     } finally {
       setLoading(false); // Stop loading when fetch is complete
@@ -141,28 +180,28 @@ const BlocksDetailsByBlockNumber = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Block Hash:</span>
-                <span className="flex items-center">{blockData.block_hash.slice(0, 10) + '...' + blockData.block_hash.slice(-6)}</span>
+                <span className="flex items-center">{blockData.block_hash}</span>
               </div>
 
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
                 <span className="font-semibold">Parent Hash:</span>
-                <span className="flex items-center">{blockData.parent_hash.slice(0, 10) + '...' + blockData.parent_hash.slice(-6)}</span>
+                <span className="flex items-center">{blockData.parent_hash}</span>
               </div>
 
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
                 <span className="font-semibold">State Root:</span>
-                <span className="flex items-center">{blockData.state_root.slice(0, 10) + '...' + blockData.state_root.slice(-6)}</span>
+                <span className="flex items-center">{blockData.state_root}</span>
               </div>
 
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
                 <span className="font-semibold">Extrinsics Root:</span>
-                <span className="flex items-center">{blockData.extrinsics_root.slice(0, 10) + '...' + blockData.extrinsics_root.slice(-6)}</span>
+                <span className="flex items-center">{blockData.extrinsics_root}</span>
               </div>
 
               <hr className="opacity-75"></hr>
@@ -173,6 +212,64 @@ const BlocksDetailsByBlockNumber = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {blockDataEVM.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
+          {blockDataEVM.map((transaction, index) => (
+            <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {/* <div className="flex justify-between">
+                  <span className="font-semibold">Block Number:</span>
+                  <span className="flex items-center">{transaction.blockNumber}</span>
+                </div>
+
+                <hr className="opacity-75"></hr> */}
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Transaction Hash:</span>
+                  <span className="flex items-center">{transaction.transactionHash}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">From Address:</span>
+                  <span className="flex items-center">{transaction.from}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">To Address:</span>
+                  <span className="flex items-center">{transaction.to}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Gas Fee:</span>
+                  <span className="flex items-center">{transaction.gasFee} AGC</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Amount:</span>
+                  <span className="flex items-center">{transaction.amount} AGC</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Timestamp:</span>
+                  <span>{formatTimestamp(transaction.timestamp)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

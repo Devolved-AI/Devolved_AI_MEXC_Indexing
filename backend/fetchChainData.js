@@ -120,25 +120,6 @@ const processBlockWithRetries = async (api, blockNumber) => {
   }
 };
 
-const processBlockWithTimeout = (api, blockNumber, timeout = 60000) => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error(`Processing block ${blockNumber} timed out`));
-    }, timeout);
-
-    processBlock(api, blockNumber).then(
-      (result) => {
-        clearTimeout(timer);
-        resolve(result);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
-};
-
 // Process a single block
 const processBlock = async (api, blockNumber) => {
   try {
@@ -166,13 +147,11 @@ const processBlock = async (api, blockNumber) => {
       }
     }
 
-    // Ensure timestamp is not null
     if (!timestamp) {
       console.error(`No timestamp found for block ${blockNumber}`);
       return;
     }
 
-    // Accumulate block data
     blockInsertData.push([blockNum, blockHash, parentHash, stateRoot, extrinsicsRoot, timestamp]);
 
     const allEvents = await api.query.system.events.at(signedBlock.block.header.hash);
@@ -180,49 +159,59 @@ const processBlock = async (api, blockNumber) => {
 
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
-
+      const extrinsicMethod = `${section}.${method}`;
+      
       if (isSigned) {
-        const [to, amount] = args;
-        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
-
+        let from = signer.toString();
+        let to = null;
         let gasFee = '0';
+        let amount = '0';
         const extrinsicEvents = allEvents.filter(
           ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
         );
 
-        const events = extrinsicEvents.map(({ event }) => ({
-          section: event.section,
-          method: event.method,
-          data: event.data.map((data) => data.toString()),
-        }));
-
-        for (const { event } of extrinsicEvents) {
-          if (event.section === 'balances' && event.method === 'Withdraw') {
-            gasFee = event.data[1].toString();
+        extrinsicEvents.forEach(({ event }) => {
+          if (event.section === 'ethereum' && event.method === 'Executed') {
+            to = event.data[1] ? event.data[1].toString() : 'Contract Creation';
           }
-        }
+          
+          if (event.section === 'balances' && event.method === 'Withdraw') {
+            const rawGasFee = event.data[1].toString();
+            gasFee = (parseFloat(rawGasFee) / 1e18).toFixed(18);
+          }
+
+          if (event.section === 'balances' && event.method === 'Transfer') {
+            const rawAmount = event.data[2].toString();
+            amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
+          }
+        });
+
+        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
 
         transactions.push({
           extrinsic_index: extrinsicIndex,
           hash: hash.toHex(),
           block_number: blockNum,
-          from_address: signer.toString(),
-          to_address: to.toString(),
-          amount: amount.toString(),
+          from_address: from,
+          to_address: to,
+          amount,
           fee: tip,
           gas_fee: gasFee,
-          gas_value: '0', // Assuming gas value is not available
-          method: `${section}.${method}`,
-          events: events
+          gas_value: '0',
+          method: extrinsicMethod,
+          events: extrinsicEvents.map(({ event }) => ({
+            section: event.section,
+            method: event.method,
+            data: event.data.map((data) => data.toString()),
+          }))
         });
 
-        // Update account balances
-        await updateAccountBalance(api, signer.toString());
-        await updateAccountBalance(api, to.toString());
-      } 
+        await updateAccountBalance(api, from);
+        if (to) await updateAccountBalance(api, to);
+      }
     }
 
-    // Accumulate transaction data
+    // Accumulate transaction data for insertion
     for (const transaction of transactions) {
       transactionInsertData.push([
         transaction.hash,
@@ -281,6 +270,7 @@ const processBlock = async (api, blockNumber) => {
       await pool.query(eventQuery, eventInsertData.flat());
       console.log(`Inserted event data for block ${blockNumber}`);
     }
+
     console.log(`Successfully processed block ${blockNumber}`);
   } catch (error) {
     console.error(`Error processing block ${blockNumber}:`, error);

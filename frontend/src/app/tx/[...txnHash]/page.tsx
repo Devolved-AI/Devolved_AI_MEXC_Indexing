@@ -13,8 +13,20 @@ const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod
 });
 import LoadinJson from '../../../../public/block.json';
 
+interface BlockEVM {
+  blockNumber: string;
+  transactionHash: string;
+  from: string;
+  to: string;
+  gasFee: string;
+  amount: string;
+  timestamp: string;
+}
+
 const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState<any>(null);
+  const [blockDataEVM, setBlockDataEVM] = useState<BlockEVM[]>([]);
+  const [transactionDataBlockHash, setTransactionDataBlockHash] = useState<any>(null);
   const [transactionMessage, setTransactionMessage] = useState<string | null>(null); // State to store the message
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +76,74 @@ const TransactionDetails = () => {
         setTransactionData(data.transaction);
         setError(null);
       } else {
-        setTransactionData(null);
-        setError(data.message);
+        // Try to fetch from the alternative URL if the primary fetch fails
+        await fetchFromAlternativeUrl(txHash);
       }
     } catch (err) {
-      setTransactionData(null);
+      // If any error occurs, attempt to fetch from the alternative URL
+      await fetchFromAlternativeUrl(txHash);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFromAlternativeUrl = async (txHash: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/fetchTransactionData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ blockHash: txHash }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data && data.data.length > 0) {
+        // Extract the required fields
+        const extrinsic = data.data[0];
+        const extractedData = {
+          blockNumber: extrinsic.blockNumber,
+          transactionHash: extrinsic.blockHash,
+          toAddress: extrinsic.signer,
+          ipfsHash: extrinsic.events[0]?.data[1], // Assuming the 2nd value is the IPFS Hash
+        };
+        setTransactionDataBlockHash(extractedData);
+        setError(null);
+      } else {
+        await fetchFromAlternativeUrl_2(txHash);
+      } 
+    } catch (err) {
+      await fetchFromAlternativeUrl_2(txHash);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFromAlternativeUrl_2 = async (txHash: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/transactionDetailsEVM', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tx_hash: txHash }),
+      });
+
+      const data = await response.json();
+      console.log("evm", data);
+
+      if (data.success && data.block.length > 0) {
+        setBlockDataEVM(data.block);
+        setError(null);
+      } else {
+        setTransactionDataBlockHash(null);
+        setError('Transaction not found or an error occurred.');
+      }
+    } catch (err) {
+      setTransactionDataBlockHash(null);
       setError('Transaction not found or an error occurred.');
     } finally {
       setLoading(false);
@@ -146,6 +221,19 @@ const TransactionDetails = () => {
       </div>
     );
   }
+
+  const formatTimestamp = (timestamp: any) => {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
+  };
 
   const statusInfo = transactionData ? getTransactionStatus(transactionData.events) : null;
 
@@ -278,6 +366,121 @@ const TransactionDetails = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {transactionDataBlockHash && (
+        <div className="mt-6">
+          <div className="bg-white shadow-md rounded-lg p-4">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              <div className="flex justify-between">
+                <span className="font-semibold">Transaction Hash:</span>
+                <span className="flex items-center">
+                  {transactionDataBlockHash.transactionHash.slice(0, 10) + '...' + transactionDataBlockHash.transactionHash.slice(-5)}
+                  <button
+                    className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                    data-clipboard-text={transactionDataBlockHash.transactionHash}
+                    title="Copy transaction hash to clipboard"
+                  >
+                    <FiClipboard />
+                  </button>
+                </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">Block Number:</span>
+                <span>{transactionDataBlockHash.blockNumber}</span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">From Address:</span>
+                <span className="flex items-center">
+                  {transactionDataBlockHash.toAddress}
+                  <button
+                    className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                    data-clipboard-text={transactionDataBlockHash.toAddress}
+                    title="Copy to address to clipboard"
+                  >
+                    <FiClipboard />
+                  </button>
+                </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">IPFS Hash:</span>
+                <span>{transactionDataBlockHash.ipfsHash}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {blockDataEVM.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-lg sm:text-xl font-bold mb-4">EVM Transaction Details</h2>
+          {blockDataEVM.map((transaction, index) => (
+            <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div className="flex justify-between">
+                  <span className="font-semibold">Block Number:</span>
+                  <span className="flex items-center">{transaction.blockNumber}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Transaction Hash:</span>
+                  <span className="flex items-center">{transaction.transactionHash}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">From Address:</span>
+                  <span className="flex items-center">{transaction.from}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">{transaction.amount === "0" ? "Contract Address:" : "To Address:"}</span>
+                  <span className="flex items-center">{transaction.to}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Gas Fee:</span>
+                  <span className="flex items-center">{transaction.gasFee} AGC</span>
+                </div>
+
+                {transaction.amount != "0" && (
+                  <>
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Amount:</span>
+                      <span className="flex items-center">{transaction.amount} AGC</span>
+                    </div>
+                  </>
+                )}
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Timestamp:</span>
+                  <span>{formatTimestamp(transaction.timestamp)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
