@@ -184,6 +184,12 @@ const processBlock = async (api, blockNumber) => {
             const rawAmount = event.data[2].toString();
             amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
           }
+
+          if (event.section === 'palletCounter' && event.method === 'TransferOfBalanceNew') {
+            from = event.data[0]?.toString() || from;
+            to = event.data[1]?.toString() || to;
+            amount = event.data[2]?.toString() || amount;
+          }
         });
 
         const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
