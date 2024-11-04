@@ -127,7 +127,6 @@ const processBlock = async (api, blockNumber) => {
     const blockInsertData = [];
     const transactionInsertData = [];
     const eventInsertData = [];
-    const ipfsInsertData = [];
 
     const hash = await api.rpc.chain.getBlockHash(blockNumber);
     const signedBlock = await api.rpc.chain.getBlock(hash);
@@ -163,10 +162,13 @@ const processBlock = async (api, blockNumber) => {
       const extrinsicMethod = `${section}.${method}`;
       
       if (isSigned) {
-        let from = signer.toString();
+        let from = signer ? signer.toString() : null;
         let to = null;
         let gasFee = '0';
         let amount = '0';
+        let evmAddress = null;
+        let balanceChange = '0';
+        let status = null;
         const extrinsicEvents = allEvents.filter(
           ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
         );
@@ -179,11 +181,46 @@ const processBlock = async (api, blockNumber) => {
           if (event.section === 'balances' && event.method === 'Withdraw') {
             const rawGasFee = event.data[1].toString();
             gasFee = (parseFloat(rawGasFee) / 1e18).toFixed(18);
+            evmAddress = event.data[0].toString();
           }
 
           if (event.section === 'balances' && event.method === 'Transfer') {
             const rawAmount = event.data[2].toString();
             amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
+          }
+
+          if (event.section === 'palletCounter' && event.method === 'TransferOfBalanceNew') {
+            from = event.data[0]?.toString() || from;
+            to = event.data[1]?.toString() || to;
+            amount = event.data[2]?.toString() || amount;
+          }
+
+          if (event.section === 'palletCounter' && event.method === 'EvmToSubstrateTransfer') {
+            // Extract values for EvmToSubstrateTransfer
+            evmAddress = event.data[0]?.toString() || evmAddress;   // EVM address (H160)
+            to = event.data[1]?.toString() || to;                   // Substrate address (AccountId32)
+            amount = event.data[2]?.toString() || amount;           // Amount (u128)
+          }
+
+          if (event.section === 'palletCounter' && event.method === 'EvmBalanceMutated') {
+            // Extract values for EvmBalanceMutated
+            evmAddress = event.data[0]?.toString() || evmAddress;   // EVM address (H160)
+            balanceChange = event.data[1]?.toString() || balanceChange; // Balance change (U256)
+            status = event.data[2]?.toString() || status;           // Mutation status (bool)
+          }
+
+          if (event.section === 'palletCounter' && event.method === 'substrateToEvm') {
+            // Handle Substrate to EVM transfer
+            from = event.data[0]?.toString() || from;               // Substrate address (AccountId32)
+            evmAddress = event.data[1]?.toString() || evmAddress;   // EVM address (H160)
+            amount = event.data[2]?.toString() || amount;           // Amount (u128)
+          }
+
+          if (event.section === 'palletCounter' && event.method === 'evmToSubstrate') {
+            // Handle EVM to Substrate transfer
+            from = event.data[0]?.toString() || from;               // EVM address (H160)
+            to = event.data[1]?.toString() || to;                   // Substrate address (AccountId32)
+            amount = event.data[2]?.toString() || amount;           // Amount (u128)
           }
         });
 

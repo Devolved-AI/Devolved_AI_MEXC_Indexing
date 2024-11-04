@@ -178,7 +178,7 @@ const TransactionDetailsByAddress = () => {
                   {transactionData.map((transaction: Transaction, index: number) => (
                     <tr key={index}>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-sm text-gray-500">
-                        <Link href={`/transactions/${transaction.tx_hash}`} className="hover:underline">
+                        <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
                           {transaction.tx_hash.slice(0, 10) + '...' + transaction.tx_hash.slice(-5)}
                         </Link>
                         <button className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
@@ -188,7 +188,7 @@ const TransactionDetailsByAddress = () => {
                         </button>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Link href={`/blocks/${transaction.block_number}`} className="hover:underline">
+                        <Link href={`/block/${transaction.block_number}`} className="hover:underline">
                           {transaction.block_number}
                         </Link>
                       </td>

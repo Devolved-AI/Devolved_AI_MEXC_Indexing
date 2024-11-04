@@ -82,10 +82,13 @@ const TransactionDetails = () => {
     } catch (err) {
       // If any error occurs, attempt to fetch from the alternative URL
       await fetchFromAlternativeUrl(txHash);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchFromAlternativeUrl = async (txHash: string) => {
+    setLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/fetchTransactionData', {
         method: 'POST',
@@ -119,6 +122,7 @@ const TransactionDetails = () => {
   };
 
   const fetchFromAlternativeUrl_2 = async (txHash: string) => {
+    setLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/transactionDetailsEVM', {
         method: 'POST',
@@ -141,6 +145,8 @@ const TransactionDetails = () => {
     } catch (err) {
       setTransactionDataBlockHash(null);
       setError('Transaction not found or an error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -302,7 +308,7 @@ const TransactionDetails = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Transaction Fee:</span>
-                <span>{convertTo18Precision(transactionData.gas_fee)} AGC</span>
+                <span>{transactionData.gas_fee} AGC</span>
               </div>
 
               <hr className="opacity-75"></hr>
@@ -418,7 +424,7 @@ const TransactionDetails = () => {
 
       {blockDataEVM.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction(E) Details</h2>
+          <h2 className="text-lg sm:text-xl font-bold mb-4">EVM Transaction Details</h2>
           {blockDataEVM.map((transaction, index) => (
             <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -444,7 +450,7 @@ const TransactionDetails = () => {
                 <hr className="opacity-75"></hr>
 
                 <div className="flex justify-between">
-                  <span className="font-semibold">To Address:</span>
+                  <span className="font-semibold">{transaction.amount === "0" ? "Contract Address:" : "To Address:"}</span>
                   <span className="flex items-center">{transaction.to}</span>
                 </div>
 
@@ -455,12 +461,16 @@ const TransactionDetails = () => {
                   <span className="flex items-center">{transaction.gasFee} AGC</span>
                 </div>
 
-                <hr className="opacity-75"></hr>
+                {transaction.amount != "0" && (
+                  <>
+                    <hr className="opacity-75"></hr>
 
-                <div className="flex justify-between">
-                  <span className="font-semibold">Amount:</span>
-                  <span className="flex items-center">{transaction.amount} AGC</span>
-                </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Amount:</span>
+                      <span className="flex items-center">{transaction.amount} AGC</span>
+                    </div>
+                  </>
+                )}
 
                 <hr className="opacity-75"></hr>
 
