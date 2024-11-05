@@ -308,7 +308,7 @@ const TransactionDetails = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Transaction Fee:</span>
-                <span>{convertTo18Precision(transactionData.gas_fee)} AGC</span>
+                <span>{transactionData.gas_fee} AGC</span>
               </div>
 
               <hr className="opacity-75"></hr>
