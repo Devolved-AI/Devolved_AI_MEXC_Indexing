@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
-import LoadinJson from '../../../../public/block.json';
+import LoadinJson from '../../../../../public/block.json';
 
 interface Block {
   block_number: string;

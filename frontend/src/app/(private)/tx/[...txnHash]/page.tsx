@@ -11,7 +11,7 @@ import Link from 'next/link';
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
-import LoadinJson from '../../../../public/block.json';
+import LoadinJson from '../../../../../public/block.json';
 
 const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState<any>(null);

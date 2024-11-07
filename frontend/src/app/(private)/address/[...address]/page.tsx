@@ -9,7 +9,7 @@ import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
-import LoadinJson from '../../../../public/block.json';
+import LoadinJson from '../../../../../public/block.json';
 
 interface Transaction {
   tx_hash: string;
@@ -178,7 +178,8 @@ const TransactionDetailsByAddress = () => {
                   {transactionData.map((transaction: Transaction, index: number) => (
                     <tr key={index}>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-sm text-gray-500">
-                        <Link href={`/transactions/${transaction.tx_hash}`} className="hover:underline">
+                        {/* <Link href={`/transactions/${transaction.tx_hash}`} className="hover:underline"> */}
+                        <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
                           {transaction.tx_hash.slice(0, 10) + '...' + transaction.tx_hash.slice(-5)}
                         </Link>
                         <button className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
