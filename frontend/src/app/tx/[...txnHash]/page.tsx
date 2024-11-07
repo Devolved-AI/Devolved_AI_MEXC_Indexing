@@ -71,7 +71,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-
+      console.log('tx-by-hash', data);
       if (data.success) {
         setTransactionData(data.transaction);
         setError(null);
@@ -99,7 +99,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-
+      console.log('tx-by-block-hash', data);
       if (data.success && data.data && data.data.length > 0) {
         // Extract the required fields
         const extrinsic = data.data[0];
@@ -133,7 +133,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-      console.log("evm", data);
+      console.log('tx-by-hash-evm', data);
 
       if (data.success && data.block.length > 0) {
         setBlockDataEVM(data.block);
@@ -162,7 +162,8 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-
+      console.log('tx-message', data);
+      
       if (data.success) {
         setTransactionMessage(data.message); // Set the fetched message
       } else {
@@ -175,7 +176,11 @@ const TransactionDetails = () => {
   };
 
   const convertTo18Precision = (amount: string) => {
-    return (parseFloat(amount) / 1e18).toFixed(18);
+    // Check if the value has 18 decimal places; if not, convert it
+    if (!/^\d+\.\d{18}$/.test(amount)) {
+      return (parseFloat(amount) / 1e18).toFixed(18);
+    }
+    return amount;
   };
 
   // Function to determine the transaction status
@@ -261,8 +266,21 @@ const TransactionDetails = () => {
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
+                <span className="font-semibold">Method:</span>
+                <span>
+                  {transactionData.method.split('.').pop() || ''}
+                </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
                 <span className="font-semibold">Block Number:</span>
-                <span>{transactionData.block_number}</span>
+                <span>
+                  <Link href={`/block/${transactionData.block_number}`} className="hover:underline">
+                    {transactionData.block_number}
+                  </Link>
+                </span>
               </div>
 
               <hr className="opacity-75"></hr>
@@ -270,7 +288,9 @@ const TransactionDetails = () => {
               <div className="flex justify-between">
                 <span className="font-semibold">From Address:</span>
                 <span className="flex items-center">
-                  {transactionData.from_address.slice(0, 10) + '...' + transactionData.from_address.slice(-5)}
+                  <Link href={`/address/${transactionData.from_address}`} className="hover:underline">
+                    {transactionData.from_address}
+                  </Link>
                   <button
                     className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
                     data-clipboard-text={transactionData.from_address}
@@ -286,7 +306,9 @@ const TransactionDetails = () => {
               <div className="flex justify-between">
                 <span className="font-semibold">To Address:</span>
                 <span className="flex items-center">
-                  {transactionData.to_address.slice(0, 10) + '...' + transactionData.to_address.slice(-5)}
+                  <Link href={`/address/${transactionData.to_address}`} className="hover:underline">
+                    {transactionData.to_address}
+                  </Link>
                   <button
                     className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
                     data-clipboard-text={transactionData.to_address}
@@ -308,7 +330,7 @@ const TransactionDetails = () => {
 
               <div className="flex justify-between">
                 <span className="font-semibold">Transaction Fee:</span>
-                <span>{transactionData.gas_fee} AGC</span>
+                <span>{convertTo18Precision(transactionData.gas_fee)} AGC</span>
               </div>
 
               <hr className="opacity-75"></hr>
@@ -458,7 +480,7 @@ const TransactionDetails = () => {
 
                 <div className="flex justify-between">
                   <span className="font-semibold">Gas Fee:</span>
-                  <span className="flex items-center">{transaction.gasFee} AGC</span>
+                  <span className="flex items-center">{convertTo18Precision(transaction.gasFee)} AGC</span>
                 </div>
 
                 {transaction.amount != "0" && (
@@ -467,7 +489,7 @@ const TransactionDetails = () => {
 
                     <div className="flex justify-between">
                       <span className="font-semibold">Amount:</span>
-                      <span className="flex items-center">{transaction.amount} AGC</span>
+                      <span className="flex items-center">{convertTo18Precision(transaction.amount)} AGC</span>
                     </div>
                   </>
                 )}

@@ -19,6 +19,8 @@ interface Transaction {
   to_address: string;
   amount: string;
   gas_fee: string;
+  method: string;
+  methodName?: string; // Add methodName property
 }
 
 const TransactionDetailsByAddress = () => {
@@ -66,7 +68,12 @@ const TransactionDetailsByAddress = () => {
 
       const data = await response.json();
       if (data.success) {
-        setTransactionData(data.transactions);
+        // Extract method name for each transaction
+        const transactionsWithMethodName = data.transactions.map((transaction: Transaction) => ({
+          ...transaction,
+          methodName: transaction.method.split('.').pop() || '', // Extract method name after dot
+        }));
+        setTransactionData(transactionsWithMethodName);
         setError(null);
       } else {
         setTransactionData(null);
@@ -104,7 +111,11 @@ const TransactionDetailsByAddress = () => {
   };
 
   const convertTo18Precision = (amount: string) => {
-    return (parseFloat(amount) / 1e18).toFixed(18);
+    // Check if the value has 18 decimal places; if not, convert it
+    if (!/^\d+\.\d{18}$/.test(amount)) {
+      return (parseFloat(amount) / 1e18).toFixed(18);
+    }
+    return amount;
   };
 
   const formatTimestamp = (timestamp: any) => {
@@ -166,6 +177,7 @@ const TransactionDetailsByAddress = () => {
                 <thead>
                   <tr>
                     <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</th>
+                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                     <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block Number</th>
                     <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                     <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From Address</th>
@@ -178,40 +190,46 @@ const TransactionDetailsByAddress = () => {
                   {transactionData.map((transaction: Transaction, index: number) => (
                     <tr key={index}>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-sm text-gray-500">
-                        <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
-                          {transaction.tx_hash.slice(0, 10) + '...' + transaction.tx_hash.slice(-5)}
-                        </Link>
-                        <button className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
+                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
                           data-clipboard-text={transaction.tx_hash}
                           title="Copy txhash to clipboard">
                           <FiClipboard />
                         </button>
+                        <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
+                          {transaction.tx_hash.slice(0, 10) + '...' + transaction.tx_hash.slice(-5)}
+                        </Link>
                       </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.methodName}</td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
+                          data-clipboard-text={transaction.block_number}
+                          title="Copy block number to clipboard">
+                          <FiClipboard />
+                        </button>
                         <Link href={`/block/${transaction.block_number}`} className="hover:underline">
                           {transaction.block_number}
                         </Link>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(transaction.timestamp)}</td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Link href={`/address/${transaction.from_address}`} className="hover:underline">
-                          {transaction.from_address.slice(0, 10) + '...' + transaction.from_address.slice(-5)}
-                        </Link>
-                        <button className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
+                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
                           data-clipboard-text={transaction.from_address}
                           title="Copy from address to clipboard">
                           <FiClipboard />
                         </button>
+                        <Link href={`/address/${transaction.from_address}`} className="hover:underline">
+                          {transaction.from_address.slice(0, 10) + '...' + transaction.from_address.slice(-5)}
+                        </Link>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Link href={`/address/${transaction.to_address}`} className="hover:underline">
-                          {transaction.to_address.slice(0, 10) + '...' + transaction.to_address.slice(-5)}
-                        </Link>
-                        <button className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
+                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
                           data-clipboard-text={transaction.to_address}
                           title="Copy to address to clipboard">
                           <FiClipboard />
                         </button>
+                        <Link href={`/address/${transaction.to_address}`} className="hover:underline">
+                          {transaction.to_address.slice(0, 10) + '...' + transaction.to_address.slice(-5)}
+                        </Link>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{convertTo18Precision(transaction.amount)} AGC</td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{convertTo18Precision(transaction.gas_fee)} AGC</td>

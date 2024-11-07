@@ -160,78 +160,117 @@ const processBlock = async (api, blockNumber) => {
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
       const extrinsicMethod = `${section}.${method}`;
-      
-      if (isSigned) {
-        let from = signer.toString();
+
+      // Check if the section and method match the new specified criteria
+      if (
+        (section === 'balances' && ['transfer', 'transferAll', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) ||
+        (section === 'palletCounter' && ['balanceTransferNew', 'mint'].includes(method))
+      ) {
+        let from = isSigned ? signer.toString() : null;
         let to = null;
-        let gasFee = '0';
         let amount = '0';
+        let gasFee = '0';
+
+        // Assign `to` and `amount` based on method arguments
+        if (section === 'balances') {
+          if (['transfer', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) {
+            [to, amount] = args;
+          } else if (method === 'transferAll') {
+            [to] = args; // transferAll may not have `amount` argument, adjust based on requirements
+            // `transferAll` doesn't include `amount` in args, so fetch from events below
+          }
+        } 
+        else if (section === 'palletCounter') {
+          if (method === 'mint') {
+            [to, amount] = [args[0].toString(), args[1].toString()];
+          } 
+          
+          else if (method === 'balanceTransferNew' || method === 'TransferOfBalanceNew') {
+            // Look for a `balances.Transfer` or `balances.transfer` event to get `from`, `to`, and `amount`
+            const balanceTransferEvent = allEvents.find(
+              ({ event }) =>
+                event.section === 'balances' &&
+                (event.method === 'Transfer' || event.method === 'transfer')
+            );
+            
+            if (balanceTransferEvent && balanceTransferEvent.event.data.length >= 3) {
+              from = balanceTransferEvent.event.data[0].toString(); // Sender
+              to = balanceTransferEvent.event.data[1].toString();   // Receiver
+              amount = balanceTransferEvent.event.data[2].toString(); // Amount
+            } else {
+              from = '0';
+              to = '0';
+              amount = '0';
+            }
+          }
+        }
+        
+
+        // For `transferAll`, find `amount` from `Transfer` or `Endowed` events if not in args
+        if (method === 'transferAll' && amount === '0') {
+          const transferEvent = allEvents.find(
+            ({ event }) => event.section === 'balances' && (event.method === 'Transfer' || event.method === 'Endowed')
+          );
+          if (transferEvent) {
+            amount = transferEvent.event.data[2]?.toString() || '0';
+          }
+        }
+        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
+
+        // Filter events related to this extrinsic
         const extrinsicEvents = allEvents.filter(
           ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
         );
 
-        extrinsicEvents.forEach(({ event }) => {
-          if (event.section === 'ethereum' && event.method === 'Executed') {
-            to = event.data[1] ? event.data[1].toString() : 'Contract Creation';
-          }
-          
+        // Map events to JSON format for storage
+        const events = extrinsicEvents.map(({ event }) => ({
+          section: event.section,
+          method: event.method,
+          data: event.data.map((data) => data.toString()),
+        }));
+
+        // Find gas fee within events if applicable
+        for (const { event } of extrinsicEvents) {
           if (event.section === 'balances' && event.method === 'Withdraw') {
-            const rawGasFee = event.data[1].toString();
-            gasFee = (parseFloat(rawGasFee) / 1e18).toFixed(18);
+            gasFee = event.data[1].toString();
           }
+        }
 
-          if (event.section === 'balances' && event.method === 'Transfer') {
-            const rawAmount = event.data[2].toString();
-            amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
-          }
+        // Accumulate transaction data
+        transactionInsertData.push([
+          hash.toHex(),
+          blockNum,
+          from,
+          to.toString(),
+          amount.toString(),
+          tip,
+          gasFee,
+          '0', // Assuming gas_value as '0' for now
+          extrinsicMethod,
+          JSON.stringify(events), // Events stored in JSON format
+        ]);
 
-          if (event.section === 'palletCounter' && event.method === 'TransferOfBalanceNew') {
-            from = event.data[0]?.toString() || from;
-            to = event.data[1]?.toString() || to;
-            amount = event.data[2]?.toString() || amount;
-          }
-        });
-
-        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
-
-        transactions.push({
-          extrinsic_index: extrinsicIndex,
-          hash: hash.toHex(),
-          block_number: blockNum,
-          from_address: from,
-          to_address: to,
-          amount,
-          fee: tip,
-          gas_fee: gasFee,
-          gas_value: '0',
-          method: extrinsicMethod,
-          events: extrinsicEvents.map(({ event }) => ({
-            section: event.section,
-            method: event.method,
-            data: event.data.map((data) => data.toString()),
-          }))
-        });
-
+        // Update account balances if necessary
         await updateAccountBalance(api, from);
         if (to) await updateAccountBalance(api, to);
       }
     }
 
     // Accumulate transaction data for insertion
-    for (const transaction of transactions) {
-      transactionInsertData.push([
-        transaction.hash,
-        transaction.block_number,
-        transaction.from_address,
-        transaction.to_address,
-        transaction.amount,
-        transaction.fee,
-        transaction.gas_fee,
-        transaction.gas_value,
-        transaction.method,
-        JSON.stringify(transaction.events),
-      ]);
-    }
+    // for (const transaction of transactions) {
+    //   transactionInsertData.push([
+    //     transaction.hash,
+    //     transaction.block_number,
+    //     transaction.from_address,
+    //     transaction.to_address,
+    //     transaction.amount,
+    //     transaction.fee,
+    //     transaction.gas_fee,
+    //     transaction.gas_value,
+    //     transaction.method,
+    //     JSON.stringify(transaction.events),
+    //   ]);
+    // }
 
     // Accumulate event data
     for (const { event, phase } of allEvents) {
