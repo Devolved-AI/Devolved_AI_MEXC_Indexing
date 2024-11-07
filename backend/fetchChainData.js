@@ -38,13 +38,6 @@ const main = async () => {
       console.log(`Starting from block number: ${startBlockNumber}`);
     }
 
-    // Check if the difference between the latest block number and the last processed block number is more than 2
-    // if (latestBlockNumber - startBlockNumber > 5) {
-    //   console.log('Block processing is lagging. Restarting process to resynchronize.');
-    //   await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    //   restartPM2();
-    // }
-
     // Process blocks in batches
     for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
       const endBlockNumber = Math.min(blockNumber + BATCH_SIZE - 1, latestBlockNumber);
@@ -160,110 +153,84 @@ const processBlock = async (api, blockNumber) => {
     for (const [extrinsicIndex, extrinsic] of signedBlock.block.extrinsics.entries()) {
       const { isSigned, meta, method: { method, section }, args, signer, hash } = extrinsic;
       const extrinsicMethod = `${section}.${method}`;
-      
-      if (isSigned) {
-        let from = signer ? signer.toString() : null;
+
+      // Check if the section and method match the new specified criteria
+      if (
+        (section === 'balances' && ['transfer', 'transferAll', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) ||
+        (section === 'palletCounter' && ['balanceTransferNew', 'mint'].includes(method))
+      ) {
+        let from = isSigned ? signer.toString() : null;
         let to = null;
-        let gasFee = '0';
         let amount = '0';
-        let evmAddress = null;
-        let balanceChange = '0';
-        let status = null;
+        let gasFee = '0';
+
+        // Assign `to` and `amount` based on method arguments
+        if (section === 'balances') {
+          if (['transfer', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) {
+            [to, amount] = args;
+          } else if (method === 'transferAll') {
+            [to] = args; // transferAll may not have `amount` argument, adjust based on requirements
+          }
+        } else if (section === 'palletCounter') {
+          [to, amount] = method === 'mint' ? [args[0], args[1]] : [args[1], args[2]];
+        }
+
+        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
+
+        // Filter events related to this extrinsic
         const extrinsicEvents = allEvents.filter(
           ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
         );
 
-        extrinsicEvents.forEach(({ event }) => {
-          if (event.section === 'ethereum' && event.method === 'Executed') {
-            to = event.data[1] ? event.data[1].toString() : 'Contract Creation';
-          }
-          
+        // Map events to JSON format for storage
+        const events = extrinsicEvents.map(({ event }) => ({
+          section: event.section,
+          method: event.method,
+          data: event.data.map((data) => data.toString()),
+        }));
+
+        // Find gas fee within events if applicable
+        for (const { event } of extrinsicEvents) {
           if (event.section === 'balances' && event.method === 'Withdraw') {
-            const rawGasFee = event.data[1].toString();
-            gasFee = (parseFloat(rawGasFee) / 1e18).toFixed(18);
-            evmAddress = event.data[0].toString();
+            gasFee = (parseFloat(event.data[1].toString()) / 1e18).toFixed(18);
           }
+        }
 
-          if (event.section === 'balances' && event.method === 'Transfer') {
-            const rawAmount = event.data[2].toString();
-            amount = (parseFloat(rawAmount) / 1e18).toFixed(18);
-          }
+        // Accumulate transaction data
+        transactionInsertData.push([
+          hash.toHex(),
+          blockNum,
+          from,
+          to.toString(),
+          amount.toString(),
+          tip,
+          gasFee,
+          '0', // Assuming gas_value as '0' for now
+          extrinsicMethod,
+          JSON.stringify(events), // Events stored in JSON format
+        ]);
 
-          if (event.section === 'palletCounter' && event.method === 'TransferOfBalanceNew') {
-            from = event.data[0]?.toString() || from;
-            to = event.data[1]?.toString() || to;
-            amount = event.data[2]?.toString() || amount;
-          }
-
-          if (event.section === 'palletCounter' && event.method === 'EvmToSubstrateTransfer') {
-            // Extract values for EvmToSubstrateTransfer
-            evmAddress = event.data[0]?.toString() || evmAddress;   // EVM address (H160)
-            to = event.data[1]?.toString() || to;                   // Substrate address (AccountId32)
-            amount = event.data[2]?.toString() || amount;           // Amount (u128)
-          }
-
-          if (event.section === 'palletCounter' && event.method === 'EvmBalanceMutated') {
-            // Extract values for EvmBalanceMutated
-            evmAddress = event.data[0]?.toString() || evmAddress;   // EVM address (H160)
-            balanceChange = event.data[1]?.toString() || balanceChange; // Balance change (U256)
-            status = event.data[2]?.toString() || status;           // Mutation status (bool)
-          }
-
-          if (event.section === 'palletCounter' && event.method === 'substrateToEvm') {
-            // Handle Substrate to EVM transfer
-            from = event.data[0]?.toString() || from;               // Substrate address (AccountId32)
-            evmAddress = event.data[1]?.toString() || evmAddress;   // EVM address (H160)
-            amount = event.data[2]?.toString() || amount;           // Amount (u128)
-          }
-
-          if (event.section === 'palletCounter' && event.method === 'evmToSubstrate') {
-            // Handle EVM to Substrate transfer
-            from = event.data[0]?.toString() || from;               // EVM address (H160)
-            to = event.data[1]?.toString() || to;                   // Substrate address (AccountId32)
-            amount = event.data[2]?.toString() || amount;           // Amount (u128)
-          }
-        });
-
-        const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
-
-        transactions.push({
-          extrinsic_index: extrinsicIndex,
-          hash: hash.toHex(),
-          block_number: blockNum,
-          from_address: from,
-          to_address: to,
-          amount,
-          fee: tip,
-          gas_fee: gasFee,
-          gas_value: '0',
-          method: extrinsicMethod,
-          events: extrinsicEvents.map(({ event }) => ({
-            section: event.section,
-            method: event.method,
-            data: event.data.map((data) => data.toString()),
-          }))
-        });
-
+        // Update account balances if necessary
         await updateAccountBalance(api, from);
         if (to) await updateAccountBalance(api, to);
       }
     }
 
     // Accumulate transaction data for insertion
-    for (const transaction of transactions) {
-      transactionInsertData.push([
-        transaction.hash,
-        transaction.block_number,
-        transaction.from_address,
-        transaction.to_address,
-        transaction.amount,
-        transaction.fee,
-        transaction.gas_fee,
-        transaction.gas_value,
-        transaction.method,
-        JSON.stringify(transaction.events),
-      ]);
-    }
+    // for (const transaction of transactions) {
+    //   transactionInsertData.push([
+    //     transaction.hash,
+    //     transaction.block_number,
+    //     transaction.from_address,
+    //     transaction.to_address,
+    //     transaction.amount,
+    //     transaction.fee,
+    //     transaction.gas_fee,
+    //     transaction.gas_value,
+    //     transaction.method,
+    //     JSON.stringify(transaction.events),
+    //   ]);
+    // }
 
     // Accumulate event data
     for (const { event, phase } of allEvents) {

@@ -54,23 +54,30 @@ const blockDetails = async (req, res) => {
   }
 
   try {
-    // SQL query to get the block details by block number
-    const result = await query(
+    // Query to get the block details by block number
+    const blockResult = await query(
       'SELECT block_number, block_hash, parent_hash, state_root, extrinsics_root, timestamp FROM blocks WHERE block_number = $1',
       [blockNumber]
     );
 
-    if (result.rows.length === 0) {
+    if (blockResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No block found with blockNum: ${blockNumber}`,
+        message: `No block found with block number: ${blockNumber}`,
       });
     }
+
+    // Query to get all transactions associated with the block number
+    const transactionsResult = await query(
+      'SELECT * FROM transactions WHERE block_number = $1',
+      [blockNumber]
+    );
 
     // Return the block details
     return res.status(200).json({
       success: true,
-      block: result.rows[0],
+      block: blockResult.rows[0],
+      transaction: transactionsResult.rows
     });
   } catch (error) {
     console.error('Error fetching block from PostgreSQL:', error.message);

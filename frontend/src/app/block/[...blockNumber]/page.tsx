@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import ClipboardJS from 'clipboard';
 import Link from 'next/link';
-import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
+import { FiClipboard } from 'react-icons/fi';
+import dynamic from 'next/dynamic';
 
-// Dynamically import the Player component for client-side rendering only
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
@@ -31,8 +31,21 @@ interface BlockEVM {
   timestamp: string;
 }
 
+interface Transaction {
+  tx_hash: string;
+  block_number: string;
+  timestamp: string;
+  from_address: string;
+  to_address: string;
+  amount: string;
+  gas_fee: string;
+  method: string;
+  events: string[];
+}
+
 const BlocksDetailsByBlockNumber = () => {
   const [blockData, setBlockData] = useState<Block | null>(null);
+  const [transactionData, setTransactionData] = useState<Transaction[] | null>(null);
   const [blockDataEVM, setBlockDataEVM] = useState<BlockEVM[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,18 +53,14 @@ const BlocksDetailsByBlockNumber = () => {
   const blockNumber = pathname?.split('/').pop();
 
   useEffect(() => {
-    // Initialize ClipboardJS
     const clipboard = new ClipboardJS('.copy-btn');
-    
-    clipboard.on('success', function(e) {
+    clipboard.on('success', function (e) {
       console.log(e);
     });
-    
-    clipboard.on('error', function(e) {
+    clipboard.on('error', function (e) {
       console.log(e);
     });
 
-    // Cleanup
     return () => {
       clipboard.destroy();
     };
@@ -64,60 +73,62 @@ const BlocksDetailsByBlockNumber = () => {
   }, [blockNumber]);
 
   const fetchBlockDetails = async (blockNumber: string) => {
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ blockNumber })
+        body: JSON.stringify({ blockNumber }),
       });
 
       const data = await response.json();
+      // console.log(data);
 
       if (data.success) {
         setBlockData(data.block);
-        setError(null); // Clear any errors
-        fetchBlockDetailsEVM(blockNumber);
+        setTransactionData(data.transaction);
+        setError(null);
       } else {
         setBlockData(null);
-        setError('Block not found or an error occurred.');
+        setTransactionData([]);
+        fetchBlockDetailsEVM(blockNumber);
       }
     } catch (err) {
       setBlockData(null);
-      setError('Block not found or an error occurred.');
+      setTransactionData([]);
+      fetchBlockDetailsEVM(blockNumber);
     } finally {
-      setLoading(false); // Stop loading when fetch is complete
+      setLoading(false);
     }
   };
 
   const fetchBlockDetailsEVM = async (blockNumber: string) => {
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetailsEVM', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ blockNumber })
+        body: JSON.stringify({ blockNumber }),
       });
 
       const data = await response.json();
-      console.log("evm", data);
 
       if (data.success && data.block.length > 0) {
         setBlockDataEVM(data.block);
         setError(null);
       } else {
         setBlockDataEVM([]);
-        setError('Block EVM not found or an error occurred.');
+        setError('Block not found or an error occurred.');
       }
     } catch (err) {
       setBlockDataEVM([]);
       setError('Block not found or an error occurred.');
     } finally {
-      setLoading(false); // Stop loading when fetch is complete
+      setLoading(false);
     }
   };
 
@@ -134,25 +145,32 @@ const BlocksDetailsByBlockNumber = () => {
     }).format(date);
   };
 
-  // Show loading screen while data is being fetched
+  const getTransactionStatus = (events: any[] | undefined) => {
+    if (!events) return { status: 'Unknown' };
+
+    const failedEvent = events.find(event => event === 'ExtrinsicFailed');
+    if (failedEvent) {
+      return { status: 'Failed', reason: 'FundsUnavailable' };
+    }
+
+    const successEvent = events.find(event => event === 'Transfer');
+    if (successEvent) {
+      return { status: 'Success' };
+    }
+
+    return { status: 'Unknown' };
+  };
+  
   if (loading) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow">
         <div className="flex justify-center items-center h-64">
-          <div className="loader">
-            <Player
-              autoplay
-              loop
-              src={LoadinJson} // Ensure you have this JSON file in your public directory or adjust the path accordingly
-              style={{ height: '150px', width: '150px' }}
-            />
-          </div>
+          <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
         </div>
       </div>
     );
   }
 
-  // Show error if any occurs
   if (error) {
     return (
       <div className="p-4 bg-white text-gray-700 shadow text-center">
@@ -165,7 +183,6 @@ const BlocksDetailsByBlockNumber = () => {
     );
   }
 
-  // Show block details once data is fetched and no error occurs
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {blockData && (
@@ -178,35 +195,35 @@ const BlocksDetailsByBlockNumber = () => {
                 <span className="flex items-center">{blockData.block_number}</span>
               </div>
 
-              <hr className="opacity-75"></hr>
+              <hr className="opacity-75" />
 
               <div className="flex justify-between">
                 <span className="font-semibold">Block Hash:</span>
                 <span className="flex items-center">{blockData.block_hash}</span>
               </div>
 
-              <hr className="opacity-75"></hr>
+              <hr className="opacity-75" />
 
               <div className="flex justify-between">
                 <span className="font-semibold">Parent Hash:</span>
                 <span className="flex items-center">{blockData.parent_hash}</span>
               </div>
 
-              <hr className="opacity-75"></hr>
+              <hr className="opacity-75" />
 
               <div className="flex justify-between">
                 <span className="font-semibold">State Root:</span>
                 <span className="flex items-center">{blockData.state_root}</span>
               </div>
 
-              <hr className="opacity-75"></hr>
+              <hr className="opacity-75" />
 
               <div className="flex justify-between">
                 <span className="font-semibold">Extrinsics Root:</span>
                 <span className="flex items-center">{blockData.extrinsics_root}</span>
               </div>
 
-              <hr className="opacity-75"></hr>
+              <hr className="opacity-75" />
 
               <div className="flex justify-between">
                 <span className="font-semibold">Timestamp:</span>
@@ -223,13 +240,6 @@ const BlocksDetailsByBlockNumber = () => {
           {blockDataEVM.map((transaction, index) => (
             <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                {/* <div className="flex justify-between">
-                  <span className="font-semibold">Block Number:</span>
-                  <span className="flex items-center">{transaction.blockNumber}</span>
-                </div>
-
-                <hr className="opacity-75"></hr> */}
-
                 <div className="flex justify-between">
                   <span className="font-semibold">Transaction Hash:</span>
                   <span className="flex items-center">{transaction.transactionHash}</span>
@@ -274,6 +284,42 @@ const BlocksDetailsByBlockNumber = () => {
           ))}
         </div>
       )}
+
+      <div className="mt-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction List</h2>
+
+        {transactionData && transactionData.length > 0 ? (
+          transactionData.map((transaction: Transaction, index: number) => {
+            const statusInfo = getTransactionStatus(transaction.events);
+
+            return (
+              <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Transaction Hash:</span>
+                    <span className="flex items-center">
+                      <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
+                        {transaction.tx_hash}
+                      </Link>
+                      <button
+                        className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                        data-clipboard-text={transaction.tx_hash}
+                        title="Copy txhash to clipboard"
+                      >
+                        <FiClipboard />
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="bg-white shadow-md rounded-lg p-4 mb-4">
+            <p className="text-gray-600 text-center">No transaction found</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
