@@ -38,6 +38,13 @@ const main = async () => {
       console.log(`Starting from block number: ${startBlockNumber}`);
     }
 
+    // Check if the difference between the latest block number and the last processed block number is more than 2
+    // if (latestBlockNumber - startBlockNumber > 5) {
+    //   console.log('Block processing is lagging. Restarting process to resynchronize.');
+    //   await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
+    //   restartPM2();
+    // }
+
     // Process blocks in batches
     for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
       const endBlockNumber = Math.min(blockNumber + BATCH_SIZE - 1, latestBlockNumber);
@@ -170,11 +177,44 @@ const processBlock = async (api, blockNumber) => {
             [to, amount] = args;
           } else if (method === 'transferAll') {
             [to] = args; // transferAll may not have `amount` argument, adjust based on requirements
+            // `transferAll` doesn't include `amount` in args, so fetch from events below
           }
-        } else if (section === 'palletCounter') {
-          [to, amount] = method === 'mint' ? [args[0], args[1]] : [args[1], args[2]];
+        } 
+        else if (section === 'palletCounter') {
+          if (method === 'mint') {
+            [to, amount] = [args[0].toString(), args[1].toString()];
+          } 
+          
+          else if (method === 'balanceTransferNew' || method === 'TransferOfBalanceNew') {
+            // Look for a `balances.Transfer` or `balances.transfer` event to get `from`, `to`, and `amount`
+            const balanceTransferEvent = allEvents.find(
+              ({ event }) =>
+                event.section === 'balances' &&
+                (event.method === 'Transfer' || event.method === 'transfer')
+            );
+            
+            if (balanceTransferEvent && balanceTransferEvent.event.data.length >= 3) {
+              from = balanceTransferEvent.event.data[0].toString(); // Sender
+              to = balanceTransferEvent.event.data[1].toString();   // Receiver
+              amount = balanceTransferEvent.event.data[2].toString(); // Amount
+            } else {
+              from = '0';
+              to = '0';
+              amount = '0';
+            }
+          }
         }
+        
 
+        // For `transferAll`, find `amount` from `Transfer` or `Endowed` events if not in args
+        if (method === 'transferAll' && amount === '0') {
+          const transferEvent = allEvents.find(
+            ({ event }) => event.section === 'balances' && (event.method === 'Transfer' || event.method === 'Endowed')
+          );
+          if (transferEvent) {
+            amount = transferEvent.event.data[2]?.toString() || '0';
+          }
+        }
         const tip = meta.isSome ? meta.unwrap().tip.toString() : '0';
 
         // Filter events related to this extrinsic
@@ -192,7 +232,7 @@ const processBlock = async (api, blockNumber) => {
         // Find gas fee within events if applicable
         for (const { event } of extrinsicEvents) {
           if (event.section === 'balances' && event.method === 'Withdraw') {
-            gasFee = (parseFloat(event.data[1].toString()) / 1e18).toFixed(18);
+            gasFee = event.data[1].toString();
           }
         }
 
