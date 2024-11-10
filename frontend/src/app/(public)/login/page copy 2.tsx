@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from 'react';
+// import { useRouter } from 'next/router';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie'; // Import js-cookie
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,12 +26,8 @@ export default function Login() {
 
       if (response.ok) {
         const data = await response.json();
-        
-        // Save email and access_token in cookies
-        Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
-        Cookies.set('access_token', data.access_token, { expires: 7 });
-
-        // Redirect to home page
+        // Assuming the API returns a token or some form of success indicator
+        // Save token to local storage or cookies here if needed
         router.push('/');
       } else {
         const errorData = await response.json();

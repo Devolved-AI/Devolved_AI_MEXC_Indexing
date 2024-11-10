@@ -1,12 +1,19 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import HeaderLogo from '../../../public/headerLogo.jpg';
 import { FaUser } from 'react-icons/fa';
+
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
+
+import { cookies } from 'next/headers';
+
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [email, setEmail] = useState(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -17,6 +24,24 @@ const Header: React.FC = () => {
   };
 
   const [isOpen, setIsOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    // Clear cookies
+    Cookies.remove('email');
+    Cookies.remove('access_token');
+
+    // Redirect to the login page
+    router.push('/login');
+  };
+
+  useEffect(() => {
+    // Access email cookie on the client side
+    const emailCookie:any = Cookies.get('email');
+    setEmail(emailCookie);
+  }, []);
+
 
   return (
     <header className="bg-white shadow-md">
@@ -80,25 +105,26 @@ const Header: React.FC = () => {
                 aria-labelledby="dropdownAvatarNameButton"
               >
                 <div className="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                  <div className="font-medium">Pro User</div>
-                  <div className="truncate">name@flowbite.com</div>
+                  <div className="font-medium">User Email</div>
+                  <div className="truncate">{email}</div>
                 </div>
                 <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownAvatarNameButton">
                   <li>
                     <Link href="/myaccount" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dashboard</Link>
                   </li>
                   <li>
-                    <Link href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</Link>
+                    {/* <Link href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</Link> */}
                   </li>
-                  {/* <li>
-              <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Earnings</a>
-            </li> */}
+
                 </ul>
+
+
                 <div className="py-2">
-                  <Link href="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                  <samp onClick={handleSignOut} className="block px-4 py-2 cursor-pointer text-sm font-semibold text-gray-700 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
                     Sign out
-                  </Link>
+                  </samp>
                 </div>
+
               </div>
             )}
           </div>
@@ -154,14 +180,14 @@ const Header: React.FC = () => {
                   <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dashboard</a>
                 </li>
                 <li>
-                  <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a>
+                  {/* <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</a> */}
                 </li>
                 {/* <li>
               <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Earnings</a>
             </li> */}
               </ul>
               <div className="py-2">
-                
+
                 <Link href="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
                   Sign out
                 </Link>
