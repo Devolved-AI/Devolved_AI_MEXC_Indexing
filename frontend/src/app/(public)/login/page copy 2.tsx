@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie'; // Import js-cookie
+import Cookies from 'js-cookie';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,20 +16,26 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await fetch('https://test-scanner.devolvedai.com/backend/auth/login', {
-        method: 'POST',
+      // Define the confirmation token
+      const router = useRouter();
+      const { searchParams } = new URL(window.location.href);
+      const confirmationToken = searchParams.get('confirmation_token');
+      // const confirmationToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im51ckBkZXZvbHZlZGFpLmNvbSIsInZlcmlmaWVkIjp0cnVlLCJpYXQiOjE3MzEzMTcwMzgsImV4cCI6MTczMTQwMzQzOH0.IrxvPoXWhPG19H9LtOSodgOBfcvvdAn0ZX8Rv4DmxF4';
+
+      // Use the confirmation token in the URL
+      const response = await fetch(`https://test-scanner.devolvedai.com/login?confirmation_token=${confirmationToken}`, {
+        method: 'GET', // Assuming it's a GET request
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        }
       });
 
       if (response.ok) {
         const data = await response.json();
         
-        // Save email and access_token in cookies
-        Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
-        Cookies.set('access_token', data.data.token, { expires: 7 });
+        // Save email and access_token in cookies if data is returned successfully
+        Cookies.set('email', email, { expires: 7 }); // Assuming email can still be saved from input
+        Cookies.set('access_token', data.access_token, { expires: 7 });
 
         // Redirect to home page
         router.push('/myaccount');
