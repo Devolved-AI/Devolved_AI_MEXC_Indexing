@@ -22,9 +22,9 @@ export default function Register() {
       setError("Passwords do not match");
       return;
     }
-
+    // https://test-scanner.devolvedai.com/backend/auth/register
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/register', {
+      const response = await fetch('https://test-scanner.devolvedai.com/backend/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,7 +40,8 @@ export default function Register() {
         // Cookies.set('access_token', data.token, { expires: 7 });
 
         // Redirect to the home page
-        router.push('/login');
+        // router.push('/login');
+        console.log(data)
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Registration failed');
