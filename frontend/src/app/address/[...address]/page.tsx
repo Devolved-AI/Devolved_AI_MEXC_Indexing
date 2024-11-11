@@ -5,47 +5,42 @@ import ClipboardJS from 'clipboard';
 import { FiClipboard } from 'react-icons/fi';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import dynamic from 'next/dynamic'; // Import dynamic for client-side rendering
-const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
-  ssr: false,
-});
+import dynamic from 'next/dynamic';
+const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), { ssr: false });
 import LoadinJson from '../../../../public/block.json';
 
 interface Transaction {
   tx_hash: string;
-  block_number: string;
-  timestamp: string;
   from_address: string;
   to_address: string;
   amount: string;
   gas_fee: string;
   method: string;
-  methodName?: string; // Add methodName property
+  methodName?: string;
 }
 
+interface Block {
+  block_number: string;
+  timestamp: string;
+  transactions: Transaction[];
+}
+
+const ITEMS_PER_PAGE = 20;
+
 const TransactionDetailsByAddress = () => {
-  const [transactionData, setTransactionData] = useState<Transaction[] | null>(null);
+  const [transactionData, setTransactionData] = useState<Block[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [balance, setBalance] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const pathname = usePathname();
   const address = pathname?.split('/').pop();
 
   useEffect(() => {
-    // Initialize ClipboardJS
     const clipboard = new ClipboardJS('.copy-btn');
-    
-    clipboard.on('success', function(e) {
-      console.log(e);
-    });
-    
-    clipboard.on('error', function(e) {
-      console.log(e);
-    });
-
-    return () => {
-      clipboard.destroy();
-    };
+    clipboard.on('success', e => console.log(e));
+    clipboard.on('error', e => console.log(e));
+    return () => clipboard.destroy();
   }, []);
 
   useEffect(() => {
@@ -60,20 +55,20 @@ const TransactionDetailsByAddress = () => {
       setLoading(true);
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getTransactionDetailsByAddress', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address }),
       });
 
       const data = await response.json();
       if (data.success) {
-        // Extract method name for each transaction
-        const transactionsWithMethodName = data.transactions.map((transaction: Transaction) => ({
-          ...transaction,
-          methodName: transaction.method.split('.').pop() || '', // Extract method name after dot
+        const blocksWithMethodName = data.blocks.map((block: Block) => ({
+          ...block,
+          transactions: block.transactions.map(transaction => ({
+            ...transaction,
+            methodName: transaction.method.split('.').pop() || '',
+          })),
         }));
-        setTransactionData(transactionsWithMethodName);
+        setTransactionData(blocksWithMethodName.reverse());
         setError(null);
       } else {
         setTransactionData(null);
@@ -91,34 +86,23 @@ const TransactionDetailsByAddress = () => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/transaction/getBalance', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address }),
       });
-
       const data = await response.json();
-      if (data.success) {
-        setBalance(data.balance);
-        setError(null);
-      } else {
-        setBalance('Balance not found');
-      }
+      setBalance(data.success ? data.balance : 'Balance not found');
     } catch (err) {
       setBalance('Balance not found');
       setError('Balance not found or an error occurred.');
     }
   };
 
-  const convertTo18Precision = (amount: string) => {
-    // Check if the value has 18 decimal places; if not, convert it
-    if (!/^\d+\.\d{18}$/.test(amount)) {
-      return (parseFloat(amount) / 1e18).toFixed(18);
-    }
-    return amount;
+  const convertToFixedPrecision = (amount: string, decimals = 4) => {
+    const formattedAmount = parseFloat(amount) / 1e18;
+    return isNaN(formattedAmount) ? '0.0000' : formattedAmount.toFixed(decimals);
   };
 
-  const formatTimestamp = (timestamp: any) => {
+  const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return new Intl.DateTimeFormat('en-GB', {
       year: 'numeric',
@@ -131,26 +115,37 @@ const TransactionDetailsByAddress = () => {
     }).format(date);
   };
 
+  const paginateData = () => {
+    if (!transactionData) return [];
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return transactionData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  };
+
+  const handleNextPage = () => {
+    if (transactionData && currentPage * ITEMS_PER_PAGE < transactionData.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow">
+      <div className="p-4 bg-white text-gray-700 shadow rounded-md">
         <div className="flex justify-center items-center h-64">
-          <div className="loader">
-            <Player
-              autoplay
-              loop
-              src={LoadinJson}
-              style={{ height: '150px', width: '150px' }}
-            />
-          </div>
+          <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
         </div>
       </div>
     );
   }
 
-  if ((!balance && !transactionData ) || error) {
+  if ((!balance && !transactionData) || error) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow text-center">
+      <div className="p-4 bg-white text-gray-700 shadow rounded-md text-center">
         <h1 className="text-4xl font-bold text-red-500">404</h1>
         <p className="mt-2 text-gray-600">The balance and transaction details for the specified address were not found.</p>
         <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
@@ -163,81 +158,104 @@ const TransactionDetailsByAddress = () => {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (
-        <div className="text-center mb-4">
-          <h4 className="text-md sm:text-md font-medium mb-4">{balance !== 'Balance not found' ? `Balance: ${convertTo18Precision(balance)} AGC` : 'Balance not found'}</h4>
+        <div className="text-center mb-6">
+          <h4 className="text-lg sm:text-lg font-semibold mb-4 text-gray-700">
+            {balance !== 'Balance not found' ? `Balance: ${convertToFixedPrecision(balance)} AGC` : 'Balance not found'}
+          </h4>
         </div>
       )}
 
       {transactionData ? (
-        <div className="mt-6">
-          <div className="bg-white shadow-md rounded-lg p-4">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block Number</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From Address</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To Address</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Fee</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {transactionData.map((transaction: Transaction, index: number) => (
-                    <tr key={index}>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-sm text-gray-500">
-                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
-                          data-clipboard-text={transaction.tx_hash}
-                          title="Copy txhash to clipboard">
-                          <FiClipboard />
-                        </button>
-                        <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
-                          {transaction.tx_hash.slice(0, 10) + '...' + transaction.tx_hash.slice(-5)}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.methodName}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
-                          data-clipboard-text={transaction.block_number}
-                          title="Copy block number to clipboard">
-                          <FiClipboard />
-                        </button>
-                        <Link href={`/block/${transaction.block_number}`} className="hover:underline">
-                          {transaction.block_number}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(transaction.timestamp)}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
-                          data-clipboard-text={transaction.from_address}
-                          title="Copy from address to clipboard">
-                          <FiClipboard />
-                        </button>
-                        <Link href={`/address/${transaction.from_address}`} className="hover:underline">
-                          {transaction.from_address.slice(0, 10) + '...' + transaction.from_address.slice(-5)}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button className="mr-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded" 
-                          data-clipboard-text={transaction.to_address}
-                          title="Copy to address to clipboard">
-                          <FiClipboard />
-                        </button>
-                        <Link href={`/address/${transaction.to_address}`} className="hover:underline">
-                          {transaction.to_address.slice(0, 10) + '...' + transaction.to_address.slice(-5)}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{convertTo18Precision(transaction.amount)} AGC</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{convertTo18Precision(transaction.gas_fee)} AGC</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="space-y-6">
+          {paginateData().map((block, blockIndex) => (
+            <div key={blockIndex} className="bg-white shadow-md rounded-lg p-6">
+              <div className="mb-4 border-b pb-4">
+                <h5 className="text-lg font-semibold text-gray-800">Block #{block.block_number}</h5>
+                <p className="text-gray-500">{formatTimestamp(block.timestamp)}</p>
+              </div>
+
+              {block.transactions.map((transaction, txIndex) => (
+                <div
+                  key={txIndex}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-b last:border-b-0"
+                >
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">Transaction</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
+                        data-clipboard-text={transaction.tx_hash}
+                        title="Copy txhash to clipboard"
+                      >
+                        <FiClipboard />
+                      </button>
+                      <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline text-pink-600">
+                        {transaction.tx_hash.slice(0, 10)}...{transaction.tx_hash.slice(-5)}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">Method</span>
+                    <p className="text-gray-700">{transaction.methodName}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">From</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
+                        data-clipboard-text={transaction.from_address}
+                        title="Copy from address to clipboard"
+                      >
+                        <FiClipboard />
+                      </button>
+                      <Link href={`/address/${transaction.from_address}`} className="hover:underline text-pink-600">
+                        {transaction.from_address.slice(0, 10)}...{transaction.from_address.slice(-5)}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">To</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
+                        data-clipboard-text={transaction.to_address}
+                        title="Copy to address to clipboard"
+                      >
+                        <FiClipboard />
+                      </button>
+                      <Link href={`/address/${transaction.to_address}`} className="hover:underline text-pink-600">
+                        {transaction.to_address.slice(0, 10)}...{transaction.to_address.slice(-5)}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">Amount</span>
+                    <p className="text-gray-700">{convertToFixedPrecision(transaction.amount)} AGC</p>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">Gas Fee</span>
+                    <p className="text-gray-700">{convertToFixedPrecision(transaction.gas_fee)} AGC</p>
+                  </div>
+                </div>
+              ))}
             </div>
+          ))}
+          <div className="flex justify-between items-center p-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="bg-pink-500 text-white px-4 py-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700">Page {currentPage}</span>
+            <button
+              onClick={handleNextPage}
+              disabled={transactionData && currentPage * ITEMS_PER_PAGE >= transactionData.length}
+              className="bg-pink-500 text-white px-4 py-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         </div>
       ) : (

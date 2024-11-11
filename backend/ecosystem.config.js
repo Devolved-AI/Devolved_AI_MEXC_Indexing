@@ -3,7 +3,7 @@ module.exports = {
       {
         name: 'argochain-scanner-backend-fetchdata',
         script: 'fetchChainData.js',
-        node_args: '--max-old-space-size=2048',
+        node_args: '--max-old-space-size=8192',
         watch: false,
         autorestart: true,
         restart_delay: 5000,

@@ -40,7 +40,7 @@ interface Transaction {
   amount: string;
   gas_fee: string;
   method: string;
-  events: string[];
+  events: string;
 }
 
 const BlocksDetailsByBlockNumber = () => {
@@ -84,7 +84,7 @@ const BlocksDetailsByBlockNumber = () => {
       });
 
       const data = await response.json();
-      // console.log(data);
+      console.log(data);
 
       if (data.success) {
         setBlockData(data.block);
@@ -145,19 +145,27 @@ const BlocksDetailsByBlockNumber = () => {
     }).format(date);
   };
 
-  const getTransactionStatus = (events: any[] | undefined) => {
+  const getTransactionStatus = (events: string | undefined) => {
     if (!events) return { status: 'Unknown' };
-
-    const failedEvent = events.find(event => event === 'ExtrinsicFailed');
+  
+    let parsedEvents;
+    try {
+      parsedEvents = JSON.parse(events);
+    } catch (error) {
+      console.error("Failed to parse events:", error);
+      return { status: 'Unknown' };
+    }
+  
+    const failedEvent = parsedEvents.find((event: any) => event.method === 'ExtrinsicFailed');
     if (failedEvent) {
       return { status: 'Failed', reason: 'FundsUnavailable' };
     }
-
-    const successEvent = events.find(event => event === 'Transfer');
+  
+    const successEvent = parsedEvents.find((event: any) => event.method === 'Transfer');
     if (successEvent) {
       return { status: 'Success' };
     }
-
+  
     return { status: 'Unknown' };
   };
   
