@@ -175,12 +175,39 @@ const TransactionDetails = () => {
     }
   };
 
-  const convertTo18Precision = (amount: string) => {
-    // Check if the value has 18 decimal places; if not, convert it
-    if (!/^\d+\.\d{18}$/.test(amount)) {
-      return (parseFloat(amount) / 1e18).toFixed(18);
+  // const convertTo18Precision = (amount: string) => {
+  //   // Check if the value has 18 decimal places; if not, convert it
+  //   if (!/^\d+\.\d{18}$/.test(amount)) {
+  //     return (parseFloat(amount) / 1e18).toFixed(18);
+  //   }
+  //   return amount;
+  // };
+
+  // const convertTo18Precision = (amount: string, decimals = 18) => {
+  //   const formattedAmount = parseFloat(amount) / 1e18;
+  //   return isNaN(formattedAmount) ? '0.0000' : formattedAmount.toFixed(decimals);
+  // };
+
+  const convertTo18Precision = (amount: string, decimals = 18) => {
+    try {
+      const balanceBigInt = BigInt(amount); // Convert amount to BigInt
+      const divisor = BigInt(1e18);
+      const integerPart = balanceBigInt / divisor;
+      const fractionalPart = balanceBigInt % divisor;
+
+      // Calculate fractional part as a string with necessary precision
+      let fractionalStr = fractionalPart.toString().padStart(18, '0').slice(0, decimals);
+
+      // Check if the fractional part is all zeros
+      if (parseInt(fractionalStr) === 0) {
+          return integerPart.toString(); // Return integer part only
+      } else {
+          return `${integerPart}.${fractionalStr}`; // Return with fractional part
+      }
+    } catch (error) {
+        console.error("Invalid input for conversion:", error);
+        return '0.0'; // Default value if input is invalid
     }
-    return amount;
   };
 
   // Function to determine the transaction status
