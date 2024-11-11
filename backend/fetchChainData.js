@@ -15,8 +15,8 @@ const pool = new Pool({
   port: process.env.POSTGRES_PORT
 });
 
-const RETRY_LIMIT = 5; // Number of retries for block processing
-const RETRY_DELAY = 5000; // Delay between retries (in milliseconds)
+const RETRY_LIMIT = 3; // Number of retries for block processing
+const RETRY_DELAY = 3000; // Delay between retries (in milliseconds)
 const BATCH_SIZE = parseInt(process.env.FETCHING_BATCH_SIZE || '10', 10);; // Number of blocks to process in a batch
 const RESTART_DELAY = 3000;
 
@@ -37,13 +37,6 @@ const main = async () => {
       startBlockNumber = parseInt(fs.readFileSync('lastProcessedBlock.txt', 'utf8'), 10) + 1;
       console.log(`Starting from block number: ${startBlockNumber}`);
     }
-
-    // Check if the difference between the latest block number and the last processed block number is more than 2
-    // if (latestBlockNumber - startBlockNumber > 5) {
-    //   console.log('Block processing is lagging. Restarting process to resynchronize.');
-    //   await delay(RESTART_DELAY); // Wait for 5 seconds before restarting
-    //   restartPM2();
-    // }
 
     // Process blocks in batches
     for (let blockNumber = startBlockNumber; blockNumber <= latestBlockNumber; blockNumber += BATCH_SIZE) {
@@ -180,30 +173,75 @@ const processBlock = async (api, blockNumber) => {
             // `transferAll` doesn't include `amount` in args, so fetch from events below
           }
         } 
+
+        // else if (section === 'palletCounter') {
+        //   if (method === 'mint') {
+        //     [to, amount] = [args[0].toString(), args[1].toString()];
+        //   } 
+          
+        //   else if (method === 'balanceTransferNew' || method === 'TransferOfBalanceNew') {
+        //     // Look for a `balances.Transfer` or `balances.transfer` event to get `from`, `to`, and `amount`
+        //     const balanceTransferEvent = allEvents.find(
+        //       ({ event }) =>
+        //         event.section === 'balances' &&
+        //         (event.method === 'Transfer' || event.method === 'transfer')
+        //     );
+            
+        //     if (balanceTransferEvent && balanceTransferEvent.event.data.length >= 3) {
+        //       from = balanceTransferEvent.event.data[0].toString(); // Sender
+        //       to = balanceTransferEvent.event.data[1].toString();   // Receiver
+        //       amount = balanceTransferEvent.event.data[2].toString(); // Amount
+        //     } else {
+        //       from = '0';
+        //       to = '0';
+        //       amount = '0';
+        //     }
+        //   }
+        // }
+
         else if (section === 'palletCounter') {
           if (method === 'mint') {
-            [to, amount] = [args[0].toString(), args[1].toString()];
+              [to, amount] = [args[0].toString(), args[1].toString()];
           } 
-          
           else if (method === 'balanceTransferNew' || method === 'TransferOfBalanceNew') {
-            // Look for a `balances.Transfer` or `balances.transfer` event to get `from`, `to`, and `amount`
-            const balanceTransferEvent = allEvents.find(
-              ({ event }) =>
-                event.section === 'balances' &&
-                (event.method === 'Transfer' || event.method === 'transfer')
-            );
-            
-            if (balanceTransferEvent && balanceTransferEvent.event.data.length >= 3) {
-              from = balanceTransferEvent.event.data[0].toString(); // Sender
-              to = balanceTransferEvent.event.data[1].toString();   // Receiver
-              amount = balanceTransferEvent.event.data[2].toString(); // Amount
-            } else {
+              // Define initial default values for `from`, `to`, and `amount`
               from = '0';
               to = '0';
               amount = '0';
-            }
+      
+              // Look for `Withdraw` and `Deposit` events to find `from`, `to`, and `amount`
+              const withdrawEvent = allEvents.find(
+                  ({ event }) => event.section === 'balances' && event.method === 'Withdraw'
+              );
+              const depositEvent = allEvents.find(
+                  ({ event }) => event.section === 'balances' && event.method === 'Deposit'
+              );
+      
+              // If a `Withdraw` event is found, set `from` based on the event data
+              if (withdrawEvent && withdrawEvent.event.data.length >= 2) {
+                  from = withdrawEvent.event.data[0].toString(); // Sender
+              }
+      
+              // If a `Deposit` event is found, set `to` and `amount` based on the event data
+              if (depositEvent && depositEvent.event.data.length >= 2) {
+                  to = depositEvent.event.data[0].toString();     // Receiver
+                  amount = depositEvent.event.data[1].toString();  // Amount
+              }
+              
+              // Check for `TransferOfBalanceNew` to handle Case 2, if it exists
+              const transferEvent = allEvents.find(
+                  ({ event }) => event.section === 'palletCounter' && 
+                                 (event.method === 'TransferOfBalanceNew' || event.method === 'balanceTransferNew')
+              );
+      
+              // Use the `TransferOfBalanceNew` event data if available and relevant
+              if (transferEvent && transferEvent.event.data.length >= 3) {
+                  from = transferEvent.event.data[0].toString() || from;
+                  to = transferEvent.event.data[1].toString() || to;
+                  amount = transferEvent.event.data[2].toString() || amount;
+              }
           }
-        }
+      }      
         
 
         // For `transferAll`, find `amount` from `Transfer` or `Endowed` events if not in args
@@ -236,19 +274,19 @@ const processBlock = async (api, blockNumber) => {
           }
         }
 
-        // Accumulate transaction data
-        transactionInsertData.push([
-          hash.toHex(),
-          blockNum,
-          from,
-          to.toString(),
-          amount.toString(),
-          tip,
-          gasFee,
-          '0', // Assuming gas_value as '0' for now
-          extrinsicMethod,
-          JSON.stringify(events), // Events stored in JSON format
-        ]);
+        // Accumulate transaction data in the `transactions` array
+        transactions.push({
+          hash: hash.toHex(),
+          block_number: blockNum,
+          from_address: from,
+          to_address: to.toString(),
+          amount: amount.toString(),
+          fee: tip,
+          gas_fee: gasFee,
+          gas_value: '0', // Assuming gas_value as '0' for now
+          method: extrinsicMethod,
+          events: JSON.stringify(events), // Events stored in JSON format
+        });
 
         // Update account balances if necessary
         await updateAccountBalance(api, from);
@@ -257,20 +295,20 @@ const processBlock = async (api, blockNumber) => {
     }
 
     // Accumulate transaction data for insertion
-    // for (const transaction of transactions) {
-    //   transactionInsertData.push([
-    //     transaction.hash,
-    //     transaction.block_number,
-    //     transaction.from_address,
-    //     transaction.to_address,
-    //     transaction.amount,
-    //     transaction.fee,
-    //     transaction.gas_fee,
-    //     transaction.gas_value,
-    //     transaction.method,
-    //     JSON.stringify(transaction.events),
-    //   ]);
-    // }
+    for (const transaction of transactions) {
+      transactionInsertData.push([
+        transaction.hash,
+        transaction.block_number,
+        transaction.from_address,
+        transaction.to_address,
+        transaction.amount,
+        transaction.fee,
+        transaction.gas_fee,
+        transaction.gas_value,
+        transaction.method,
+        JSON.stringify(transaction.events),
+      ]);
+    }
 
     // Accumulate event data
     for (const { event, phase } of allEvents) {
