@@ -7,33 +7,27 @@ const rateLimit = require( 'express-rate-limit' );
 const helmet = require( 'helmet' );
 const cors = require( 'cors' );
 const hpp = require( 'hpp' );
-const { createLogger, transports, format } = require( 'winston' );
+const bodyParser = require('body-parser');
+const connectDB = require('@config/mongoDB');
 
 // Routes
 const healthCheckRoute = require( '@routes/healthCheck.route' );
+const authRoute = require('@routes/auth.route');
 const blockRoute = require( '@routes/block.route' );
 const transactionRoute = require( '@routes/transaction.route' );
 const transactionMessageRoute = require( '@routes/transactionMessage.route' );
+const contractRoutes = require( '@routes/contract.route' );
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
-
-// Logger setup
-const logger = createLogger( {
-    level: 'info',
-    format: format.combine(
-        format.timestamp(),
-        format.json()
-    ),
-    transports: [
-        new transports.File( { filename: 'error.log', level: 'error' } ),
-        new transports.File( { filename: 'combined.log' } ),
-    ],
-} );
 
 // @ts-ignore
 app.use( helmet() );
 app.use( compression() );
 app.use( express.json( { limit: '4mb' } ) );
+app.use(bodyParser.json());
 app.use( express.urlencoded( { extended: true, limit: '4mb' } ) );
 app.use( cors() );
 // @ts-ignore
@@ -48,9 +42,12 @@ app.use( rateLimit( {
 } ) );
 
 app.use( '/healthCheck', healthCheckRoute );
+// Auth routes
+app.use('/auth', authRoute);
 app.use( '/block', blockRoute );
 app.use( '/transaction', transactionRoute );
 app.use( '/transactionMessage', transactionMessageRoute );
+app.use( '/contract', contractRoutes );
 
 const PORT = process.env.PORT || 4000;
 app.listen( PORT, () => {

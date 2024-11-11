@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Confirmation Instructions</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Raleway', sans-serif; background-color: #ecf0f1; color: #000;">
+
+  <table width="100%" bgcolor="#ecf0f1" cellpadding="0" cellspacing="0" style="margin: 0; padding: 0; width: 100%;">
+    <tr>
+      <td align="center">
+        
+        <!-- Container Table -->
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; margin: 0 auto;">
+          <tr>
+            <td align="center" style="padding: 40px 0;">
+              
+              <!-- Logo -->
+              <a href="{{webAppUrl}}" target="_blank">
+                <img src="{{logo}}" alt="Logo" width="150" style="display: block; max-width: 100%; margin: 0 auto;">
+              </a>
+            </td>
+          </tr>
+
+          <!-- Content Section -->
+          <tr>
+            <td align="center" style="padding: 20px 40px;">
+              <h1 style="font-size: 24px; color: #333333; margin: 0 0 20px;">Welcome To Argochain Scanner!</h1>
+              <p style="font-size: 16px; color: #666666; line-height: 1.5;">Hello {{userEmail}},</p>
+              <p style="font-size: 16px; color: #666666; line-height: 1.5;">Thank you for signing up with Argochain Scanner! To get started, click the link below to confirm your account.</p>
+              
+              <!-- Confirmation Button -->
+              <table cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{confirmationLink}}" target="_blank" style="background-color: #f35900; color: #ffffff; padding: 10px 20px; border-radius: 4px; font-size: 16px; text-decoration: none; display: inline-block;">Confirm My Account</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 16px; color: #666666; line-height: 1.5;">If you have trouble accessing the link above, you may also copy and paste the URL into your browser</p>
+              <!-- <p style="font-size: 16px; color: #0066cc; line-height: 1.5; word-wrap: break-word;"><a href="{{confirmationLink}}" target="_blank" style="color: #0066cc; text-decoration: underline;">{{confirmationLink}}</a></p> -->
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td align="center" style="padding: 20px 0;">
+              <hr style="border: none; border-top: 1px solid #bbb; width: 80%; margin: 0 auto;">
+            </td>
+          </tr>
+
+          <!-- Social Icons -->
+          <!-- <tr>
+            <td align="center" style="padding: 10px;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="{{facebook}}" target="_blank" style="margin: 0 10px;"><img src="{{facebook}}" alt="Facebook" width="32" style="display: inline-block;"></a>
+                    <a href="{{twitter}}" target="_blank" style="margin: 0 10px;"><img src="{{twitter}}" alt="Twitter" width="32" style="display: inline-block;"></a>
+                    <a href="{{linkedin}}" target="_blank" style="margin: 0 10px;"><img src="{{linkedin}}" alt="LinkedIn" width="32" style="display: inline-block;"></a>
+                    <a href="{{reddit}}" target="_blank" style="margin: 0 10px;"><img src="{{reddit}}" alt="Reddit" width="32" style="display: inline-block;"></a>
+                    <a href="{{discord}}" target="_blank" style="margin: 0 10px;"><img src="{{discord}}" alt="Discord" width="32" style="display: inline-block;"></a>
+                    <a href="{{telegram}}" target="_blank" style="margin: 0 10px;"><img src="{{telegram}}" alt="Telegram" width="32" style="display: inline-block;"></a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr> -->
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 20px; font-size: 14px; color: #999999;">
+              <!-- <p>You have received this email as a registered user of <a href="{{webAppUrl}}" target="_blank" style="color: #0066cc; text-decoration: underline;">{{webAppUrl}}</a></p> -->
+              <p>© {{currentYear}} Devolved AI. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

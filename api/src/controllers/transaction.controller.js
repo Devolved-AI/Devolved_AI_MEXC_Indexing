@@ -27,6 +27,8 @@ const getLast10Transactions = async (req, res) => {
         tx.amount,
         tx.fee,
         tx.gas_fee,
+        tx.method,
+        tx.events,
         b.timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
@@ -122,7 +124,7 @@ const getTransactionDetailsByAddress = async (req, res) => {
       });
     }
 
-    // SQL query to retrieve transactions where the given address is either from_address or to_address
+    // SQL query to retrieve all transaction details for the given address
     const result = await query(
       `SELECT 
         tx.tx_hash, 
@@ -138,7 +140,8 @@ const getTransactionDetailsByAddress = async (req, res) => {
         b.timestamp  -- Include block timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
-      WHERE tx.from_address = $1 OR tx.to_address = $1`,
+      WHERE tx.from_address = $1 OR tx.to_address = $1
+      ORDER BY tx.block_number`,
       [address]
     );
 
@@ -150,14 +153,25 @@ const getTransactionDetailsByAddress = async (req, res) => {
       });
     }
 
-    // Return the matched transactions, including the block timestamp
+    // Organize the transactions by block number
+    const transactionsByBlock = result.rows.reduce((acc, row) => {
+      const { block_number, timestamp, ...transactionDetails } = row;
+      if (!acc[block_number]) {
+        acc[block_number] = {
+          block_number,
+          timestamp,
+          transactions: [],
+        };
+      }
+      acc[block_number].transactions.push(transactionDetails);
+      return acc;
+    }, {});
+
+    // Return the organized transactions grouped by block number
     return res.status(200).json({
       success: true,
-      message: `Transactions retrieved for address ${address}.`,
-      transactions: result.rows.map(row => ({
-        ...row,
-        timestamp: row.timestamp, // Include timestamp in the response
-      })),
+      message: `Transactions grouped by block number retrieved for address ${address}.`,
+      blocks: Object.values(transactionsByBlock),
     });
 
   } catch (error) {
@@ -169,6 +183,7 @@ const getTransactionDetailsByAddress = async (req, res) => {
     });
   }
 };
+
 
 // Function to get the account balance from Redis or from the blockchain
 const getBalance = async ( req, res ) => {
@@ -417,4 +432,3 @@ module.exports = {
   fetchTransactionData,
   transactionDetailsEVM
 };
-
