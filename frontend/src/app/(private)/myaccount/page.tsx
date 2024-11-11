@@ -1,9 +1,31 @@
 "use client"
 
 import Link from 'next/link';
-import React from 'react';
+// import React from 'react';
+import React, { useState, useEffect } from "react";
+import Cookies from 'js-cookie';
 
 const MyAccount: React.FC = () => {
+  const [contractAddress, setContractAddress] = useState("");
+  const [email, setEmail] = useState(null);
+   // Load data from local storage on component mount
+   useEffect(() => {
+    const storedContractAddress = localStorage.getItem('contractAddress');
+
+    if (storedContractAddress) setContractAddress(storedContractAddress);
+  }, []);
+
+
+  useEffect(() => {
+    // Access email cookie on the client side
+    const emailCookie:any = Cookies.get('email');
+    setEmail(emailCookie);
+  }, []);
+
+  
+
+  console.log(contractAddress)
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 md:px-16 lg:px-32">
       {/* Back to Home Link */}
@@ -35,9 +57,10 @@ const MyAccount: React.FC = () => {
 
             <h2 className="text-lg font-semibold text-gray-700 mt-6">Others</h2>
             <ul className="space-y-3 mt-3">
-              <li><Link href="#" className="text-blue-600 hover:underline">API Keys</Link></li>
+              {/* <li><Link href="#" className="text-blue-600 hover:underline">API Keys</Link></li> */}
               <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verified Addresses</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Custom ABIs</Link></li>
+              {/* Argocoin: AGC Token */}
+              <li><Link href={`/contract-address/${contractAddress}`} className="text-blue-600 hover:underline">Argocoin: AGC Token</Link></li>
             </ul>
           </aside>
 
@@ -50,11 +73,11 @@ const MyAccount: React.FC = () => {
               <div className="mt-4 space-y-4">
                 <div>
                   <p className="font-medium text-gray-800">Your Username:</p>
-                  <p className="text-gray-600">nurdev</p>
+                  <p className="text-gray-600"></p>
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">Your Email Address:</p>
-                  <p className="text-gray-600">nur@devolvedai.com</p>
+                  <p className="text-gray-600">{email}</p>
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">Last Login:</p>
@@ -64,7 +87,7 @@ const MyAccount: React.FC = () => {
             </div>
 
             {/* Overview Usage */}
-            <div className="bg-gray-50 border rounded-lg p-6">
+            {/* <div className="bg-gray-50 border rounded-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview Usage</h2>
               <p className="text-gray-700 mb-4">Usage of account features such as address watch list, address name tags, and API keys.</p>
 
@@ -98,7 +121,8 @@ const MyAccount: React.FC = () => {
                   <span className="text-gray-600">0 verified addresses / Unlimited</span>
                 </div>
               </div>
-            </div>
+            </div> */}
+
           </section>
         </div>
       </div>

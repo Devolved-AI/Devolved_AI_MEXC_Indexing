@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AddressDetails: React.FC = () => {
   // State to manage active section
   const [activeSection, setActiveSection] = useState("transactions");
-
+  const [contractAddress, setContractAddress] = useState("");
   const [activeTab, setActiveTab] = useState("code");
+
+
+  // Load data from local storage on component mount
+  useEffect(() => {
+    const storedContractAddress = localStorage.getItem('contractAddress');
+
+    if (storedContractAddress) setContractAddress(storedContractAddress);
+  }, []);
+
+  console.log(contractAddress)
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
@@ -15,20 +25,20 @@ const AddressDetails: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Contract</h1>
           <p className="text-blue-500 text-lg font-mono break-all mt-2">
-            0x42da36204446083385e59cF8B34B36a3D872731F
+            {contractAddress}
           </p>
         </div>
 
         {/* Information Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Overview Card */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+       
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Overview</h2>
             <p className="mt-4 text-gray-600 dark:text-gray-400">DEV Balance</p>
             <p className="text-2xl font-bold text-gray-800 dark:text-white">0 DEV</p>
           </div>
 
-          {/* More Info Card */}
+         
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">More Info</h2>
             <p className="mt-4 text-gray-600 dark:text-gray-400">Contract Creator</p>
@@ -37,12 +47,12 @@ const AddressDetails: React.FC = () => {
             <p className="text-blue-500 font-mono break-all">0x66c6c54113844b69a7c4a6888f937a76a76ccc314a06b054524d6951cd2419d2</p>
           </div>
 
-          {/* Multichain Info Card */}
+       
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Multichain Info</h2>
             <p className="mt-4 text-gray-600 dark:text-gray-400">N/A</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Section Tabs */}
         <div className="flex space-x-6 mb-4">

@@ -1,9 +1,13 @@
 "use client"
 
+// import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 
 const VerifyContract: React.FC = () => {
+  const router = useRouter(); // Initialize useRouter for navigation
+
   const [contractAddress, setContractAddress] = useState('');
   const [compilerType, setCompilerType] = useState('');
   const [compilerVersion, setCompilerVersion] = useState('');
@@ -11,14 +15,13 @@ const VerifyContract: React.FC = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleContinue = () => {
-    // Implement continue logic, e.g., validation or API call
-    console.log('Continuing with:', {
-      contractAddress,
-      compilerType,
-      compilerVersion,
-      licenseType,
-      agreedToTerms,
-    });
+    // Save data to local storage
+    localStorage.setItem('contractAddress', contractAddress);
+    localStorage.setItem('compilerVersion', compilerVersion);
+    localStorage.setItem('licenseType', licenseType);
+
+    // Redirect to the specified page
+    router.push('/verifyContract-solc-multiple');
   };
 
   const handleReset = () => {
@@ -59,24 +62,6 @@ const VerifyContract: React.FC = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
             required
           />
-
-          {/* Compiler Type Dropdown */}
-          <label htmlFor="compilerType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Please select Compiler Type
-          </label>
-          <select
-            id="compilerType"
-            value={compilerType}
-            onChange={(e) => setCompilerType(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
-          >
-            <option value="">Please Select</option>
-            <option value="Solidity (Single file)">Solidity (Single file)</option>
-            <option value="Solidity (Multi-Part files)">Solidity (Multi-Part files)</option>
-            <option value="Solidity (Standard-Json-Input)">Solidity (Standard-Json-Input)</option>
-            <option value="Vyper (Single file)">Vyper (Single file)</option>
-            <option value="Vyper-Json (Experimental)">Vyper-Json (Experimental)</option>
-          </select>
 
           {/* Compiler Version Dropdown */}
           <label htmlFor="compilerVersion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -172,6 +157,7 @@ const VerifyContract: React.FC = () => {
             <option value="v0.4.13+commit.0fb4cb1a">v0.4.13+commit.0fb4cb1a</option>
             <option value="v0.4.12+commit.194ff033">v0.4.12+commit.194ff033</option>
             <option value="v0.4.11+commit.68ef5810">v0.4.11+commit.68ef5810</option>
+            {/* Add other compiler options here */}
           </select>
 
           {/* License Type Dropdown */}
@@ -199,6 +185,7 @@ const VerifyContract: React.FC = () => {
             <option value="12">12) Apache 2.0 (Apache-2.0)</option>
             <option value="13">13) GNU Affero General Public License (GNU AGPLv3)</option>
             <option value="14">14) Business Source License (BSL 1.1)</option>
+            {/* Add other license options here */}
           </select>
 
           {/* Terms Checkbox */}
@@ -224,21 +211,13 @@ const VerifyContract: React.FC = () => {
             >
               Reset
             </button>
-            {/* <button
-              type="button"
-              onClick={handleContinue}
-              disabled={!agreedToTerms || !contractAddress}
-              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              Continue
-            </button> */}
             <button
               type="button"
               onClick={handleContinue}
               disabled={!agreedToTerms || !contractAddress}
               className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              <Link href="/verifyContract-solc-multiple">Continue</Link>
+              Continue
             </button>
           </div>
         </form>

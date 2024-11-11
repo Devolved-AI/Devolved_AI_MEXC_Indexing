@@ -1,7 +1,8 @@
 "use client"
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const VerifyContractSolcMultiple: React.FC = () => {
     const [contractFiles, setContractFiles] = useState<FileList | null>(null);
@@ -13,6 +14,13 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [libraries, setLibraries] = useState<{ name: string; address: string }[]>([]);
     const [optimization, setOptimization] = useState(false);
     const [message, setMessage] = useState("");
+
+    const [contractAddress, setContractAddress] = useState('');
+    const [compilerVersion, setCompilerVersion] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
@@ -29,9 +37,52 @@ const VerifyContractSolcMultiple: React.FC = () => {
         setLibraries(updatedLibraries);
     };
 
-    const handleVerifyAndPublish = () => {
-        console.log("Verify and Publish clicked");
+    // const handleVerifyAndPublish = () => {
+    //     console.log("Verify and Publish clicked");
+    // };
+
+
+    const handleVerifyAndPublish = async () => {
+        if (!contractFiles || !contractFiles[0]) {
+            setErrorMessage("Please select a Solidity file to upload.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("contractAddress", contractAddress);
+        formData.append("compilerVersion", compilerVersion);
+        formData.append("solidityFile", contractFiles[0]);
+        // process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails'
+        try {
+            // const response = await axios.post(
+            //     "https://test-scanner.devolvedai.com/backend/contract/verify-contract",
+            //     formData,
+            //     { headers: { "Content-Type": "multipart/form-data" } }
+            // );
+            const response = await axios.post(
+                process.env.NEXT_PUBLIC_BASE_URL + '/contract/verify-contract',
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
+
+            if (response.status === 200) {
+                setSuccessMessage("Contract verified and published successfully!");
+                console.log("successMessage")
+                setErrorMessage("");
+                // console.log(response.data.data)
+                setTimeout(() => setSuccessMessage(''), 3000); // Hide after 5 seconds
+            } else {
+                setErrorMessage("Failed to verify contract. Please try again.");
+                setSuccessMessage("");
+            }
+        } catch (error) {
+            console.error("Verification error:", error);
+            setErrorMessage("An error occurred while verifying the contract.");
+            setSuccessMessage("");
+        }
     };
+
+
 
     const handleReset = () => {
         setContractFiles(null);
@@ -43,6 +94,22 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
     };
 
+
+   
+
+  // Load data from local storage on component mount
+  useEffect(() => {
+    const storedContractAddress = localStorage.getItem('contractAddress');
+    const storedCompilerVersion = localStorage.getItem('compilerVersion');
+    const storedLicenseType = localStorage.getItem('licenseType');
+
+    if (storedContractAddress) setContractAddress(storedContractAddress);
+    if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
+    if (storedLicenseType) setLicenseType(storedLicenseType);
+  }, []);
+
+
+
     // Handle text input in <textarea>
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setMessage(e.target.value);
@@ -50,6 +117,15 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-6">
+            
+            {successMessage && (
+                <div className="fixed inset-0 flex items-center justify-center bg-opacity-70 bg-gray-900 z-50">
+                    <div className="bg-green-600 text-white text-lg font-semibold p-6 rounded-lg shadow-lg max-w-md text-center">
+                        {successMessage}
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-4xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                     Verify & Publish Contract Source Code
@@ -70,31 +146,25 @@ const VerifyContractSolcMultiple: React.FC = () => {
                 <div className="space-y-4 bg-[#e9ecef] p-2 rounded-lg border">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Address:</label>
-                        <p className="text-gray-800 dark:text-white">0x6c5f7dc7e8fcc4d53f46d52cdde8eb67323d3222</p>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Compiler Type:</label>
-                        <p className="text-gray-800 dark:text-white">SOLIDITY MULTI-PART VERIFIER (IMPORTS)</p>
+                        <p className="text-gray-800 dark:text-white">{contractAddress}</p>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Compiler Version:</label>
-                        <p className="text-gray-800 dark:text-white">v0.8.24+commit.e11b9ed9</p>
+                        <p className="text-gray-800 dark:text-white">{compilerVersion}</p>
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">License Type:</label>
+                        <p className="text-gray-800 dark:text-white">{licenseType}</p>
+                    </div>
+                    
                 </div>
 
                 {/* Input Contract code */}
-                <div className="mt-6">
+                {/* <div className="mt-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Enter the Solidity Contract Code below *
                     </label>
-                    {/* <input
-                        type="text"
-                        multiple
-                        onChange={handleFilesChange}
-                        className="mt-2 w-full border border-gray-300 min-h-[200px] rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    /> */}
-
-                    {/* <textarea id="message"  className="block p-2.5 w-full min-h-[200px] text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder=""></textarea> */}
+                    
                     <textarea
                         id="contractCode"
                         value={message} // Bind the `message` state here
@@ -105,7 +175,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
 
                     </p>
-                </div>
+                </div> */}
 
                 {/* Upload Contract Files */}
                 <div className="mt-6">
@@ -168,7 +238,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
                                 <option value="london">london (default for &gt;= v0.8.7)</option>
                                 <option value="paris">paris (default for &gt;=v0.8.18)</option>
                                 <option value="shanghai">shanghai (default for &gt;=v0.8.20)</option>
-                                <option value="cancun">cancun (default for &gt;= v0.8.24)</option>
                             </select>
                         </div>
                     </div>
@@ -178,7 +247,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">License Type</label>
                         {/* <p className="text-gray-800 dark:text-white">10) Mozilla Public License 2.0 (MPL-2.0)</p> */}
                         <select
-                            value={evmVersion}
+                            value={licenseType}
                             onChange={(e) => setLicenseType(e.target.value)}
                             className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         >
@@ -275,7 +344,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         onClick={handleVerifyAndPublish}
                         className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                        <Link href="/contract-address/0x42da36204446083385e59cF8B34B36a3D872731F">Verify and Publish</Link>
+                        Verify and Publish
 
                     </button>
                 </div>

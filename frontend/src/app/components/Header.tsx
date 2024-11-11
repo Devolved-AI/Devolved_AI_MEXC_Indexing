@@ -14,6 +14,7 @@ import { cookies } from 'next/headers';
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [email, setEmail] = useState(null);
+  const [userToken, setUserToken] = useState(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -39,8 +40,11 @@ const Header: React.FC = () => {
   useEffect(() => {
     // Access email cookie on the client side
     const emailCookie:any = Cookies.get('email');
+    const accessToken:any = Cookies.get('access_token');
     setEmail(emailCookie);
+    setUserToken(accessToken);
   }, []);
+
 
 
   return (
@@ -89,13 +93,26 @@ const Header: React.FC = () => {
           {/* profile section */}
 
           <div className="relative inline-block text-left">
-            <button
+            {
+              userToken? ((
+                <button
               onClick={() => setIsOpen(!isOpen)}
               className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             >
               <FaUser className="mr-2" />
               <span>Profile</span>
             </button>
+              )):((
+                <button
+              // onClick={() => setIsOpen(!isOpen)}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+            >
+              <FaUser className="mr-2" />
+              <Link href={'/login'}>Sign In</Link>
+            </button>
+              ))
+            }
+            
 
             {isOpen && (
               <div
