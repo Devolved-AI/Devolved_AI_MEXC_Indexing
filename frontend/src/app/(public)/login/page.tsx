@@ -32,7 +32,7 @@ export default function Login() {
         Cookies.set('access_token', data.access_token, { expires: 7 });
 
         // Redirect to home page
-        router.push('/');
+        router.push('/myaccount');
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Login failed');

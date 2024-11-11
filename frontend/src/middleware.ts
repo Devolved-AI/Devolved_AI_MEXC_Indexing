@@ -5,7 +5,10 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Define the paths that require authentication
-  const protectedPaths = ['/', '/blocks/', '/tx/', '/address/'];
+  // const protectedPaths = ['/', '/blocks/', '/tx/', '/address/'];
+
+  const protectedPaths = ['/myaccount', '/myverify_address', '/verifycontract', '/verifyContract-solc-multiple'];
+
 
   // Check if email and access_token cookies exist
   const email = req.cookies.get('email')?.value;
@@ -29,11 +32,22 @@ export function middleware(req: NextRequest) {
 
 // Define the routes where the middleware should run
 export const config = {
+  // matcher: [
+  //   '/',
+  //   '/blocks/:blockId*',
+  //   '/tx/:transactionHash*',
+  //   '/address/:addressId*',
+  //   '/login',
+  //   '/registration',
+  // ],
+
   matcher: [
-    '/',
-    '/blocks/:blockId*',
-    '/tx/:transactionHash*',
-    '/address/:addressId*',
+    '/myaccount',
+    '/myverify_address',
+    '/verifycontract',
+    // '/verifyContract-solc-multiple/:addressId*',
+    '/verifyContract-solc-multiple',
+    // '/contract-address/:id',
     '/login',
     '/registration',
   ],

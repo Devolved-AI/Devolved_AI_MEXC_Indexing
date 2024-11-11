@@ -36,11 +36,11 @@ export default function Register() {
         const data = await response.json();
         
         // Save email and token in cookies
-        Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
-        Cookies.set('access_token', data.token, { expires: 7 });
+        // Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
+        // Cookies.set('access_token', data.token, { expires: 7 });
 
         // Redirect to the home page
-        router.push('/');
+        router.push('/login');
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Registration failed');
