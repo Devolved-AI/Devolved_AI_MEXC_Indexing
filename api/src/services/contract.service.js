@@ -27,6 +27,9 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
         console.log(`Fetching deployed bytecode for contract at address: ${contractAddress}`);
         const deployedBytecode = await provider.getCode(contractAddress);
         console.log("Deployed Bytecode:", deployedBytecode);
+        if (!deployedBytecode || deployedBytecode === "0x") {
+            throw new Error("Deployed bytecode not found or contract address is incorrect.");
+        }
 
         // Read the Solidity source code from the uploaded file
         console.log("Reading Solidity source code from file...");
@@ -52,6 +55,15 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
         const contractData = compilationResult.contracts['Contract.sol'][contractKey];
         console.log("Contract compiled successfully:", contractKey);
 
+        if (!contractData || !contractData.abi || !contractData.evm || !contractData.evm.deployedBytecode) {
+            console.error("Compiled output is missing required fields (ABI or bytecode).");
+            throw new Error("ABI or bytecode not found in the compiled output.");
+        }
+
+        // Log the extracted ABI and bytecode for verification
+        console.log("Contract ABI:", contractData.abi);
+        console.log("Compiled Bytecode:", contractData.evm.deployedBytecode.object);
+
         // Construct ABI, Bytecode, and handle constructor and library replacements
         const abi = contractData.abi;
         let generatedBytecode = contractData.evm.deployedBytecode.object;
@@ -72,7 +84,7 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
         return {
             contractName: contractKey,
             contractAddress,
-            verificationStatus: isMatch ? "Contract verified successfully!" : "Verification failed: Bytecode mismatch.",
+            verificationStatus: isMatch ? "Contract verified successfully." : "Verification failed: Bytecode mismatch.",
             s3FileUrl,
             abi,
             deployedBytecode,
@@ -83,26 +95,6 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
             libraryAddress: libraryAddress || "No library linked",
 
         };
-
-        // Strip metadata from both generated and deployed bytecode for comparison
-        // console.log("Stripping metadata from compiled and deployed bytecode...");
-        // const strippedGeneratedBytecode = stripMetadata(contractData.evm.deployedBytecode.object);
-        // const strippedDeployedBytecode = stripMetadata(deployedBytecode);
-
-        // // Check if the compiled bytecode matches the deployed bytecode
-        // const isMatch = strippedGeneratedBytecode === strippedDeployedBytecode;
-        // console.log(isMatch ? "Bytecode match found! Contract verified successfully." : "Bytecode mismatch. Verification failed.");
-
-        // // Return the verification result and contract details
-        // return {
-        //     contractName,
-        //     compilerVersion,
-        //     sourceCode,
-        //     abi: contractData.abi,
-        //     creationCode: contractData.evm.deployedBytecode.object,
-        //     verificationStatus: isMatch ? "Contract verified successfully!" : "Verification failed: Bytecode mismatch.",
-        //     fileUrl: s3FileUrl,
-        // };
 
     } catch (error) {
         console.error("Error during contract verification:", error.message);

@@ -1,22 +1,57 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie'; // Import js-cookie
+import { auth_login } from "@/app/var";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
+import toast, { Toaster } from 'react-hot-toast';
 
-export default function Login() {
+const LoginContent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleLogin = async (e:any) => {
+  useEffect(() => {
+    const confirmationToken = searchParams.get('confirmation_token');
+    if (confirmationToken) {
+      handleLoginWithToken(confirmationToken);
+    }
+  }, [searchParams]);
+
+  const handleLoginWithToken = async (token: any) => {
+    try {
+      const response = await fetch(auth_login, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Cookies.set('email', data.data.email, { expires: 7 });
+        Cookies.set('access_token', data.data.token, { expires: 7 });
+
+        toast.success("Login successful!");
+        router.push('/myaccount');
+      } else {
+        toast.error(data.message || 'Login failed');
+      }
+    } catch (err) {
+      toast.error('An error occurred. Please try again.');
+    }
+  };
+
+  const handleLogin = async (e: any) => {
     e.preventDefault();
-    setError('');
 
     try {
-      const response = await fetch('https://test-scanner.devolvedai.com/backend/auth/login', {
+      const response = await fetch(auth_login, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -24,30 +59,28 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Save email and access_token in cookies
-        Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
+      const data = await response.json();
+      if (data.success) {
+        Cookies.set('email', email, { expires: 7 });
         Cookies.set('access_token', data.data.token, { expires: 7 });
 
-        // Redirect to home page
+        toast.success("Login successful!");
         router.push('/myaccount');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Login failed');
+        toast.error(data.message || 'Login failed');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     }
   };
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg dark:bg-gray-800">
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Sign In to Argochainscan</h2>
-        
-        {error && <p className="text-red-500 text-center">{error}</p>}
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
@@ -64,31 +97,29 @@ export default function Login() {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
-              className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              className="w-full px-3 py-2 mt-1 pr-10 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute top-9 right-3 flex items-center text-gray-500 dark:text-gray-300"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
 
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</label>
-            </div>
-            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/reset-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
               Forgot password?
             </Link>
           </div>
@@ -110,4 +141,12 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};
+
+const Login = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <LoginContent />
+  </Suspense>
+);
+
+export default Login;

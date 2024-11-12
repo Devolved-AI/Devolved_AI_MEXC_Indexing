@@ -40,27 +40,25 @@ const MyAccount: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-6">
           {/* Sidebar Navigation */}
           <aside className="col-span-1 bg-gray-50 border rounded-lg p-4">
-            <h2 className="text-lg font-semibold text-gray-700">Account</h2>
+            {/* <h2 className="text-lg font-semibold text-gray-700">Account</h2>
             <ul className="space-y-3 mt-3">
               <li><Link href="#" className="text-blue-600 hover:underline">Account Overview</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Account Settings</Link></li>
-            </ul>
+            </ul> */}
 
-            <h2 className="text-lg font-semibold text-gray-700 mt-6">Lists</h2>
+            {/* <h2 className="text-lg font-semibold text-gray-700 mt-6">Lists</h2>
             <ul className="space-y-3 mt-3">
               <li><Link href="#" className="text-blue-600 hover:underline">Watch List</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Private Name Tags</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Txn Private Notes</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Token Ignore List</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Advanced Filter</Link></li>
-            </ul>
+            </ul> */}
 
             <h2 className="text-lg font-semibold text-gray-700 mt-6">Others</h2>
             <ul className="space-y-3 mt-3">
-              {/* <li><Link href="#" className="text-blue-600 hover:underline">API Keys</Link></li> */}
-              <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verified Addresses</Link></li>
-              {/* Argocoin: AGC Token */}
-              <li><Link href="/contract-address" className="text-blue-600 hover:underline">Argocoin: AGC Token</Link></li>
+              <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verify Address</Link></li>
+              <li><Link href="/contract-address" className="text-blue-600 hover:underline">Contract Address</Link></li>
             </ul>
           </aside>
 

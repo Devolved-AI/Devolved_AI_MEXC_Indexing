@@ -1,8 +1,6 @@
 "use client"
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import Cookies from "js-cookie";
 import { verify_contract } from "@/app/var";
 
@@ -39,11 +37,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
         setLibraries(updatedLibraries);
     };
 
-    // const handleVerifyAndPublish = () => {
-    //     console.log("Verify and Publish clicked");
-    // };
-
-
     const handleVerifyAndPublish = async () => {
         if (!contractFiles || !contractFiles[0]) {
             setErrorMessage("Please select a Solidity file to upload.");
@@ -54,18 +47,17 @@ const VerifyContractSolcMultiple: React.FC = () => {
         formData.append("contractAddress", contractAddress);
         formData.append("compilerVersion", compilerVersion);
         formData.append("solidityFile", contractFiles[0]);
-        // process.env.NEXT_PUBLIC_BASE_URL + '/block/blockDetails'
         try {
-            // const response = await axios.post(
-            //     "https://test-scanner.devolvedai.com/backend/contract/verify-contract",
-            //     formData,
-            //     { headers: { "Content-Type": "multipart/form-data" } }
-            // );
-            const response = await axios.post(
-                process.env.NEXT_PUBLIC_BASE_URL + '/contract/verify-contract',
-                formData,
-                { headers: { "Content-Type": "multipart/form-data" } }
-            );
+
+            const accessToken = Cookies.get("access_token");
+
+            const response = await fetch(verify_contract, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json"
+                }
+              });
 
             if (response.status === 200) {
                 setSuccessMessage("Contract verified and published successfully!");
@@ -84,8 +76,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
         }
     };
 
-
-
     const handleReset = () => {
         setContractFiles(null);
         setRuns(200);
@@ -95,9 +85,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
         setOptimization(false);
 
     };
-
-
-   
 
   // Load data from local storage on component mount
   useEffect(() => {
@@ -109,8 +96,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
     if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
     if (storedLicenseType) setLicenseType(storedLicenseType);
   }, []);
-
-
 
     // Handle text input in <textarea>
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -160,24 +145,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
                     </div>
                     
                 </div>
-
-                {/* Input Contract code */}
-                {/* <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Enter the Solidity Contract Code below *
-                    </label>
-                    
-                    <textarea
-                        id="contractCode"
-                        value={message} // Bind the `message` state here
-                        onChange={handleTextChange} // Call `handleTextChange` on each change
-                        className="block p-2.5 w-full min-h-[200px] text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder=""
-                    ></textarea>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-
-                    </p>
-                </div> */}
 
                 {/* Upload Contract Files */}
                 <div className="mt-6">

@@ -5,24 +5,25 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { auth_register } from "@/app/var";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmpassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
-  const handleRegister = async (e:any) => {
+  const handleRegister = async (e: any) => {
     e.preventDefault();
-    setError('');
 
-    // Check if passwords match
     if (password !== confirmpassword) {
-      setError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
+
     try {
       const response = await fetch(auth_register, {
         method: 'POST',
@@ -32,25 +33,27 @@ export default function Register() {
         body: JSON.stringify({ username, email, password, confirmpassword }),
       });
 
-      const res = await response.json()
+      const res = await response.json();
 
       if (res.success) {
+        toast.success("Registration successful! Please check your email for verification.");
         router.push(`/checkVerificationMail?email=${email}`);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Registration failed');
+        toast.error(res.message || 'Registration failed');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     }
   };
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg dark:bg-gray-800">
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Create Your Argochainscan Account</h2>
-        
-        {error && <p className="text-red-500 text-center">{error}</p>}
 
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div>
@@ -81,45 +84,46 @@ export default function Register() {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
-              className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              className="w-full px-3 py-2 mt-1 pr-10 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute top-9 right-3 flex items-center text-gray-500 dark:text-gray-300"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
 
-          <div>
+          <div className="relative">
             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
             <input
               id="confirm-password"
               name="confirm-password"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               required
-              className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              className="w-full px-3 py-2 mt-1 pr-10 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={confirmpassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              id="terms"
-              name="terms"
-              type="checkbox"
-              required
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-              I agree to the <Link href="/terms" className="text-blue-600 hover:underline dark:text-blue-400">Terms of Service</Link>
-            </label>
+            <button
+              type="button"
+              onClick={toggleConfirmPasswordVisibility}
+              className="absolute top-9 right-3 flex items-center text-gray-500 dark:text-gray-300"
+            >
+              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
 
           <button

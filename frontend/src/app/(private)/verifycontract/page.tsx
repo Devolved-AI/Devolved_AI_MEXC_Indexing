@@ -9,6 +9,7 @@ const VerifyContract: React.FC = () => {
   const router = useRouter(); // Initialize useRouter for navigation
 
   const [contractAddress, setContractAddress] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
   const [compilerType, setCompilerType] = useState('');
   const [compilerVersion, setCompilerVersion] = useState('');
   const [licenseType, setLicenseType] = useState('');
@@ -17,6 +18,7 @@ const VerifyContract: React.FC = () => {
   const handleContinue = () => {
     // Save data to local storage
     localStorage.setItem('contractAddress', contractAddress);
+    localStorage.setItem('walletAddress', walletAddress);
     localStorage.setItem('compilerVersion', compilerVersion);
     localStorage.setItem('licenseType', licenseType);
 
@@ -27,6 +29,7 @@ const VerifyContract: React.FC = () => {
   const handleReset = () => {
     // Reset all form fields
     setContractAddress('');
+    setWalletAddress('');
     setCompilerType('');
     setCompilerVersion('');
     setLicenseType('');
@@ -49,6 +52,20 @@ const VerifyContract: React.FC = () => {
         </ol>
 
         <form onSubmit={(e) => e.preventDefault()}>
+          {/* Wallet Address Input */}
+          <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Please enter your Wallet Address
+          </label>
+          <input
+            type="text"
+            id="walletAddress"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
+            required
+          />
+
           {/* Contract Address Input */}
           <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Please enter the Contract Address you would like to verify
@@ -171,37 +188,23 @@ const VerifyContract: React.FC = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
           >
             <option value="">Please Select</option>
-            <option value="1">1) No License (None)</option>
-            <option value="2">2) The Unlicense (Unlicense)</option>
-            <option value="3">3) MIT License (MIT)</option>
-            <option value="4">4) GNU General Public License v2.0 (GNU GPLv2)</option>
-            <option value="5">5) GNU General Public License v3.0 (GNU GPLv3)</option>
-            <option value="6">6) GNU Lesser General Public License v2.1 (GNU LGPLv2.1)</option>
-            <option value="7">7) GNU Lesser General Public License v3.0 (GNU LGPLv3)</option>
-            <option value="8">8) BSD 2-clause "Simplified" license (BSD-2-Clause)</option>
-            <option value="9">9) BSD 3-clause "New" Or "Revised" license (BSD-3-Clause)</option>
-            <option value="10">10) Mozilla Public License 2.0 (MPL-2.0)</option>
-            <option value="11">11) Open Software License 3.0 (OSL-3.0)</option>
-            <option value="12">12) Apache 2.0 (Apache-2.0)</option>
-            <option value="13">13) GNU Affero General Public License (GNU AGPLv3)</option>
-            <option value="14">14) Business Source License (BSL 1.1)</option>
+            <option value="No License (None)">No License (None)</option>
+            <option value="The Unlicense (Unlicense)">The Unlicense (Unlicense)</option>
+            <option value="MIT License (MIT)">MIT License (MIT)</option>
+            <option value="GNU General Public License v2.0 (GNU GPLv2)">GNU General Public License v2.0 (GNU GPLv2)</option>
+            <option value="GNU General Public License v3.0 (GNU GPLv3)">GNU General Public License v3.0 (GNU GPLv3)</option>
+            <option value="GNU Lesser General Public License v2.1 (GNU LGPLv2.1)">GNU Lesser General Public License v2.1 (GNU LGPLv2.1)</option>
+            <option value="GNU Lesser General Public License v3.0 (GNU LGPLv3)">GNU Lesser General Public License v3.0 (GNU LGPLv3)</option>
+            <option value="BSD 2-clause &quot;Simplified&quot; license (BSD-2-Clause)">BSD 2-clause "Simplified" license (BSD-2-Clause)</option>
+            <option value="BSD 3-clause &quot;New&quot; Or &quot;Revised&quot; license (BSD-3-Clause)">BSD 3-clause "New" Or "Revised" license (BSD-3-Clause)</option>
+            <option value="Mozilla Public License 2.0 (MPL-2.0)">Mozilla Public License 2.0 (MPL-2.0)</option>
+            <option value="Open Software License 3.0 (OSL-3.0">Open Software License 3.0 (OSL-3.0)</option>
+            <option value="Apache 2.0 (Apache-2.0)">Apache 2.0 (Apache-2.0)</option>
+            <option value="GNU Affero General Public License (GNU AGPLv3)">GNU Affero General Public License (GNU AGPLv3)</option>
+            <option value="Business Source License (BSL 1.1)">Business Source License (BSL 1.1)</option>
             {/* Add other license options here */}
           </select>
-
-          {/* Terms Checkbox */}
-          <div className="flex items-center mb-6">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={agreedToTerms}
-              onChange={() => setAgreedToTerms(!agreedToTerms)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              I agree to the terms of service
-            </label>
-          </div>
-
+          
           {/* Buttons */}
           <div className="flex justify-between">
             <button
@@ -214,7 +217,7 @@ const VerifyContract: React.FC = () => {
             <button
               type="button"
               onClick={handleContinue}
-              disabled={!agreedToTerms || !contractAddress}
+              disabled={!contractAddress && !compilerType && !walletAddress}
               className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               Continue

@@ -14,11 +14,23 @@ const {
     decodeToken
 }= require('@libs/auth/jwt');
 
+// Regular expression for email validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Regular expression for username validation (alphanumeric, 3-20 characters)
+const usernameRegex = /^[a-zA-Z0-9]{3,20}$/;
+
+// Password strength validation function
+const validatePassword = (password) => {
+    // Password must be at least 8 characters, have 1 uppercase, 1 lowercase, 1 digit, and 1 special character
+    const mediumStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return mediumStrengthRegex.test(password);
+};
+
 const register = async (req, res) => {
     // Validate the request body
     const { username, email, password, confirmpassword } = req.body;
     if(!email || !password || !confirmpassword) {
-        console.log('Validation Error: Missing required fields');
         return res.status(400).json({
             status: 400,
             success: false,
@@ -26,9 +38,35 @@ const register = async (req, res) => {
         });
     }
 
+    // Validate username
+    if (!usernameRegex.test(username)) {
+        return res.status(400).json({
+            status: 400,
+            success: false,
+            message: 'Username must be alphanumeric and between 3-20 characters.'
+        });
+    }
+
+    // Validate email
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({
+            status: 400,
+            success: false,
+            message: 'Invalid email format.'
+        });
+    }
+
+    // Validate password strength
+    if (!validatePassword(password)) {
+        return res.status(400).json({
+            status: 400,
+            success: false,
+            message: 'Password must be at least 8 characters long and include uppercase, lowercase, digit, and special character.'
+        });
+    }
+
     if (password !== confirmpassword) {
-        console.log('Password Mismatch: Password and confirm password do not match');
-        res.status(402).json({
+        return res.status(402).json({
             status: 402,
             success: false,
             message: 'Password and confirm password not matched'
@@ -37,7 +75,6 @@ const register = async (req, res) => {
 
     try {
         // Check if the user already exists
-        console.log('User already exists for email:', email);
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(409).json({
@@ -47,11 +84,9 @@ const register = async (req, res) => {
             });
         } else {
             // Hash passwords
-            console.log('Hashing password for new user registration');
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(confirmpassword, salt);
 
-            console.log('Creating new user for email:', email);
             // Create new user
             const newUser = await User.create({
                 username: username,
@@ -60,7 +95,6 @@ const register = async (req, res) => {
             });
 
             if(newUser) {
-                console.log('Sending confirmation email to:', email);
                 const emailSent = await sendMail(email, true);
                 if (!emailSent) {
                     return res.status(500).json({ 
@@ -70,14 +104,12 @@ const register = async (req, res) => {
                     });
                 }
 
-                console.log('User registered successfully, confirmation email sent:', email);
                 return res.status(201).json({
                     status: 201,
                     success: true,
                     message: 'Registration successful! Please check your email to confirm your account.',
                 });
             } else {
-                console.log('User creation failed for email:', email);
                 return res.status(400).json({
                     status: 400,
                     success: false,
@@ -86,7 +118,6 @@ const register = async (req, res) => {
             }
         }
     } catch (error) {
-        console.error('Registration Error:', error.message);
         return res.status(500).json({ 
             status: 500,
             success: false,
@@ -96,23 +127,22 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const {email, password } = req.body;
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-
     try {
         let users;
+        const {email, password } = req.body;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
         // 1. If token is provided
         if (token) {
-            console.log('Token provided, validating...');
-
             // Verify token validity
             const decoded = verifyToken(token);
             if (!decoded || !decoded.email) {
-                return res.status(401).json({ 
+                return res.status(401).json({
+                    status: 401,
                     success: false, 
-                    message: 'Invalid token.' });
+                    message: 'Invalid token.' 
+                });
             }
 
             // Check if user exists and update login status
@@ -124,10 +154,13 @@ const login = async (req, res) => {
             );
 
             if (!users) {
-                return res.status(404).json({ success: false, message: 'User not found.' });
+                return res.status(404).json({ 
+                    status: 404,
+                    success: false, 
+                    message: 'User not found.' 
+                });
             }
 
-            console.log('Token valid, user logged in:', users.email);
             return res.status(200).json({
                 status: 200,
                 success: true,
@@ -138,18 +171,24 @@ const login = async (req, res) => {
 
         // 2. If email and password are provided instead of a token
         if (email && password) {
-            console.log('Email and password provided, verifying credentials...');
-
             // Check if user exists
             users = await User.findOne({ email });
             if (!users) {
-                return res.status(404).json({ success: false, message: 'User not found.' });
+                return res.status(404).json({ 
+                    status: 404,
+                    success: false, 
+                    message: 'User not found.' 
+                });
             }
 
             // Verify password
             const validPassword = await bcrypt.compare(password, users.password);
             if (!validPassword) {
-                return res.status(401).json({ success: false, message: 'Incorrect password.' });
+                return res.status(401).json({ 
+                    status: 401,
+                    success: false, 
+                    message: 'Incorrect password.' 
+                });
             }
 
             // Generate a new token, log the user in
@@ -160,8 +199,8 @@ const login = async (req, res) => {
                 { new: true }
             );
 
-            console.log('Email and password valid, user logged in:', users.email);
             return res.status(200).json({
+                status: 200,
                 success: true,
                 message: 'Login successful.',
                 data: users,
@@ -170,13 +209,15 @@ const login = async (req, res) => {
 
         // 3. If neither token nor email/password are provided
         return res.status(400).json({
+            status: 400,
             success: false,
             message: 'Token or email and password are required.',
         });
     } catch (error) {
         console.error('Login Error:', error);
-        return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR.code).json({ 
+        return res.status(500).json({ 
             status: 500,
+            success: false,
             message: 'Internal Server Error' 
         });
     }
