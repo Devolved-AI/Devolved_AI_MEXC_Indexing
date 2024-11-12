@@ -214,7 +214,7 @@ const VerifyContract: React.FC = () => {
             <button
               type="button"
               onClick={handleContinue}
-              disabled={!agreedToTerms || !contractAddress}
+              disabled={!compilerVersion || !contractAddress}
               className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               Continue
