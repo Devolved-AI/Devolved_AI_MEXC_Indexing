@@ -11,7 +11,7 @@ import Link from 'next/link';
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
 });
-import LoadinJson from '../../../../public/block.json';
+import LoadinJson from '../../../../../public/block.json';
 
 interface BlockEVM {
   blockNumber: string;
@@ -55,7 +55,7 @@ const TransactionDetails = () => {
   useEffect(() => {
     if (txnHash) {
       fetchTransactionDetails(txnHash);
-      fetchTransactionMessage(txnHash);
+      // fetchTransactionMessage(txnHash);
     }
   }, [txnHash]);
 
@@ -71,7 +71,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-      console.log('tx-by-hash', data);
+      // console.log('tx-by-hash', data);
       if (data.success) {
         setTransactionData(data.transaction);
         setError(null);
@@ -99,7 +99,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-      console.log('tx-by-block-hash', data);
+      // console.log('tx-by-block-hash', data);
       if (data.success && data.data && data.data.length > 0) {
         // Extract the required fields
         const extrinsic = data.data[0];
@@ -113,7 +113,7 @@ const TransactionDetails = () => {
         setError(null);
       } else {
         await fetchFromAlternativeUrl_2(txHash);
-      } 
+      }
     } catch (err) {
       await fetchFromAlternativeUrl_2(txHash);
     } finally {
@@ -133,7 +133,7 @@ const TransactionDetails = () => {
       });
 
       const data = await response.json();
-      console.log('tx-by-hash-evm', data);
+      // console.log('tx-by-hash-evm', data);
 
       if (data.success && data.block.length > 0) {
         setBlockDataEVM(data.block);
@@ -163,7 +163,7 @@ const TransactionDetails = () => {
 
       const data = await response.json();
       console.log('tx-message', data);
-      
+
       if (data.success) {
         setTransactionMessage(data.message); // Set the fetched message
       } else {
@@ -184,19 +184,37 @@ const TransactionDetails = () => {
   };
 
   // Function to determine the transaction status
-  const getTransactionStatus = (events: any[]) => {
-    const failedEvent = events.find(event => event.section === 'system' && event.method === 'ExtrinsicFailed');
+  // const getTransactionStatus = (events: any[]) => {
+  //   const failedEvent = events.find(event => event.section === 'system' && event.method === 'ExtrinsicFailed');
+  //   if (failedEvent) {
+  //     return { status: 'Failed', reason: 'FundsUnavailable' }; // Display the failure reason
+  //   }
+
+  //   const successEvent = events.find(event => event.section === 'balances' && event.method === 'Transfer');
+  //   if (successEvent) {
+  //     return { status: 'Success' };
+  //   }
+
+  //   return { status: 'Unknown' };
+  // };
+
+  const getTransactionStatus = (events: any) => {
+    // If events is a string, parse it as JSON
+    const parsedEvents = typeof events === 'string' ? JSON.parse(events) : events;
+
+    const failedEvent = parsedEvents.find((event: { section: string; method: string; }) => event.section === 'system' && event.method === 'ExtrinsicFailed');
     if (failedEvent) {
-      return { status: 'Failed', reason: 'FundsUnavailable' }; // Display the failure reason
+      return { status: 'Failed', reason: 'FundsUnavailable' };
     }
 
-    const successEvent = events.find(event => event.section === 'balances' && event.method === 'Transfer');
+    const successEvent = parsedEvents.find((event: { section: string; method: string; }) => event.section === 'balances' && event.method === 'Transfer');
     if (successEvent) {
       return { status: 'Success' };
     }
 
     return { status: 'Unknown' };
   };
+
 
   if (loading) {
     return (
