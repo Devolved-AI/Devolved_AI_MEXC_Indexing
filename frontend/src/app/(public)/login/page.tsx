@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie'; // Import js-cookie
+import Cookies from 'js-cookie';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -16,7 +17,7 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await fetch('https://test-scanner.devolvedai.com/backend/auth/login', {
+      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,7 +29,7 @@ export default function Login() {
         const data = await response.json();
         
         // Save email and access_token in cookies
-        Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
+        Cookies.set('email', email, { expires: 7 });
         Cookies.set('access_token', data.data.token, { expires: 7 });
 
         // Redirect to home page
@@ -64,18 +65,27 @@ export default function Login() {
             />
           </div>
 
-          <div>
+          <div className="relative ">
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <div className=' relative flex items-center'>
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
+            >
+              {showPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+            </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between mt-4">
@@ -88,7 +98,7 @@ export default function Login() {
               />
               <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</label>
             </div>
-            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/lostpassword" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
               Forgot password?
             </Link>
           </div>
