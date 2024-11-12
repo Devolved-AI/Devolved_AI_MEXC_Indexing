@@ -12,6 +12,8 @@ export default function Register() {
   const [confirmpassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
 
   const handleRegister = async (e:any) => {
     e.preventDefault();
@@ -87,32 +89,50 @@ export default function Register() {
             />
           </div>
 
-          <div>
+          <div className='relative'>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <div className='relative flex items-center'>
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
+            >
+              {showPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+            </button>
+            </div>
           </div>
 
-          <div>
+          <div className='relative'>
             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+            <div className='relative flex items-center'>
             <input
               id="confirm-password"
               name="confirm-password"
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               required
               className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="••••••••"
               value={confirmpassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
+            >
+              {showConfirmPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+            </button>
+            </div>
           </div>
 
           <div className="flex items-center">
