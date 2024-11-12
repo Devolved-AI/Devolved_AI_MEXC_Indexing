@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Cookies from 'js-cookie';
+import { auth_register } from "@/app/var";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -22,9 +23,8 @@ export default function Register() {
       setError("Passwords do not match");
       return;
     }
-    // https://test-scanner.devolvedai.com/backend/auth/register
     try {
-      const response = await fetch('https://test-scanner.devolvedai.com/backend/auth/register', {
+      const response = await fetch(auth_register, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,16 +32,10 @@ export default function Register() {
         body: JSON.stringify({ username, email, password, confirmpassword }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Save email and token in cookies
-        // Cookies.set('email', email, { expires: 7 }); // Cookie expires in 7 days
-        // Cookies.set('access_token', data.token, { expires: 7 });
+      const res = await response.json()
 
-        // Redirect to the home page
-        // router.push('/login');
-        console.log(data)
+      if (res.success) {
+        router.push(`/checkVerificationMail?email=${email}`);
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Registration failed');

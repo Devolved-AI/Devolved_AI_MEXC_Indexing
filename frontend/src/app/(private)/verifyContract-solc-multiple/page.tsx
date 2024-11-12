@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from "js-cookie";
+import { verify_contract } from "@/app/var";
 
 const VerifyContractSolcMultiple: React.FC = () => {
     const [contractFiles, setContractFiles] = useState<FileList | null>(null);

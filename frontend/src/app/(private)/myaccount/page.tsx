@@ -60,7 +60,7 @@ const MyAccount: React.FC = () => {
               {/* <li><Link href="#" className="text-blue-600 hover:underline">API Keys</Link></li> */}
               <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verified Addresses</Link></li>
               {/* Argocoin: AGC Token */}
-              <li><Link href={`/contract-address/${contractAddress}`} className="text-blue-600 hover:underline">Argocoin: AGC Token</Link></li>
+              <li><Link href="/contract-address" className="text-blue-600 hover:underline">Argocoin: AGC Token</Link></li>
             </ul>
           </aside>
 
