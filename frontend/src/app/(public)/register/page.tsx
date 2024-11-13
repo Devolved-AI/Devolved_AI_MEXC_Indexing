@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 import Cookies from 'js-cookie';
 
 export default function Register() {
@@ -123,7 +124,7 @@ export default function Register() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
                 >
-                  {showPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+                  {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Eye icon toggles */} {/* Eye icon toggles */}
                 </button>
               </div>
             </div>
@@ -146,7 +147,7 @@ export default function Register() {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
                 >
-                  {showConfirmPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />} {/* Eye icon toggles */} {/* Eye icon toggles */}
                 </button>
               </div>
             </div>

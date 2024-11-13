@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -83,7 +84,7 @@ export default function Login() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
             >
-              {showPassword ? '🙈' : '👁️'} {/* Eye icon toggles */}
+              {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Eye icon toggles */}
             </button>
             </div>
           </div>

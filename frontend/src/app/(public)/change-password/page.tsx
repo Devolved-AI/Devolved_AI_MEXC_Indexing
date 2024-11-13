@@ -1,13 +1,15 @@
 "use client"
 
 import { useState } from 'react';
-
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 export default function PasswordRecovery() {
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmpassword, setConfirmpassword] = useState('');
 
   const [showMessageScreen, setShowMessageScreen] = useState(false); // Toggle message screen
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
 
   const handlePasswordRecovery = async (e:any) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export default function PasswordRecovery() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password, confirmPassword }),
+        body: JSON.stringify({ password, confirmpassword }),
       });
 
       if (response.ok) {
@@ -58,37 +60,51 @@ export default function PasswordRecovery() {
             {error && <p className="text-red-500 text-center">{error}</p>}
 
             <form className="space-y-4 mt-6" onSubmit={handlePasswordRecovery}>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
+            <div className='relative'>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+              <div className='relative flex items-center'>
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                  placeholder="Create new password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />} {/* Eye icon toggles */} {/* Eye icon toggles */}
+                </button>
               </div>
+            </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Confirm password
-                </label>
+            <div className='relative'>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+              <div className='relative flex items-center'>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
+                  id="confirm-password"
+                  name="confirm-password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  value={confirmpassword}
+                  onChange={(e) => setConfirmpassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400"
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />} {/* Eye icon toggles */} {/* Eye icon toggles */}
+                </button>
               </div>
+            </div>
 
               <button
                 type="submit"
