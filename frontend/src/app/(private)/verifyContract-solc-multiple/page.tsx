@@ -143,7 +143,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                 </ol>
 
                 {/* Contract Address, Compiler Type, Compiler Version */}
-                <div className="space-y-4 bg-[#e9ecef] p-2 rounded-lg border">
+                <div className="space-y-4 bg-[#e9ecef] dark:bg-gray-800 p-2 rounded-lg border">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Address:</label>
                         <p className="text-gray-800 dark:text-white">{contractAddress}</p>
