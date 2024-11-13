@@ -1,30 +1,65 @@
 "use client"
 
 import Link from 'next/link';
-// import React from 'react';
 import React, { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
+import { profile } from "@/app/var";
 
 const MyAccount: React.FC = () => {
   const [contractAddress, setContractAddress] = useState("");
-  const [email, setEmail] = useState(null);
-   // Load data from local storage on component mount
-   useEffect(() => {
-    const storedContractAddress = localStorage.getItem('contractAddress');
+  const [email, setEmail] = useState('');
+  const [username, setUserName] = useState('');
+  const [image, setImage] = useState('');
+  const [firstLogin, setFirstLogin] = useState('');
+  const [lastLogin, setLastLogin] = useState('');
 
+  // Load data from local storage on component mount
+  useEffect(() => {
+    const storedContractAddress = localStorage.getItem('contractAddress');
     if (storedContractAddress) setContractAddress(storedContractAddress);
   }, []);
 
-
   useEffect(() => {
-    // Access email cookie on the client side
-    const emailCookie:any = Cookies.get('email');
-    setEmail(emailCookie);
+    // Fetch profile information from the API
+    const fetchProfile = async () => {
+      const accessToken = Cookies.get("access_token");
+
+      if (!accessToken) {
+        console.error("No access token found.");
+        return;
+      }
+
+      try {
+        const response = await fetch(profile, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const res = await response.json();
+          if (res.success) {
+            setUserName(res.data.name);
+            setEmail(res.data.email);
+            setImage(res.data.image);
+            setFirstLogin(new Date(res.data.firstLogin).toUTCString());
+            setLastLogin(new Date(res.data.lastLogin).toUTCString());
+          } else {
+            console.error(res.message || "Error retrieving profile data.");
+          }
+        } else {
+          const errorData = await response.json();
+          console.error(errorData.message || "Failed to fetch profile data.");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+
+    fetchProfile();
   }, []);
-
-  
-
-  console.log(contractAddress)
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 md:px-16 lg:px-32">
@@ -40,25 +75,9 @@ const MyAccount: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-6">
           {/* Sidebar Navigation */}
           <aside className="col-span-1 bg-gray-50 border rounded-lg p-4">
-            {/* <h2 className="text-lg font-semibold text-gray-700">Account</h2>
-            <ul className="space-y-3 mt-3">
-              <li><Link href="#" className="text-blue-600 hover:underline">Account Overview</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Account Settings</Link></li>
-            </ul> */}
-
-            {/* <h2 className="text-lg font-semibold text-gray-700 mt-6">Lists</h2>
-            <ul className="space-y-3 mt-3">
-              <li><Link href="#" className="text-blue-600 hover:underline">Watch List</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Private Name Tags</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Txn Private Notes</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Token Ignore List</Link></li>
-              <li><Link href="#" className="text-blue-600 hover:underline">Advanced Filter</Link></li>
-            </ul> */}
-
             <h2 className="text-lg font-semibold text-gray-700 mt-6">Others</h2>
             <ul className="space-y-3 mt-3">
               <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verify Address</Link></li>
-              <li><Link href="/contract-address" className="text-blue-600 hover:underline">Contract Address</Link></li>
             </ul>
           </aside>
 
@@ -71,56 +90,22 @@ const MyAccount: React.FC = () => {
               <div className="mt-4 space-y-4">
                 <div>
                   <p className="font-medium text-gray-800">Your Username:</p>
-                  <p className="text-gray-600"></p>
+                  <p className="text-gray-600">{username}</p>
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">Your Email Address:</p>
                   <p className="text-gray-600">{email}</p>
                 </div>
                 <div>
+                  <p className="font-medium text-gray-800">First Login:</p>
+                  <p className="text-gray-600">{firstLogin}</p>
+                </div>
+                <div>
                   <p className="font-medium text-gray-800">Last Login:</p>
-                  <p className="text-gray-600">2024-11-05 04:06:41 (UTC)</p>
+                  <p className="text-gray-600">{lastLogin}</p>
                 </div>
               </div>
             </div>
-
-            {/* Overview Usage */}
-            {/* <div className="bg-gray-50 border rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview Usage</h2>
-              <p className="text-gray-700 mb-4">Usage of account features such as address watch list, address name tags, and API keys.</p>
-
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Total POL Balance (Watch List):</span>
-                  <span className="text-gray-600">0 POL ($0.00)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Email Notification Limit:</span>
-                  <span className="text-gray-600">0 emails sent out / 100 daily limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Address Watch List:</span>
-                  <span className="text-gray-600">0 address alert(s) / 50 limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Txn Private Notes:</span>
-                  <span className="text-gray-600">0 transaction private note(s) / 10,000 limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Address Tags:</span>
-                  <span className="text-gray-600">0 address tag(s) / 5,000 limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">API Key Usage:</span>
-                  <span className="text-gray-600">0 active API(s) / 3 limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-800">Verified Addresses:</span>
-                  <span className="text-gray-600">0 verified addresses / Unlimited</span>
-                </div>
-              </div>
-            </div> */}
-
           </section>
         </div>
       </div>

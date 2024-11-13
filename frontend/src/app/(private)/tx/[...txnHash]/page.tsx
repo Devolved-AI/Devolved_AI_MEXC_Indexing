@@ -175,28 +175,26 @@ const TransactionDetails = () => {
     }
   };
 
-  const convertTo18Precision = (amount: string) => {
-    // Check if the value has 18 decimal places; if not, convert it
-    if (!/^\d+\.\d{18}$/.test(amount)) {
-      return (parseFloat(amount) / 1e18).toFixed(18);
+  const convertTo18Precision = (amount: string, decimals = 18) => {
+    try {
+      const balanceBigInt = BigInt(amount); // Convert amount to BigInt
+      const divisor = BigInt(1e18);
+      const integerPart = balanceBigInt / divisor;
+      const fractionalPart = balanceBigInt % divisor;
+
+      // Calculate fractional part as a string with necessary precision
+      let fractionalStr = fractionalPart.toString().padStart(18, '0').slice(0, decimals);
+
+      // Remove trailing zeros from fractional part
+      fractionalStr = fractionalStr.replace(/0+$/, '');
+
+      // Return the result with fractional part only if it has significant digits
+      return fractionalStr ? `${integerPart}.${fractionalStr}` : integerPart.toString();
+    } catch (error) {
+        console.error("Invalid input for conversion:", error);
+        return '0.0'; // Default value if input is invalid
     }
-    return amount;
   };
-
-  // Function to determine the transaction status
-  // const getTransactionStatus = (events: any[]) => {
-  //   const failedEvent = events.find(event => event.section === 'system' && event.method === 'ExtrinsicFailed');
-  //   if (failedEvent) {
-  //     return { status: 'Failed', reason: 'FundsUnavailable' }; // Display the failure reason
-  //   }
-
-  //   const successEvent = events.find(event => event.section === 'balances' && event.method === 'Transfer');
-  //   if (successEvent) {
-  //     return { status: 'Success' };
-  //   }
-
-  //   return { status: 'Unknown' };
-  // };
 
   const getTransactionStatus = (events: any) => {
     // If events is a string, parse it as JSON

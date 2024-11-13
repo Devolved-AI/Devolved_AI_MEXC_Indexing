@@ -3,24 +3,30 @@
 import { useState, useEffect } from 'react';
 import Cookies from "js-cookie";
 import { verify_contract } from "@/app/var";
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
+const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), { ssr: false });
+import LoadinJson from '../../../../public/block.json';
 
 const VerifyContractSolcMultiple: React.FC = () => {
-    const [contractFiles, setContractFiles] = useState<FileList | null>(null);
-    const [runs, setRuns] = useState(200);
-    const [evmVersion, setEvmVersion] = useState('default');
-    const [licenseType, setLicenseType] = useState('default');
-
-    const [constructorArgs, setConstructorArgs] = useState('');
-    const [libraries, setLibraries] = useState<{ name: string; address: string }[]>([]);
-    const [optimization, setOptimization] = useState(false);
-    const [message, setMessage] = useState("");
-
+    const router = useRouter();
+    const [loading, setLoading] = useState<boolean>(false);
+    const [walletAddress, setWalletAddress] = useState('');
     const [contractAddress, setContractAddress] = useState('');
     const [compilerVersion, setCompilerVersion] = useState('');
+    const [contractFiles, setContractFiles] = useState<FileList | null>(null);
+    const [licenseType, setLicenseType] = useState('');
+    const [optimization, setOptimization] = useState(false);
+    const [runs, setRuns] = useState(0);
+    const [evmVersion, setEvmVersion] = useState('');
+    const [constructorArgs, setConstructorArgs] = useState('');
+    const [types, setTypes] = useState('');
+    const [values, setValues] = useState('');
+    const [libraries, setLibraries] = useState<{ name: string; address: string }[]>([]);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-
+    const [message, setMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
@@ -38,41 +44,78 @@ const VerifyContractSolcMultiple: React.FC = () => {
     };
 
     const handleVerifyAndPublish = async () => {
-        if (!contractFiles || !contractFiles[0]) {
-            setErrorMessage("Please select a Solidity file to upload.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("contractAddress", contractAddress);
-        formData.append("compilerVersion", compilerVersion);
-        formData.append("solidityFile", contractFiles[0]);
+        console.log("Step 1: Starting verification process");
+        setLoading(true);
         try {
+            if (!contractFiles || !contractFiles[0]) {
+                toast.error("Please select a Solidity file to upload.");
+                return;
+            }
 
+            console.log("Step 2: Preparing form data");
+            const formData = new FormData();
+            formData.append("walletAddress", walletAddress);
+            formData.append("contractAddress", contractAddress);
+            formData.append("compilerVersion", compilerVersion);
+            formData.append("solidityFile", contractFiles[0]);
+            formData.append("license", licenseType);
+            formData.append("sourceCodeOptimized", optimization.toString());
+            formData.append("runsOptimizer", runs.toString());
+            formData.append("evmVersionToTarget", evmVersion);
+            const constructorArgsArray = constructorArgs.split(",").map(arg => arg.trim());
+            formData.append("constructorArgs", JSON.stringify(constructorArgsArray));
+            const libraryNames = libraries.map(library => library.name);
+            const libraryAddresses = libraries.map(library => library.address);
+            formData.append("libraryName", JSON.stringify(libraryNames));
+            formData.append("libraryAddress", JSON.stringify(libraryAddresses));
+            // formData.append("types", types);
+            // formData.append("values", values);
+            console.log("Step 3: Fetching access token");
             const accessToken = Cookies.get("access_token");
+            if (!accessToken) {
+                console.error("Error: Access token not found.");
+                toast.error("Access token is missing.");
+                return;
+            }
+            
+            console.log("Step 3: Verifying FormData entries");
+            // Log each key-value pair in formData using getAll for each key
+            formData.forEach((value, key) => {
+                console.log(`${key}: ${value}`);
+            });
 
+            // Log each key-value pair in formData for inspection
+            console.log("Step 4: Verifying FormData entries");
+            // Log each key-value pair in formData using getAll for each key
+            formData.forEach((value, key) => {
+                console.log(`${key}: ${value}`);
+            });
+
+            console.log("Step 5: Making API request");
             const response = await fetch(verify_contract, {
                 method: "POST",
                 headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "application/json"
-                }
-              });
+                  Authorization: `Bearer ${accessToken}`
+                },
+                body: formData
+            });
+            
+            const res = await response.json();
 
-            if (response.status === 200) {
-                setSuccessMessage("Contract verified and published successfully!");
-                console.log("successMessage")
-                setErrorMessage("");
-                // console.log(response.data.data)
-                setTimeout(() => setSuccessMessage(''), 3000); // Hide after 5 seconds
+            console.log("Step 6: API response received", res);
+
+            if (res.success) {
+                toast.success(res.message || "Contract verified and published successfully!");
+                router.push('/myverify_address');
             } else {
-                setErrorMessage("Failed to verify contract. Please try again.");
-                setSuccessMessage("");
+                toast.error(res.message || "Failed to verify contract. Please try again.");
             }
         } catch (error) {
             console.error("Verification error:", error);
-            setErrorMessage("An error occurred while verifying the contract.");
-            setSuccessMessage("");
+            toast.error("An error occurred while verifying the contract.");
+        } finally {
+            setLoading(false);
+            console.log("Step 7: Verification process complete");
         }
     };
 
@@ -86,33 +129,37 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
     };
 
-  // Load data from local storage on component mount
-  useEffect(() => {
-    const storedContractAddress = localStorage.getItem('contractAddress');
-    const storedCompilerVersion = localStorage.getItem('compilerVersion');
-    const storedLicenseType = localStorage.getItem('licenseType');
+    // Load data from local storage on component mount
+    useEffect(() => {
+        console.log("Step 0: Loading data from local storage");
+        const storedContractAddress = localStorage.getItem('contractAddress');
+        const storedCompilerVersion = localStorage.getItem('compilerVersion');
+        const storedLicenseType = localStorage.getItem('licenseType');
+        const storedWalletAddress = localStorage.getItem('walletAddress');
 
-    if (storedContractAddress) setContractAddress(storedContractAddress);
-    if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
-    if (storedLicenseType) setLicenseType(storedLicenseType);
-  }, []);
+        if (storedContractAddress) setContractAddress(storedContractAddress);
+        if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
+        if (storedLicenseType) setLicenseType(storedLicenseType);
+        if (storedWalletAddress) setWalletAddress(storedWalletAddress);
+    }, []);
 
     // Handle text input in <textarea>
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setMessage(e.target.value);
     }
 
+    if (loading) {
+        return (
+          <div className="p-4 bg-white text-gray-700 shadow rounded-md">
+            <div className="flex justify-center items-center h-64">
+              <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
+            </div>
+          </div>
+        );
+      }
+
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-6">
-            
-            {successMessage && (
-                <div className="fixed inset-0 flex items-center justify-center bg-opacity-70 bg-gray-900 z-50">
-                    <div className="bg-green-600 text-white text-lg font-semibold p-6 rounded-lg shadow-lg max-w-md text-center">
-                        {successMessage}
-                    </div>
-                </div>
-            )}
-
             <div className="max-w-4xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                     Verify & Publish Contract Source Code
@@ -131,6 +178,10 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
                 {/* Contract Address, Compiler Type, Compiler Version */}
                 <div className="space-y-4 bg-[#e9ecef] p-2 rounded-lg border">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Wallet Address:</label>
+                        <p className="text-gray-800 dark:text-white">{walletAddress}</p>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Address:</label>
                         <p className="text-gray-800 dark:text-white">{contractAddress}</p>
@@ -195,18 +246,18 @@ const VerifyContractSolcMultiple: React.FC = () => {
                                 onChange={(e) => setEvmVersion(e.target.value)}
                                 className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             >
-                                <option value="default">default (compiler defaults)</option>
-                                <option value="homestead">homestead (oldest version)</option>
+                                <option value="">Please Select</option>
+                                <option value="homestead">homestead</option>
                                 <option value="tangerineWhistle">tangerineWhistle</option>
                                 <option value="spuriousDragon">spuriousDragon</option>
-                                <option value="byzantium">byzantium (default for &lt;= v0.5.4)</option>
+                                <option value="byzantium">byzantium</option>
                                 <option value="constantinople">constantinople</option>
-                                <option value="petersburg">petersburg (default for &gt;= v0.5.5)</option>
-                                <option value="istanbul">istanbul (default for &gt;= v0.5.14)</option>
-                                <option value="berlin">berlin (default for &gt;= v0.8.5)</option>
-                                <option value="london">london (default for &gt;= v0.8.7)</option>
-                                <option value="paris">paris (default for &gt;=v0.8.18)</option>
-                                <option value="shanghai">shanghai (default for &gt;=v0.8.20)</option>
+                                <option value="petersburg">petersburg</option>
+                                <option value="istanbul">istanbul</option>
+                                <option value="berlin">berlin</option>
+                                <option value="london">london</option>
+                                <option value="paris">paris</option>
+                                <option value="shanghai">shanghai</option>
                             </select>
                         </div>
                     </div>
@@ -220,21 +271,21 @@ const VerifyContractSolcMultiple: React.FC = () => {
                             onChange={(e) => setLicenseType(e.target.value)}
                             className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         >
-                            <option value="default">default (compiler defaults)</option>
-                            <option value="1">1) No License (None)</option>
-                            <option value="2">2) The Unlicense (Unlicense)</option>
-                            <option value="3">3) MIT License (MIT)</option>
-                            <option value="4">4) GNU General Public License v2.0 (GNU GPLv2)</option>
-                            <option value="5">5) GNU General Public License v3.0 (GNU GPLv3)</option>
-                            <option value="6">6) GNU Lesser General Public License v2.1 (GNU LGPLv2.1)</option>
-                            <option value="7">7) GNU Lesser General Public License v3.0 (GNU LGPLv3)</option>
-                            <option value="8">8) BSD 2-clause "Simplified" license (BSD-2-Clause)</option>
-                            <option value="9">9) BSD 3-clause "New" Or "Revised" license (BSD-3-Clause)</option>
-                            <option value="10">10) Mozilla Public License 2.0 (MPL-2.0)</option>
-                            <option value="11">11) Open Software License 3.0 (OSL-3.0)</option>
-                            <option value="12">12) Apache 2.0 (Apache-2.0)</option>
-                            <option value="13">13) GNU Affero General Public License (GNU AGPLv3)</option>
-                            <option value="14">14) Business Source License (BSL 1.1)</option>
+                            <option value="">Please Select</option>
+                            <option value="No License (None)">No License (None)</option>
+                            <option value="The Unlicense (Unlicense)">The Unlicense (Unlicense)</option>
+                            <option value="MIT License (MIT)">MIT License (MIT)</option>
+                            <option value="GNU General Public License v2.0 (GNU GPLv2)">GNU General Public License v2.0 (GNU GPLv2)</option>
+                            <option value="GNU General Public License v3.0 (GNU GPLv3)">GNU General Public License v3.0 (GNU GPLv3)</option>
+                            <option value="GNU Lesser General Public License v2.1 (GNU LGPLv2.1)">GNU Lesser General Public License v2.1 (GNU LGPLv2.1)</option>
+                            <option value="GNU Lesser General Public License v3.0 (GNU LGPLv3)">GNU Lesser General Public License v3.0 (GNU LGPLv3)</option>
+                            <option value="BSD 2-clause &quot;Simplified&quot; license (BSD-2-Clause)">BSD 2-clause "Simplified" license (BSD-2-Clause)</option>
+                            <option value="BSD 3-clause &quot;New&quot; Or &quot;Revised&quot; license (BSD-3-Clause)">BSD 3-clause "New" Or "Revised" license (BSD-3-Clause)</option>
+                            <option value="Mozilla Public License 2.0 (MPL-2.0)">Mozilla Public License 2.0 (MPL-2.0)</option>
+                            <option value="Open Software License 3.0 (OSL-3.0">Open Software License 3.0 (OSL-3.0)</option>
+                            <option value="Apache 2.0 (Apache-2.0)">Apache 2.0 (Apache-2.0)</option>
+                            <option value="GNU Affero General Public License (GNU AGPLv3)">GNU Affero General Public License (GNU AGPLv3)</option>
+                            <option value="Business Source License (BSL 1.1)">Business Source License (BSL 1.1)</option>
                         </select>
                     </div>
 
@@ -242,14 +293,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Constructor Arguments ABI-encoded
                         </label>
-                        {/* <input
-                            type="text"
-                            value={constructorArgs}
-                            onChange={(e) => setConstructorArgs(e.target.value)}
-                            placeholder="For contracts that were created with constructor parameters"
-                            className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        /> */}
-
                         <textarea
                             id="contractCode"
                             value={message} // Bind the `message` state here
@@ -259,6 +302,31 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         ></textarea>
 
                     </div>
+
+                    <div className="mt-6 space-y-4">
+
+                    <div className='lg:flex '>
+                        <div className='mx-2'>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Types</label>
+                            <input
+                                type="types"
+                                value={types}
+                                onChange={(e) => setTypes(e.target.value)}
+                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            />
+                        </div>
+
+                        <div className='mx-2'>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Values</label>
+                            <input
+                                type="values"
+                                value={values}
+                                onChange={(e) => setValues(e.target.value)}
+                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            />
+                        </div>
+                    </div>
+                </div>
 
 
                     {/* Library Addresses */}

@@ -13,6 +13,7 @@ const connectDB = require('@config/mongoDB');
 // Routes
 const healthCheckRoute = require( '@routes/healthCheck.route' );
 const authRoute = require('@routes/auth.route');
+const userRoute = require('@routes/user.route');
 const blockRoute = require( '@routes/block.route' );
 const transactionRoute = require( '@routes/transaction.route' );
 const transactionMessageRoute = require( '@routes/transactionMessage.route' );
@@ -44,6 +45,8 @@ app.use( rateLimit( {
 app.use( '/healthCheck', healthCheckRoute );
 // Auth routes
 app.use('/auth', authRoute);
+// Use routes
+app.use('/user', userRoute);
 app.use( '/block', blockRoute );
 app.use( '/transaction', transactionRoute );
 app.use( '/transactionMessage', transactionMessageRoute );

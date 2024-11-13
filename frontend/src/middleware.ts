@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Cookies from 'js-cookie';
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  // Define the paths that require authentication
-  // const protectedPaths = ['/', '/blocks/', '/tx/', '/address/'];
-
-  const protectedPaths = ['/myaccount', '/myverify_address', '/verifycontract', '/verifyContract-solc-multiple'];
-
+  const protectedPaths = [
+    '/myaccount', 
+    '/myverify_address', 
+    '/verifycontract', 
+    '/verifyContract-solc-multiple'
+  ];
 
   // Check if email and access_token cookies exist
-  const email = req.cookies.get('email')?.value;
   const accessToken = req.cookies.get('access_token')?.value;
 
   // If cookies are missing, restrict access to only /login and /registration
-  if (!email || !accessToken) {
-    if (pathname !== '/login' && pathname !== '/registration') {
+  if (!accessToken) {
+    if (pathname !== '/registration') {
       return NextResponse.redirect(new URL('/login', req.url));
     }
   } else {
@@ -32,15 +30,6 @@ export function middleware(req: NextRequest) {
 
 // Define the routes where the middleware should run
 export const config = {
-  // matcher: [
-  //   '/',
-  //   '/blocks/:blockId*',
-  //   '/tx/:transactionHash*',
-  //   '/address/:addressId*',
-  //   '/login',
-  //   '/registration',
-  // ],
-
   matcher: [
     '/myaccount',
     '/myverify_address',
@@ -48,7 +37,5 @@ export const config = {
     // '/verifyContract-solc-multiple/:addressId*',
     '/verifyContract-solc-multiple',
     // '/contract-address/:id',
-    '/login',
-    '/registration',
   ],
 };

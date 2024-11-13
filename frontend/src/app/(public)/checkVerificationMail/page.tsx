@@ -15,16 +15,22 @@ const CheckVerificationMailContent = () => {
   }, [searchParams]);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden py-6 sm:py-12 bg-white">
-      <div className="max-w-xl px-5 text-center">
-        <h2 className="mb-2 text-[42px] font-bold text-zinc-800">Check your inbox</h2>
-        <p className="mb-2 text-lg text-zinc-500">
-          We are glad that you’re with us! We’ve sent you a verification link to the email address 
-          <span className="text-red-500"> (Don't Forget to Check Your Spam Folder!)</span> 
-          <span className="font-medium text-indigo-500"> {email}</span>.
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg dark:bg-gray-800">
+          <div>
+            <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Check Your Inbox</h2>
+            <p className="mt-4 text-sm p-2 bg-[#011a27] border-[#044f75] border-2 rounded-lg text-[#6edff6] dark:text-[#6edff6] text-center">
+              Thank you for joining us! We’ve sent a verification link to: {email}
+            </p>
+            <p className="mt-2 text-sm text-red-500 dark:text-red-400 mb-2 text-left">
+              Don’t forget to check your spam folder!
+            </p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+              If you need any assistance, please <a href="https://devolvedai.com" className="text-blue-600 hover:underline dark:text-blue-400">contact us</a>.
+            </p>
+          </div>
       </div>
-    </section>
+    </div>
   );
 };
 

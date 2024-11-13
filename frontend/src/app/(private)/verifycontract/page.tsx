@@ -1,8 +1,6 @@
 "use client"
 
-// import { useRouter } from 'next/router';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useState } from 'react';
 
 const VerifyContract: React.FC = () => {
@@ -10,10 +8,8 @@ const VerifyContract: React.FC = () => {
 
   const [contractAddress, setContractAddress] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
-  const [compilerType, setCompilerType] = useState('');
   const [compilerVersion, setCompilerVersion] = useState('');
   const [licenseType, setLicenseType] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleContinue = () => {
     // Save data to local storage
@@ -30,10 +26,8 @@ const VerifyContract: React.FC = () => {
     // Reset all form fields
     setContractAddress('');
     setWalletAddress('');
-    setCompilerType('');
     setCompilerVersion('');
     setLicenseType('');
-    setAgreedToTerms(false);
   };
 
   return (
@@ -217,7 +211,7 @@ const VerifyContract: React.FC = () => {
             <button
               type="button"
               onClick={handleContinue}
-              disabled={!contractAddress && !compilerType && !walletAddress}
+              disabled={(!contractAddress || !compilerVersion)}
               className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               Continue

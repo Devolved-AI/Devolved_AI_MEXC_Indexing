@@ -97,9 +97,25 @@ const TransactionDetailsByAddress = () => {
     }
   };
 
-  const convertToFixedPrecision = (amount: string, decimals = 4) => {
-    const formattedAmount = parseFloat(amount) / 1e18;
-    return isNaN(formattedAmount) ? '0.0000' : formattedAmount.toFixed(decimals);
+  const convertToFixedPrecision = (amount: string, decimals = 18) => {
+    try {
+      const balanceBigInt = BigInt(amount); // Convert amount to BigInt
+      const divisor = BigInt(1e18);
+      const integerPart = balanceBigInt / divisor;
+      const fractionalPart = balanceBigInt % divisor;
+
+      // Calculate fractional part as a string with necessary precision
+      let fractionalStr = fractionalPart.toString().padStart(18, '0').slice(0, decimals);
+
+      // Remove trailing zeros from fractional part
+      fractionalStr = fractionalStr.replace(/0+$/, '');
+
+      // Return the result with fractional part only if it has significant digits
+      return fractionalStr ? `${integerPart}.${fractionalStr}` : integerPart.toString();
+    } catch (error) {
+        console.error("Invalid input for conversion:", error);
+        return '0.0'; // Default value if input is invalid
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {

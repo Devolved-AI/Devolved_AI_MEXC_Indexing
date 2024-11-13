@@ -7,11 +7,11 @@ const User = require('@models/user.model');
 
 // libraries
 const sendMail = require('@libs/email/sendConfirmMail');
+const sendResetMail = require('@libs/email/sendResetPasswordMail');
 
 const {
     generateUserToken,
     verifyToken,
-    decodeToken
 }= require('@libs/auth/jwt');
 
 // Regular expression for email validation
@@ -223,7 +223,243 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    // Extract token from the Authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(' ')[1]; // Using optional chaining
+
+    if (!token) {
+        return res.status(401).json({ 
+            status: 401,
+            success: false,
+            message: 'Authorization token required' 
+        });
+    }
+
+    try {
+        const decodedToken = await verifyToken(token);
+        if (!decodedToken) {
+            return res.status(403).json({ 
+                status: 403,
+                success: false,
+                message: 'Invalid Token' 
+            });
+        }
+
+        const user = await User.findOne({ email: decodedToken.email });
+        // Check if the user exists
+        if (!user) {
+            return res.status(404).json({ 
+                status: 404,
+                success: false,
+                message: 'User not found' 
+            });
+        }
+
+        // Log the user out by clearing the token and loggedIn flag
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id, 
+            { $unset: { token: 1 }, $set: { loggedIn: false } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(500).json({
+                status: 500,
+                success: false,
+                message: 'Could not log out' 
+            });
+        }
+
+        // Successful logout
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            message: 'Successfully logged out',
+            user: {
+                email: updatedUser.email,
+                loggedIn: updatedUser.loggedIn,
+                token: updatedUser.token
+            }
+        });
+
+    } catch (error) {
+        console.error('Logout Error:', error);
+        return res.status(500).json({ 
+            status: 500,
+            success: false,
+            message: 'Server error' 
+        });
+    }
+};
+
+const sendResetPasswordMail = async (req, res) => {
+    const { email } = req.body;
+    if(!email) {
+        return res.status(400).json({
+            status: 400,
+            success: false,
+            message: 'Email is required'
+        });
+    }
+    try {
+        // Check if the user exists or not
+        const user = await User.findOne({ email });
+        if(!user) {
+            return res.status(404).json({
+                status: 404,
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Check if email is verified
+        if (!user.emailVerified) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Email not verified!',
+            });
+        }
+
+        const resetEmailSent = await sendResetMail(email);
+        if(!resetEmailSent) {
+            return res.status(500).json({
+                status: 500,
+                success: false,
+                message: 'Failed to send reset password email.'
+            });
+        }
+
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            message: 'Reset password email sent successfully.'
+        });
+        
+    } catch (err) {
+        return res.status(500).json({ 
+            status: 500,
+            success: false,
+            message: 'Server error' 
+        });
+    }
+}
+
+const resetPassword = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+        if (!token) {
+            return res.status(404).json({
+                status: 401,
+                success: false, 
+                message: 'Token is required.' 
+            });
+        }
+
+        const decoded = verifyToken(token);
+        if (!decoded || !decoded.email) {
+            return res.status(401).json({
+                status: 401,
+                success: false, 
+                message: 'Invalid token.' 
+            });
+        }
+
+        // Verify user exists and OTP is correct
+        const user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            return res.status(404).json({
+                status: 404,
+                success: false,
+                message: 'User not found.',
+            });
+        }
+
+        // Check if the new password matches confirmation
+        const { newPassword, confirmPassword } = req.body;
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: "New password and confirmation don't match.",
+            });
+        }
+
+        // Ensure the new password is different from the old password
+        const isSamePassword = await bcrypt.compare(confirmPassword, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'New password must be different from the old password',
+            });
+        }
+
+        // Validate password strength
+        if (!validatePassword(confirmPassword)) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Password must be at least 8 characters long and include uppercase, lowercase, digit, and special character.'
+            });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(confirmPassword, salt);
+
+        // Update user password, clear old token and OTP, and set timestamp
+        const updateResult = await User.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                    loggedIn: true,
+                    passwordUpdateTimestamp: new Date(),
+                },
+            }
+        );
+
+        if (!updateResult.modifiedCount) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: 'Password reset failed, please try again',
+            });
+        }
+
+        // Generate a new token
+        const newToken = await generateUserToken(user.email);
+
+        // Update user with the new token
+        user.token = newToken;
+        await user.save();
+
+        // Respond with success and new token
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            message: 'Password reset successful',
+            email: user.email,
+            token: newToken,
+        });
+    } catch (error) {
+        console.error('Password reset error:', error);
+        return res.status(500).json({
+            status: 500,
+            success: false,
+            message: 'Server error',
+        });
+    }
+};
+
 module.exports = {
     register,
-    login
+    login,
+    sendResetPasswordMail,
+    resetPassword,
+    logout
 };

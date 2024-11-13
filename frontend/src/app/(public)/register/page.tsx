@@ -62,7 +62,6 @@ export default function Register() {
               id="username"
               name="username"
               type="text"
-              required
               className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               placeholder="Your username"
               value={username}

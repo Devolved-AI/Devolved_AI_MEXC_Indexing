@@ -16,8 +16,7 @@ function compileContract(solcSnapshot, sourceCode) {
         settings: {
             optimizer: { enabled: true, runs: 200 },
             evmVersion: 'shanghai',
-            outputSelection: { '*': { '*': [ 'abi', 'evm.deployedBytecode.object' ] } },
-            // metadata: { useLiteralContent: true },
+            outputSelection: { '*': { '*': [ 'abi', 'evm.deployedBytecode.object' ] } }
         },
     };
     return JSON.parse(solcSnapshot.compile(JSON.stringify(input)));

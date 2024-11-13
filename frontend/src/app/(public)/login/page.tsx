@@ -34,8 +34,7 @@ const LoginContent = () => {
 
       const data = await response.json();
       if (data.success) {
-        Cookies.set('email', data.data.email, { expires: 7 });
-        Cookies.set('access_token', data.data.token, { expires: 7 });
+        Cookies.set('access_token', data.data.token, { expires: 29 });
 
         toast.success("Login successful!");
         router.push('/myaccount');
@@ -61,8 +60,7 @@ const LoginContent = () => {
 
       const data = await response.json();
       if (data.success) {
-        Cookies.set('email', email, { expires: 7 });
-        Cookies.set('access_token', data.data.token, { expires: 7 });
+        Cookies.set('access_token', data.data.token, { expires: 29 });
 
         toast.success("Login successful!");
         router.push('/myaccount');
@@ -119,7 +117,7 @@ const LoginContent = () => {
           </div>
 
           <div className="flex items-center justify-between mt-4">
-            <Link href="/reset-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
               Forgot password?
             </Link>
           </div>

@@ -17,6 +17,13 @@ function generateUserToken(userEmail) {
         { expiresIn: process.env.JWT_USER_EXPIRATION });
 }
 
+function generateResetToken(userEmail) {
+    return jwt.sign(
+        { email: userEmail },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_RESET_PASSWORD_EXPIRATION });
+}
+
 const verifyToken = (token) => {
     try {
         return jwt.verify(token, process.env.JWT_SECRET);
@@ -38,6 +45,7 @@ const decodeToken = (token) => {
 module.exports = {
     generateConfirmationToken,
     generateUserToken,
+    generateResetToken,
     verifyToken,
     decodeToken
 };
