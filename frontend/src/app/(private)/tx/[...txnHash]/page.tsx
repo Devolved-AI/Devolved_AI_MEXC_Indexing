@@ -218,7 +218,7 @@ const TransactionDetails = () => {
 
   if (loading) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow">
+      <div className="p-4 bg-white dark:bg-gray-800 text-gray-700 shadow">
         <div className="flex justify-center items-center h-64">
           <div className="loader">
             <Player
@@ -261,10 +261,11 @@ const TransactionDetails = () => {
   const statusInfo = transactionData ? getTransactionStatus(transactionData.events) : null;
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div className=" dark:bg-gray-800 ">
+      <div className='container mx-auto p-4 sm:p-6 lg:p-8'>
       {transactionData && (
         <div className="mt-6">
-          <div className="bg-white shadow-md rounded-lg p-4">
+          <div className="bg-white dark:bg-gray-700 dark:text-gray-300 shadow-md rounded-lg p-4">
             <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="flex justify-between">
@@ -523,6 +524,7 @@ const TransactionDetails = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };

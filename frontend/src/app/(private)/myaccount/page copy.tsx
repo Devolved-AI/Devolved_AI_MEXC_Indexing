@@ -27,59 +27,61 @@ const MyAccount: React.FC = () => {
   console.log(contractAddress)
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8 px-4 md:px-16 lg:px-32">
+    <div className="min-h-screen bg-gray-100 py-8 px-4 md:px-16 lg:px-32">
       {/* Back to Home Link */}
       <Link href="/" passHref>
         <samp className="text-blue-600 hover:underline">Back Home</samp>
       </Link>
 
-      <div className="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+      <div className="mt-6 bg-white shadow-lg rounded-lg p-6">
         {/* Account Overview */}
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-300 mb-6">Account Overview</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Account Overview</h1>
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Sidebar Navigation */}
-          <aside className="col-span-1 bg-gray-50 dark:bg-gray-700 border rounded-lg p-4">
-            {/* <h2 className="text-lg font-semibold text-gray-700">Account</h2>
+          <aside className="col-span-1 bg-gray-50 border rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-gray-700">Account</h2>
             <ul className="space-y-3 mt-3">
               <li><Link href="#" className="text-blue-600 hover:underline">Account Overview</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Account Settings</Link></li>
-            </ul> */}
+            </ul>
 
-            {/* <h2 className="text-lg font-semibold text-gray-700 mt-6">Lists</h2>
+            <h2 className="text-lg font-semibold text-gray-700 mt-6">Lists</h2>
             <ul className="space-y-3 mt-3">
               <li><Link href="#" className="text-blue-600 hover:underline">Watch List</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Private Name Tags</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Txn Private Notes</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Token Ignore List</Link></li>
               <li><Link href="#" className="text-blue-600 hover:underline">Advanced Filter</Link></li>
-            </ul> */}
+            </ul>
 
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mt-6">Others</h2>
+            <h2 className="text-lg font-semibold text-gray-700 mt-6">Others</h2>
             <ul className="space-y-3 mt-3">
-              <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verify Address</Link></li>
-              <li><Link href="/contract-address" className="text-blue-600 hover:underline">Contract Address</Link></li>
+              {/* <li><Link href="#" className="text-blue-600 hover:underline">API Keys</Link></li> */}
+              <li><Link href="/myverify_address" className="text-blue-600 hover:underline">Verified Addresses</Link></li>
+              {/* Argocoin: AGC Token */}
+              <li><Link href={`/contract-address/${contractAddress}`} className="text-blue-600 hover:underline">Argocoin: AGC Token</Link></li>
             </ul>
           </aside>
 
           {/* Main Content */}
           <section className="col-span-2">
-            <div className="bg-gray-50 dark:bg-gray-700 border rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4">Personal Info</h2>
-              <p className="text-gray-700 dark:text-gray-300">Below are the username, email, and overview information for your account.</p>
+            <div className="bg-gray-50 border rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Info</h2>
+              <p className="text-gray-700">Below are the username, email, and overview information for your account.</p>
 
               <div className="mt-4 space-y-4">
                 <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-300">Your Username:</p>
-                  <p className="text-gray-600 dark:text-gray-300"></p>
+                  <p className="font-medium text-gray-800">Your Username:</p>
+                  <p className="text-gray-600"></p>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-300">Your Email Address:</p>
-                  <p className="text-gray-600 dark:text-gray-300">{email}</p>
+                  <p className="font-medium text-gray-800">Your Email Address:</p>
+                  <p className="text-gray-600">{email}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-300">Last Login:</p>
-                  <p className="text-gray-600 dark:text-gray-300">2024-11-05 04:06:41 (UTC)</p>
+                  <p className="font-medium text-gray-800">Last Login:</p>
+                  <p className="text-gray-600">2024-11-05 04:06:41 (UTC)</p>
                 </div>
               </div>
             </div>

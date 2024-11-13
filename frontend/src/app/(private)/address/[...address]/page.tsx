@@ -135,7 +135,7 @@ const TransactionDetailsByAddress = () => {
 
   if (loading) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow rounded-md">
+      <div className="p-4 bg-white dark:bg-gray-800 text-gray-700 shadow rounded-md">
         <div className="flex justify-center items-center h-64">
           <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
         </div>
@@ -156,10 +156,11 @@ const TransactionDetailsByAddress = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      {balance && (
+    <div className=" dark:bg-gray-800">
+     <div className='container mx-auto p-4 sm:p-6 lg:p-8'>
+     {balance && (
         <div className="text-center mb-6">
-          <h4 className="text-lg sm:text-lg font-semibold mb-4 text-gray-700">
+          <h4 className="text-lg sm:text-lg dark:text-gray-300 font-semibold mb-4 text-gray-700">
             {balance !== 'Balance not found' ? `Balance: ${convertToFixedPrecision(balance)} AGC` : 'Balance not found'}
           </h4>
         </div>
@@ -168,9 +169,9 @@ const TransactionDetailsByAddress = () => {
       {transactionData ? (
         <div className="space-y-6">
           {paginateData().map((block, blockIndex) => (
-            <div key={blockIndex} className="bg-white shadow-md rounded-lg p-6">
+            <div key={blockIndex} className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-6">
               <div className="mb-4 border-b pb-4">
-                <h5 className="text-lg font-semibold text-gray-800">Block #{block.block_number}</h5>
+                <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-300">Block #{block.block_number}</h5>
                 <p className="text-gray-500">{formatTimestamp(block.timestamp)}</p>
               </div>
 
@@ -261,6 +262,7 @@ const TransactionDetailsByAddress = () => {
       ) : (
         <div className="text-center text-red-500 mt-6">Transaction details not found.</div>
       )}
+     </div>
     </div>
   );
 };

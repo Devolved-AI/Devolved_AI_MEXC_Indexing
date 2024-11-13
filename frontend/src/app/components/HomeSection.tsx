@@ -112,21 +112,21 @@ const HomeSection: React.FC = () => {
         
         {/* Latest Blocks Section */}
         <div className="w-full md:w-1/2 overflow-auto">
-          <h2 className="text-xl font-semibold mb-4">Latest Blocks</h2>
-          <div className="bg-white shadow-md rounded-lg p-4 overflow-auto">
+          <h2 className="text-xl dark:text-gray-300 font-semibold mb-4">Latest Blocks</h2>
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 overflow-auto">
             {latestBlocks ? (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8 h-8">Icon</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8 h-8">Icon</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                   {latestBlocks.map((block, index) => (
                     <tr key={index}>
-                      <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={BlockImage} alt="block-icon" /></td>
+                      <td className="px-5 py-7 bg-gray-100 dark:bg-gray-700 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={BlockImage} alt="block-icon" /></td>
                       <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
                         <Link href={`/block/${block.block_number}`} className="text-[#D91A9C] hover:underline">
                           {block.block_number}
@@ -145,22 +145,22 @@ const HomeSection: React.FC = () => {
 
         {/* Latest Transactions Section */}
         <div className="w-full md:w-1/2 overflow-auto">
-          <h2 className="text-xl font-semibold mb-4">Latest Transactions</h2>
-          <div className="bg-white shadow-md rounded-lg p-4 overflow-auto">
+          <h2 className="text-xl dark:text-gray-300 font-semibold mb-4">Latest Transactions</h2>
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 overflow-auto">
             {latestTransactions ? (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Txn Hash</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
-                    <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Txn Hash</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
+                    <th className="px-4 py-2 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                   {latestTransactions.map((txn, index) => (
                     <tr key={index}>
-                      <td className="px-5 py-7 bg-gray-100 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={TransactionImage} alt="transaction-icon" /></td>
+                      <td className="px-5 py-7 bg-gray-100 dark:bg-gray-700 text-xs sm:text-sm text-gray-500 h-4 w-4"><Image priority src={TransactionImage} alt="transaction-icon" /></td>
                       <td className="px-4 py-6 text-xs sm:text-sm text-[#D91A9C]">
                         <Link href={`/tx/${txn.tx_hash}`} className="text-[#D91A9C] hover:underline">
                           {shorten(txn.tx_hash)}
