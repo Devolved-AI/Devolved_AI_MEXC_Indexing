@@ -30,14 +30,14 @@ export default function Home() {
   const [filter, setFilter] = useState('txnHash');
 
   return (
-    <main className="flex justify-center items-center min-h-screen bg-gray-100">
+    <main className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-800">
       <div className="container mx-auto p-4 sm:p-6 lg:p-8 ">
         <div className="flex justify-left items-left mb-4">
           <form onSubmit={handleSearch} className="w-full sm:w-auto flex items-center justify-center">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="lg:px-4 py-2 border border-gray-300 rounded-l-md w-20 lg:w-auto h-10 lg:h-16 focus:outline-none focus:ring-1 focus:ring-[#D91A9C]"
+              className="lg:px-4 py-2 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 rounded-l-md w-20 lg:w-auto h-10 lg:h-16 focus:outline-none focus:ring-1 focus:ring-[#D91A9C]"
             >
               <option value="txnHash">Txn Hash</option>
               <option value="address">Address</option>
@@ -49,7 +49,7 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search by ${filter.charAt(0).toUpperCase() + filter.slice(1)}`}
-              className="w-full lg:w-[750px] px-4 py-2 border border-gray-300 h-10 lg:h-16 focus:outline-none focus:ring-1 focus:ring-[#D91A9C]"
+              className="w-full lg:w-[750px] px-4 py-2 border dark:bg-gray-700 dark:text-gray-300 border-gray-300 h-10 lg:h-16 focus:outline-none focus:ring-1 focus:ring-[#D91A9C]"
             />
             <button type="submit" className="px-1 lg:px-4 py-2 h-10 lg:h-16 bg-[#D91A9C] text-white rounded-r-full hover:bg-[#e332ab]">
               Search
