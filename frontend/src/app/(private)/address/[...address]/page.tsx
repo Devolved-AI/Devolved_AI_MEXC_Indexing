@@ -151,7 +151,7 @@ const TransactionDetailsByAddress = () => {
 
   if (loading) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow rounded-md">
+      <div className="p-4 bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-700 shadow rounded-md">
         <div className="flex justify-center items-center h-64">
           <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
         </div>
@@ -161,7 +161,7 @@ const TransactionDetailsByAddress = () => {
 
   if ((!balance && !transactionData) || error) {
     return (
-      <div className="p-4 bg-white text-gray-700 shadow rounded-md text-center">
+      <div className="p-4 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300 shadow rounded-md text-center">
         <h1 className="text-4xl font-bold text-red-500">404</h1>
         <p className="mt-2 text-gray-600">The balance and transaction details for the specified address were not found.</p>
         <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
@@ -172,22 +172,23 @@ const TransactionDetailsByAddress = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div className=" dark:bg-gray-800 dark:text-gray-300 ">
+      <div className='container mx-auto p-4 sm:p-6 lg:p-8'>
       {balance && (
-        <div className="text-center mb-6">
-          <h4 className="text-lg sm:text-lg font-semibold mb-4 text-gray-700">
+        <div className="text-center mb-6 dark:text-gray-300">
+          <h4 className="text-lg sm:text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">
             {balance !== 'Balance not found' ? `Balance: ${convertToFixedPrecision(balance)} AGC` : 'Balance not found'}
           </h4>
         </div>
       )}
 
       {transactionData ? (
-        <div className="space-y-6">
+        <div className="space-y-6 ">
           {paginateData().map((block, blockIndex) => (
-            <div key={blockIndex} className="bg-white shadow-md rounded-lg p-6">
+            <div key={blockIndex} className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-300 shadow-md rounded-lg p-6">
               <div className="mb-4 border-b pb-4">
-                <h5 className="text-lg font-semibold text-gray-800">Block #{block.block_number}</h5>
-                <p className="text-gray-500">{formatTimestamp(block.timestamp)}</p>
+                <h5 className="text-lg font-semibold ">Block #{block.block_number}</h5>
+                <p className="text-gray-500 ">{formatTimestamp(block.timestamp)}</p>
               </div>
 
               {block.transactions.map((transaction, txIndex) => (
@@ -196,7 +197,7 @@ const TransactionDetailsByAddress = () => {
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-b last:border-b-0"
                 >
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">Transaction</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">Transaction</span>
                     <div className="flex items-center space-x-2">
                       <button
                         className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
@@ -211,11 +212,11 @@ const TransactionDetailsByAddress = () => {
                     </div>
                   </div>
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">Method</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">Method</span>
                     <p className="text-gray-700">{transaction.methodName}</p>
                   </div>
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">From</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">From</span>
                     <div className="flex items-center space-x-2">
                       <button
                         className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
@@ -230,7 +231,7 @@ const TransactionDetailsByAddress = () => {
                     </div>
                   </div>
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">To</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">To</span>
                     <div className="flex items-center space-x-2">
                       <button
                         className="copy-btn bg-pink-500 text-white p-2 rounded hover:bg-pink-600 transition duration-150 ease-in-out"
@@ -245,11 +246,11 @@ const TransactionDetailsByAddress = () => {
                     </div>
                   </div>
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">Amount</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">Amount</span>
                     <p className="text-gray-700">{convertToFixedPrecision(transaction.amount)} AGC</p>
                   </div>
                   <div className="col-span-1">
-                    <span className="text-gray-500 font-semibold">Gas Fee</span>
+                    <span className="text-gray-500 dark:text-gray-300 font-semibold">Gas Fee</span>
                     <p className="text-gray-700">{convertToFixedPrecision(transaction.gas_fee)} AGC</p>
                   </div>
                 </div>
@@ -277,6 +278,7 @@ const TransactionDetailsByAddress = () => {
       ) : (
         <div className="text-center text-red-500 mt-6">Transaction details not found.</div>
       )}
+      </div>
     </div>
   );
 };
