@@ -27,6 +27,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [message, setMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState('');
+    const [showMessageScreen, setShowMessageScreen] = useState(true); // Toggle message screen
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
@@ -106,7 +107,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
             if (res.success) {
                 toast.success(res.message || "Contract verified and published successfully!");
-                router.push('/myverify_address');
+                setShowMessageScreen(true); // Show message screen on success
+                // router.push('/myverify_address');
             } else {
                 toast.error(res.message || "Failed to verify contract. Please try again.");
             }
@@ -160,6 +162,16 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-6">
+
+{showMessageScreen ? (
+          // Message screen content
+          <div className='max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
+            <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Contract verified and published</h2>
+            <p className="mt-4 text-sm p-2 bg-[#011a27] border-[#044f75] border-2 rounded-lg text-[#6edff6] dark:text-[#6edff6] text-center">
+              You've successfully Contract verified and published !.
+            </p>
+          </div>
+        ):(
             <div className="max-w-4xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                     Verify & Publish Contract Source Code
@@ -177,7 +189,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                 </ol>
 
                 {/* Contract Address, Compiler Type, Compiler Version */}
-                <div className="space-y-4 bg-[#e9ecef] p-2 rounded-lg border">
+                <div className="space-y-4 bg-[#e9ecef] dark:bg-gray-700 p-2 rounded-lg border">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Wallet Address:</label>
                         <p className="text-gray-800 dark:text-white">{walletAddress}</p>
@@ -386,6 +398,9 @@ const VerifyContractSolcMultiple: React.FC = () => {
                     </button>
                 </div>
             </div>
+        )
+    }
+            
         </div>
     );
 };
