@@ -265,7 +265,7 @@ const TransactionDetailsByAddress = () => {
             >
               Previous
             </button>
-            <span className="text-sm text-gray-700">Page {currentPage}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">Page {currentPage}</span>
             <button
               onClick={handleNextPage}
               disabled={transactionData && currentPage * ITEMS_PER_PAGE >= transactionData.length}

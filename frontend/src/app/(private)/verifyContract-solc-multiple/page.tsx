@@ -27,7 +27,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [message, setMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState('');
-    const [showMessageScreen, setShowMessageScreen] = useState(true); // Toggle message screen
+    const [showMessageScreen, setShowMessageScreen] = useState(false); // Toggle message screen
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
