@@ -127,7 +127,7 @@ const Header: React.FC = () => {
                 </div>
                 <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownAvatarNameButton">
                   <li>
-                    <Link href="/myaccount" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">My Account</Link>
+                    <Link href="/myaccount" onClick={() => setIsOpen(!isOpen)} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">My Account</Link>
                   </li>
                   <li>
                     {/* <Link href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Settings</Link> */}
