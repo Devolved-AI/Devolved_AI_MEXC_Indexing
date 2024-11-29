@@ -18,11 +18,11 @@ const Footer: React.FC = () => {
             <Link href="/">
               <samp className="flex items-center text-gray-700">
                 <Image src="/headerLogo.jpg" alt="Logo" width={40} height={40} className="h-10 w-10" />
-                <span className="ml-2 text-xl font-bold">Argochain Scanner</span>
+                <span className="ml-2 text-xl font-bold">Argochain Test Scanner</span>
               </samp>
             </Link>
             <p className="mt-4 text-sm">
-            Argochain Scanner is a Block Explorer and Analytics Platform for Argochain.
+            Argochain Test Scanner is a Block Explorer and Analytics Platform for Argochain Testnet.
             </p>
           </div>
 

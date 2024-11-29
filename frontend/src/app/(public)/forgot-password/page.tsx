@@ -65,7 +65,7 @@ export default function PasswordRecovery() {
         ) : (
           // Password recovery form
           <div>
-            <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Argochain Scanner Password Recovery</h2>
+            <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Argochain Test Scanner Password Recovery</h2>
             <p className="text-sm text-center text-gray-600 dark:text-gray-400">
               Enter your registered email address below, and we’ll send you a link to reset your password.
             </p>

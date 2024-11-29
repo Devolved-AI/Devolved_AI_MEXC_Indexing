@@ -16,7 +16,17 @@ const provider = new ethers.WebSocketProvider(process.env.ARGOCHAIN_RPC_URL);
  * @param {Object} solidityFile - The uploaded Solidity (.sol) file object.
  * @returns {Object} - Verification results including contract details and S3 file URL.
  */
-async function verifyContract(contractAddress, compilerVersion, solidityFile, types, values, libraryAddress) {
+async function verifyContract(
+    contractAddress, 
+    compilerVersion, 
+    solidityFile, 
+    evmVersionToTarget, 
+    sourceCodeOptimized, 
+    runsOptimizer,
+    types, 
+    values, 
+    libraryAddress
+) {
     try {
         // Upload the Solidity file to S3 and retrieve the file URL
         console.log("Uploading Solidity file to S3...");
@@ -41,7 +51,13 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
 
         // Compile the Solidity contract using the loaded compiler
         console.log("Compiling Solidity contract...");
-        const compilationResult = compileContract(solcSnapshot, sourceCode);
+        const compilationResult = compileContract(
+            solcSnapshot, 
+            sourceCode, 
+            evmVersionToTarget,
+            sourceCodeOptimized, 
+            runsOptimizer
+        );
 
         // Check for any compilation errors and throw an error if found
         if (compilationResult.errors) {
@@ -69,7 +85,8 @@ async function verifyContract(contractAddress, compilerVersion, solidityFile, ty
         let generatedBytecode = contractData.evm.deployedBytecode.object;
         if (types && values) {
             const abiCoder = new AbiCoder();
-            const encodedParams = abiCoder.encode(types.split(','), values.split(','));
+            // const encodedParams = abiCoder.encode(types.split(','), values.split(','));
+            const encodedParams = abiCoder.encode(types, values);
             generatedBytecode += encodedParams.slice(2);
         }
         if (libraryAddress) {
