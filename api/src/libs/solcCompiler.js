@@ -9,13 +9,22 @@ function loadCompilerVersion(version) {
     });
 }
 
-function compileContract(solcSnapshot, sourceCode) {
+function compileContract(
+    solcSnapshot, 
+    sourceCode, 
+    evmVersionToTarget,
+    sourceCodeOptimized, 
+    runsOptimizer
+) {
     const input = {
         language: 'Solidity',
         sources: { 'Contract.sol': { content: sourceCode } },
         settings: {
-            optimizer: { enabled: true, runs: 200 },
-            evmVersion: 'shanghai',
+            optimizer: { 
+                enabled: sourceCodeOptimized, 
+                runs: runsOptimizer 
+            },
+            evmVersion: evmVersionToTarget,
             outputSelection: { '*': { '*': [ 'abi', 'evm.deployedBytecode.object' ] } }
         },
     };

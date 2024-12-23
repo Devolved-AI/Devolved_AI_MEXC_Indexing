@@ -100,7 +100,17 @@ async function verifyContractController(req, res) {
         console.log("Starting contract verification with data:", { contractAddress, compilerVersion, types, values, libraryAddress });
 
         // Call the verification service with provided details
-        const verificationResult = await verifyContract(contractAddress, compilerVersion, req.file, types, values, libraryAddress);
+        const verificationResult = await verifyContract(
+            contractAddress, 
+            compilerVersion, 
+            req.file, 
+            evmVersionToTarget, 
+            sourceCodeOptimized, 
+            runsOptimizer, 
+            types, 
+            values, 
+            libraryAddress
+        );
         
         // Prepare verification data with schema-compliant ABI format
         const verificationData = {
@@ -123,7 +133,9 @@ async function verifyContractController(req, res) {
             evmVersionToTarget: evmVersionToTarget || 'No EVM version specified',
             libraryName: libraryName || 'No library name linked',
             libraryAddress: libraryAddress || 'No library address linked',
-            constructorArgs: constructorArgs || 'No constructor arguments provided',
+            constructorArgs: constructorArgs || [],
+            types: types || [],
+            values: values || [],
             deployedBytecodeSourcemap: deployedBytecodeSourcemap || 'No deployed bytecode sourcemap provided'
         };
 

@@ -21,11 +21,11 @@ const ContractVerificationSchema = new Schema({
     sourceCodeOptimized: { type: Boolean, default: false },
     runsOptimizer: { type: Number, default: 0 },
     evmVersionToTarget: { type: String, default: 'No evm version provided' },
-    libraryName: { type: [String], default: ['No library name linked'] },  // Allow multiple library names
-    libraryAddress: { type: [String], default: ['No library linked'] },    // Allow multiple library addresses
-    constructorArgs: { type: [String], default: [] },                      // Allow multiple constructor arguments
-    types: { type: String, default: 'No types provided' },
-    values: { type: String, default: 'No values provided' }
+    libraryName: { type: [String], default: ['No library name linked'] },
+    libraryAddress: { type: [String], default: ['No library linked'] },
+    constructorArgs: { type: [String], default: ['No constructor argument provided'] },
+    types: { type: [String], default: ['No types provided'] },
+    values: { type: [String], default: ['No values provided'] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ContractVerification', ContractVerificationSchema);
