@@ -157,7 +157,7 @@ const processBlock = async (api, blockNumber) => {
       // Check if the section and method match the new specified criteria
       if (
         (section === 'balances' && ['transfer', 'transferAll', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) ||
-        (section === 'palletCounter' && ['balanceTransferNew', 'mint'].includes(method))
+        (section === 'palletCounter' && ['balanceTransferNew', 'TransferOfBalanceNew', 'mint', 'evmToSubstrate', 'EvmToSubstrateTransfer', 'substrateToEvm', 'EvmBalanceMutated'].includes(method))
       ) {
         let from = isSigned ? signer.toString() : null;
         let to = null;
@@ -241,7 +241,49 @@ const processBlock = async (api, blockNumber) => {
                   amount = transferEvent.event.data[2].toString() || amount;
               }
           }
-      }      
+          else if (method === 'evmToSubstrate') {
+            console.log(`Processing extrinsic palletCounter.evmToSubstrate in block ${blockNumber}`);
+            from = '0';
+            to = '0';
+            amount = '0';
+
+            const evmToSubstrateEvent = allEvents.find(
+              ({ event }) => event.section === 'palletCounter' && event.method === 'EvmToSubstrateTransfer'
+            );
+
+            if (evmToSubstrateEvent) {
+              from = evmToSubstrateEvent.event.data[0].toString() || from;
+              to = evmToSubstrateEvent.event.data[1].toString() || to;
+              amount = evmToSubstrateEvent.event.data[2].toString() || amount;
+            }
+          }
+
+          else if (method === 'substrateToEvm') {
+            console.log(`Processing extrinsic palletCounter.substrateToEvm in block ${blockNumber}`);
+            from = '0';
+            to = '0';
+            amount = '0';
+
+            const evmBalanceMutatedEvent = allEvents.find(
+              ({ event }) => event.section === 'palletCounter' && event.method === 'EvmBalanceMutated'
+            );
+
+            const withdrawEvent = allEvents.find(
+              ({ event }) =>
+                event.section === 'balances' &&
+                event.method === 'Withdraw'
+            );
+
+            if (evmBalanceMutatedEvent) {
+              to = evmBalanceMutatedEvent.event.data[0].toString() || to;
+              amount = evmBalanceMutatedEvent.event.data[1].toString() || amount;
+            }
+    
+            if (withdrawEvent) {
+              from = withdrawEvent.event.data[0].toString() || from;
+            }
+          }
+      }
         
 
         // For `transferAll`, find `amount` from `Transfer` or `Endowed` events if not in args
