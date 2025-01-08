@@ -302,6 +302,13 @@ const TransactionDetails = () => {
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
+                <span className="font-semibold">Timestamp:</span>
+                <span>{transactionData.timestamp ? formatTimestamp(transactionData.timestamp) : 'Not available'}</span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
                 <span className="font-semibold">From Address:</span>
                 <span className="flex items-center">
                   <Link href={`/address/${transactionData.from_address}`} className="hover:underline">
@@ -436,6 +443,13 @@ const TransactionDetails = () => {
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
+                <span className="font-semibold">Timestamp:</span>
+                <span>{transactionDataBlockHash.timestamp ? formatTimestamp(transactionDataBlockHash.timestamp) : 'Not available'}</span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
                 <span className="font-semibold">From Address:</span>
                 <span className="flex items-center">
                   {transactionDataBlockHash.toAddress}
@@ -469,6 +483,13 @@ const TransactionDetails = () => {
                 <div className="flex justify-between">
                   <span className="font-semibold">Block Number:</span>
                   <span className="flex items-center">{transaction.blockNumber}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Timestamp:</span>
+                  <span>{transaction.timestamp ? formatTimestamp(transaction.timestamp) : 'Not available'}</span>
                 </div>
 
                 <hr className="opacity-75"></hr>
@@ -509,13 +530,6 @@ const TransactionDetails = () => {
                     </div>
                   </>
                 )}
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Timestamp:</span>
-                  <span>{formatTimestamp(transaction.timestamp)}</span>
-                </div>
               </div>
             </div>
           ))}
