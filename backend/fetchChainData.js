@@ -241,6 +241,7 @@ const processBlock = async (api, blockNumber) => {
                   amount = transferEvent.event.data[2].toString() || amount;
               }
           }
+          
           else if (method === 'evmToSubstrate') {
             console.log(`Processing extrinsic palletCounter.evmToSubstrate in block ${blockNumber}`);
             from = '0';
