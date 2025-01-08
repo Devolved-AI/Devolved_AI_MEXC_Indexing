@@ -175,39 +175,7 @@ const TransactionDetails = () => {
     }
   };
 
-  // const convertTo18Precision = (amount: string) => {
-  //   // Check if the value has 18 decimal places; if not, convert it
-  //   if (!/^\d+\.\d{18}$/.test(amount)) {
-  //     return (parseFloat(amount) / 1e18).toFixed(18);
-  //   }
-  //   return amount;
-  // };
-
-  // const convertTo18Precision = (amount: string, decimals = 18) => {
-  //   const formattedAmount = parseFloat(amount) / 1e18;
-  //   return isNaN(formattedAmount) ? '0.0000' : formattedAmount.toFixed(decimals);
-  // };
-
   const convertTo18Precision = (amount: string, decimals = 18) => {
-    // try {
-    //   const balanceBigInt = BigInt(amount); // Convert amount to BigInt
-    //   const divisor = BigInt(1e18);
-    //   const integerPart = balanceBigInt / divisor;
-    //   const fractionalPart = balanceBigInt % divisor;
-
-    //   // Calculate fractional part as a string with necessary precision
-    //   let fractionalStr = fractionalPart.toString().padStart(18, '0').slice(0, decimals);
-
-    //   // Check if the fractional part is all zeros
-    //   if (parseInt(fractionalStr) === 0) {
-    //       return integerPart.toString(); // Return integer part only
-    //   } else {
-    //       return `${integerPart}.${fractionalStr}`; // Return with fractional part
-    //   }
-    // } catch (error) {
-    //     console.error("Invalid input for conversion:", error);
-    //     return '0.0'; // Default value if input is invalid
-    // }
     try {
       const balanceBigInt = BigInt(amount); // Convert amount to BigInt
       const divisor = BigInt(1e18);
@@ -227,21 +195,6 @@ const TransactionDetails = () => {
         return '0.0'; // Default value if input is invalid
     }
   };
-
-  // Function to determine the transaction status
-  // const getTransactionStatus = (events: any[]) => {
-  //   const failedEvent = events.find(event => event.section === 'system' && event.method === 'ExtrinsicFailed');
-  //   if (failedEvent) {
-  //     return { status: 'Failed', reason: 'FundsUnavailable' }; // Display the failure reason
-  //   }
-
-  //   const successEvent = events.find(event => event.section === 'balances' && event.method === 'Transfer');
-  //   if (successEvent) {
-  //     return { status: 'Success' };
-  //   }
-
-  //   return { status: 'Unknown' };
-  // };
 
   const getTransactionStatus = (events: any) => {
     // If events is a string, parse it as JSON
@@ -344,6 +297,13 @@ const TransactionDetails = () => {
                     {transactionData.block_number}
                   </Link>
                 </span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
+                <span className="font-semibold">Timestamp:</span>
+                <span>{transactionData.timestamp ? formatTimestamp(transactionData.timestamp) : 'Not available'}</span>
               </div>
 
               <hr className="opacity-75"></hr>
@@ -483,6 +443,13 @@ const TransactionDetails = () => {
               <hr className="opacity-75"></hr>
 
               <div className="flex justify-between">
+                <span className="font-semibold">Timestamp:</span>
+                <span>{transactionDataBlockHash.timestamp ? formatTimestamp(transactionDataBlockHash.timestamp) : 'Not available'}</span>
+              </div>
+
+              <hr className="opacity-75"></hr>
+
+              <div className="flex justify-between">
                 <span className="font-semibold">From Address:</span>
                 <span className="flex items-center">
                   {transactionDataBlockHash.toAddress}
@@ -516,6 +483,13 @@ const TransactionDetails = () => {
                 <div className="flex justify-between">
                   <span className="font-semibold">Block Number:</span>
                   <span className="flex items-center">{transaction.blockNumber}</span>
+                </div>
+
+                <hr className="opacity-75"></hr>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold">Timestamp:</span>
+                  <span>{transaction.timestamp ? formatTimestamp(transaction.timestamp) : 'Not available'}</span>
                 </div>
 
                 <hr className="opacity-75"></hr>
@@ -556,13 +530,6 @@ const TransactionDetails = () => {
                     </div>
                   </>
                 )}
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Timestamp:</span>
-                  <span>{formatTimestamp(transaction.timestamp)}</span>
-                </div>
               </div>
             </div>
           ))}
