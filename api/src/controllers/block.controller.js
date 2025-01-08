@@ -14,7 +14,6 @@ const initializeApi = async () => {
     throw error;
   }
 };
-
 // Function to get the last 10 blocks from PostgreSQL
 const getLast10Blocks = async (req, res) => {
   try {

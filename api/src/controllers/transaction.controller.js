@@ -432,4 +432,3 @@ module.exports = {
   fetchTransactionData,
   transactionDetailsEVM
 };
-
