@@ -14,6 +14,7 @@ const healthCheckRoute = require( '@routes/healthCheck.route' );
 const blockRoute = require( '@routes/block.route' );
 const transactionRoute = require( '@routes/transaction.route' );
 const transactionMessageRoute = require( '@routes/transactionMessage.route' );
+const accountRoutes = require( '@routes/account.route' );
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use( '/healthCheck', healthCheckRoute );
 app.use( '/block', blockRoute );
 app.use( '/transaction', transactionRoute );
 app.use( '/transactionMessage', transactionMessageRoute );
+app.use( '/accounts', accountRoutes );
 
 const PORT = process.env.PORT || 4000;
 app.listen( PORT, () => {
