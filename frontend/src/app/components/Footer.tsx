@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaTwitter, FaDiscord, FaLinkedin, FaTelegramPlane } from 'react-icons/fa';
+import { FaTwitter, FaDiscord, FaLinkedin, FaTelegramPlane, FaGlobe } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
   const year = new Date().getFullYear();
@@ -48,6 +48,11 @@ const Footer: React.FC = () => {
             {/* <p className="text-sm">Email: info@devolvedai.com</p>
             <p className="text-sm">Phone: +0 000 000 000</p> */}
             <div className="flex mt-4 space-x-4">
+            <samp className="text-gray-700 hover:text-gray-600">
+                <Link href="https://devolvedai.com" target='_blank'>
+                  <FaGlobe className="h-6 w-6" />
+                </Link>
+              </samp>
               <samp className="text-gray-700 hover:text-gray-600">
                 <Link href="https://twitter.com/devolvedai" target='_blank'>
                   <FaTwitter className="h-6 w-6" />

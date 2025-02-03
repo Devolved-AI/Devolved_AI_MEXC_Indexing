@@ -44,8 +44,12 @@ const Header: React.FC = () => {
 
         {/* User Account Options */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link href="https://devolvedai.com/" target="_blank">
+          {/* <Link href="https://devolvedai.com/" target="_blank">
             <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Contact Us</samp>
+          </Link> */}
+
+          <Link href="https://scanner.argoscan.net/top-100-holder-wallets-addresses">
+            <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Top 100 Accounts</samp>
           </Link>
         </div>
 
@@ -83,8 +87,12 @@ const Header: React.FC = () => {
             <Link href="/transactions">
               <samp onClick={handleNavLinkClick} className="block text-gray-700 hover:bg-gray-200 px-3 py-2 rounded-md">Transactions</samp>
             </Link> */}
-            <Link href="https://devolvedai.com/" target="_blank">
+            {/* <Link href="https://devolvedai.com/" target="_blank">
             <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Contact Us</samp>
+          </Link> */}
+
+          <Link href="https://scanner.argoscan.net/top-100-holder-wallets-addresses" target="_blank">
+            <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Top 100 Accounts</samp>
           </Link>
           </nav>
         </div>
