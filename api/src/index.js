@@ -7,18 +7,18 @@ const rateLimit = require( 'express-rate-limit' );
 const helmet = require( 'helmet' );
 const cors = require( 'cors' );
 const hpp = require( 'hpp' );
-const bodyParser = require('body-parser');
-const connectDB = require('@config/mongoDB');
+const bodyParser = require( 'body-parser' );
+const connectDB = require( '@config/mongoDB' );
 
 // Routes
 const healthCheckRoute = require( '@routes/healthCheck.route' );
-const authRoute = require('@routes/auth.route');
-const userRoute = require('@routes/user.route');
+const authRoute = require( '@routes/auth.route' );
+const userRoute = require( '@routes/user.route' );
 const blockRoute = require( '@routes/block.route' );
 const transactionRoute = require( '@routes/transaction.route' );
 const transactionMessageRoute = require( '@routes/transactionMessage.route' );
 const contractRoutes = require( '@routes/contract.route' );
-
+const accountRoutes = require( '@routes/account.route' );
 // Connect to MongoDB
 connectDB();
 
@@ -28,7 +28,7 @@ const app = express();
 app.use( helmet() );
 app.use( compression() );
 app.use( express.json( { limit: '4mb' } ) );
-app.use(bodyParser.json());
+app.use( bodyParser.json() );
 app.use( express.urlencoded( { extended: true, limit: '4mb' } ) );
 app.use( cors() );
 // @ts-ignore
@@ -44,13 +44,14 @@ app.use( rateLimit( {
 
 app.use( '/healthCheck', healthCheckRoute );
 // Auth routes
-app.use('/auth', authRoute);
+app.use( '/auth', authRoute );
 // Use routes
-app.use('/user', userRoute);
+app.use( '/user', userRoute );
 app.use( '/block', blockRoute );
 app.use( '/transaction', transactionRoute );
 app.use( '/transactionMessage', transactionMessageRoute );
 app.use( '/contract', contractRoutes );
+app.use( '/accounts', accountRoutes )
 
 const PORT = process.env.PORT || 4000;
 app.listen( PORT, () => {
