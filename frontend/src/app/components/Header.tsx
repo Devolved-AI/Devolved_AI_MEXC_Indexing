@@ -86,8 +86,11 @@ const Header: React.FC = () => {
           </Link>
         </div> */}
           <div className="flex items-center px-4 py-2 mx-1 text-sm font-medium text-gray-700 bg-[#D91A9C] border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-[#e332ab] dark:hover:bg-gray-700 focus:outline-none">
-            <Link href="https://devolvedai.com/" target="_blank">
+            {/* <Link href="https://devolvedai.com/" target="_blank">
               <samp className=" text-white px-4 py-2">Contact Us</samp>
+            </Link> */}
+            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses" target="_blank">
+              <samp className=" text-white px-4 py-2">Top 100 Accounts</samp>
             </Link>
           </div>
           {/* profile section */}
@@ -211,8 +214,11 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            <Link href="https://devolvedai.com/" target="_blank">
+            {/* <Link href="https://devolvedai.com/" target="_blank">
               <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Contact Us</samp>
+            </Link> */}
+            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses" target="_blank">
+              <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Top 100 Accounts</samp>
             </Link>
           </nav>
         </div>
