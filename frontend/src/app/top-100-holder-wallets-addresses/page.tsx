@@ -98,7 +98,7 @@ const Top100HolderWalletsAddresses: React.FC = () => {
                     Address
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Balance
+                    AGC Balance
                   </th>
                 </tr>
               </thead>
