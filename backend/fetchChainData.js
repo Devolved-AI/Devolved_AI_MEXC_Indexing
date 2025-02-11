@@ -157,7 +157,10 @@ const processBlock = async (api, blockNumber) => {
       // Check if the section and method match the new specified criteria
       if (
         (section === 'balances' && ['transfer', 'transferAll', 'transferAllowDeath', 'transferKeepAlive'].includes(method)) ||
-        (section === 'palletCounter' && ['balanceTransferNew', 'TransferOfBalanceNew', 'mint', 'evmToSubstrate', 'EvmToSubstrateTransfer', 'substrateToEvm', 'EvmBalanceMutated'].includes(method))
+        (section === 'palletCounter' && [
+          'balanceTransferNew', 'TransferOfBalanceNew', 'mint', 'evmToSubstrate', 
+          'EvmToSubstrateTransfer', 'substrateToEvm', 'EvmBalanceMutated'
+        ].includes(method))
       ) {
         let from = isSigned ? signer.toString() : null;
         let to = null;
@@ -264,28 +267,88 @@ const processBlock = async (api, blockNumber) => {
             from = '0';
             to = '0';
             amount = '0';
-
+            gasFee = '0';
+          
+            // Get the "from" address and "amount" from the EvmBalanceMutated event:
+            //   - data[0]: H160 (From address)
+            //   - data[1]: U256 (Amount)
             const evmBalanceMutatedEvent = allEvents.find(
               ({ event }) => event.section === 'palletCounter' && event.method === 'EvmBalanceMutated'
             );
-
-            const withdrawEvent = allEvents.find(
-              ({ event }) =>
-                event.section === 'balances' &&
-                event.method === 'Withdraw'
-            );
-
             if (evmBalanceMutatedEvent) {
-              to = evmBalanceMutatedEvent.event.data[0].toString() || to;
+              from = evmBalanceMutatedEvent.event.data[0].toString() || from;
               amount = evmBalanceMutatedEvent.event.data[1].toString() || amount;
             }
-    
-            if (withdrawEvent) {
-              from = withdrawEvent.event.data[0].toString() || from;
+          
+            // Get the "to" address and "gas fee" from the TransactionFeePaid event:
+            //   - data[0]: AccountId32 (To address)
+            //   - data[1]: u128 (Gas fee)
+            const feePaidEvent = allEvents.find(
+              ({ event }) => event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+            );
+            if (feePaidEvent) {
+              to = feePaidEvent.event.data[0].toString() || to;
+              gasFee = feePaidEvent.event.data[1].toString() || gasFee;
             }
-          }
-      }
-        
+          }     
+
+          // else if (method === 'substrateToEvm') {
+          //   console.log(`Processing extrinsic palletCounter.substrateToEvm in block ${blockNumber}`);
+          //   from = '0';
+          //   to = '0';
+          //   amount = '0';
+          //   gasFee = '0';
+
+          //   const evmBalanceMutatedEvent = allEvents.find(
+          //     ({ event }) => event.section === 'palletCounter' && event.method === 'EvmBalanceMutated'
+          //   );
+
+          //   const withdrawEvent = allEvents.find(
+          //     ({ event }) =>
+          //       event.section === 'balances' &&
+          //       event.method === 'Withdraw'
+          //   );
+
+          //   if (evmBalanceMutatedEvent) {
+          //     to = evmBalanceMutatedEvent.event.data[0].toString() || to;
+          //     amount = evmBalanceMutatedEvent.event.data[1].toString() || amount;
+          //   }
+    
+          //   if (withdrawEvent) {
+          //     from = withdrawEvent.event.data[0].toString() || from;
+          //   }
+          // }
+          // else if (method === 'substrateToEvm') {
+          //   console.log(`Processing extrinsic palletCounter.substrateToEvm in block ${blockNumber}`);
+          //   // Reset values for this branch
+          //   from = '0';
+          //   to = '0';
+          //   amount = '0';
+          //   gasFee = '0';
+    
+          //   // Search for the EvmBalanceMutated event which contains:
+          //   //   - data[0]: H160 (From address)
+          //   //   - data[1]: U256 (Amount)
+          //   const evmBalanceMutatedEvent = allEvents.find(
+          //     ({ event }) => event.section === 'palletCounter' && event.method === 'EvmBalanceMutated'
+          //   );
+          //   if (evmBalanceMutatedEvent) {
+          //     from = evmBalanceMutatedEvent.event.data[0].toString() || from;
+          //     amount = evmBalanceMutatedEvent.event.data[1].toString() || amount;
+          //   }
+    
+          //   // Search for the TransactionFeePaid event which contains:
+          //   //   - data[0]: who (AccountId32, To address)
+          //   //   - data[1]: actualFee (u128, Gas fee)
+          //   const feePaidEvent = allEvents.find(
+          //     ({ event }) => event.section === 'transactionPayment' && event.method === 'TransactionFeePaid'
+          //   );
+          //   if (feePaidEvent) {
+          //     to = feePaidEvent.event.data[0].toString() || to;
+          //     gasFee = feePaidEvent.event.data[1].toString() || gasFee;
+          //   }
+          // }
+        }
 
         // For `transferAll`, find `amount` from `Transfer` or `Endowed` events if not in args
         if (method === 'transferAll' && amount === '0') {
@@ -310,13 +373,22 @@ const processBlock = async (api, blockNumber) => {
           data: event.data.map((data) => data.toString()),
         }));
 
-        // Find gas fee within events if applicable
+         // (Optional) Existing loop to look for a Withdraw event for gas fee can be removed or kept
+        // if you want a fallback in other extrinsics:
+        // for (const { event } of extrinsicEvents) {
+        //   if (event.section === 'balances' && event.method === 'Withdraw') {
+        //     gasFee = event.data[1].toString();
+        //   }
+        // }
         for (const { event } of extrinsicEvents) {
-          if (event.section === 'balances' && event.method === 'Withdraw') {
+          if (
+            event.section === 'balances' &&
+            event.method === 'Withdraw' &&
+            method !== 'substrateToEvm'  // <-- Added condition here
+          ) {
             gasFee = event.data[1].toString();
           }
         }
-
         // Accumulate transaction data in the `transactions` array
         transactions.push({
           hash: hash.toHex(),
