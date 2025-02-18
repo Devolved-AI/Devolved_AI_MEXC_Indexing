@@ -55,7 +55,7 @@ const TransactionDetails = () => {
   useEffect(() => {
     if (txnHash) {
       fetchTransactionDetails(txnHash);
-      // fetchTransactionMessage(txnHash);
+      fetchTransactionMessage(txnHash);
     }
   }, [txnHash]);
 

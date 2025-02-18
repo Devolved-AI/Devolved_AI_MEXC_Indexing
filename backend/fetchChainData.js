@@ -243,6 +243,17 @@ const processBlock = async (api, blockNumber) => {
                   to = transferEvent.event.data[1].toString() || to;
                   amount = transferEvent.event.data[2].toString() || amount;
               }
+
+              //// ADDED LOGIC FOR TRANSACTION MESSAGE INSERTION
+              // If the event includes a 4th field, extract the transaction message and insert it into the
+              // "transactionmessages" table. This table uses tx_hash as unique so duplicate entries are ignored.
+              if (transferEvent && transferEvent.event.data.length >= 4) {
+                const txMessage = transferEvent.event.data[3].toString();
+                await pool.query(
+                  'INSERT INTO transactionmessages (tx_hash, message) VALUES ($1, $2) ON CONFLICT (tx_hash) DO NOTHING',
+                  [hash.toHex(), txMessage]
+                );
+              }
           }
           
           else if (method === 'evmToSubstrate') {
