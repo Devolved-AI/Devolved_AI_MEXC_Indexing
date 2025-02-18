@@ -72,7 +72,7 @@ const MyVerifyAddress: React.FC = () => {
         ) : (
           <>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              The Verify Address Ownership process involves verifying the ownership of a Polygon PoS Chain address used to create a Polygon PoS Chain smart contract. Once verified, users can update token information and address name tags. <Link href="#" className="text-blue-600 hover:underline">Find out more.</Link>
+            The Verify Address Ownership process involves verifying the ownership of an Argo Chain address used to create an Argo Chain smart contract. Once verified, users can update token information and address name tags on the network.
             </p>
 
             <div className="overflow-x-auto bg-gray-100 dark:bg-gray-700 rounded-lg shadow-inner p-4">
