@@ -89,7 +89,7 @@ const Header: React.FC = () => {
             {/* <Link href="https://devolvedai.com/" target="_blank">
               <samp className=" text-white px-4 py-2">Contact Us</samp>
             </Link> */}
-            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses" target="_blank">
+            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses">
               <samp className=" text-white px-4 py-2">Top 100 Accounts</samp>
             </Link>
           </div>
@@ -217,7 +217,7 @@ const Header: React.FC = () => {
             {/* <Link href="https://devolvedai.com/" target="_blank">
               <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Contact Us</samp>
             </Link> */}
-            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses" target="_blank">
+            <Link href="https://test-scanner.devolvedai.com/top-100-holder-wallets-addresses">
               <samp className="bg-[#D91A9C] text-white px-4 py-2 rounded-full hover:bg-[#e332ab]">Top 100 Accounts</samp>
             </Link>
           </nav>
