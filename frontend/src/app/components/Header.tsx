@@ -7,14 +7,20 @@ import HeaderLogo from '../../../public/headerLogo.jpg';
 import { FaUser } from 'react-icons/fa';
 
 import Cookies from 'js-cookie';
+// import { jwtDecode } from 'jwt-decode';
+import {jwtDecode, JwtPayload } from 'jwt-decode';
+
+interface CustomJwtPayload extends JwtPayload {
+  email: string;
+}
 import { useRouter } from 'next/navigation';
 
 import { cookies } from 'next/headers';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [email, setEmail] = useState(null);
-  const [userToken, setUserToken] = useState(null);
+  const [email, setEmail]:any = useState(null);
+  const [userToken, setUserToken] = useState<string | null>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -37,12 +43,24 @@ const Header: React.FC = () => {
     router.push('/login');
   };
 
+  // useEffect(() => {
+  //   // Access email cookie on the client side
+  //   const emailCookie:any = Cookies.get('email');
+  //   const accessToken:any = Cookies.get('access_token');
+  //   setEmail(emailCookie);
+  //   setUserToken(accessToken);
+  // }, []);
+
   useEffect(() => {
-    // Access email cookie on the client side
-    const emailCookie:any = Cookies.get('email');
-    const accessToken:any = Cookies.get('access_token');
-    setEmail(emailCookie);
+    const accessToken = Cookies.get('access_token');
+    if (accessToken) {
+      // Decode the token
+    const decodedToken = jwtDecode<CustomJwtPayload>(accessToken);
+    // Extract email from the token payload and set it
+    console.log(decodedToken.email);
+    setEmail(decodedToken.email);
     setUserToken(accessToken);
+    }
   }, []);
 
 

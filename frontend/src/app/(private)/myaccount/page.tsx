@@ -37,6 +37,7 @@ const MyAccount: React.FC = () => {
             "Content-Type": "application/json",
           },
         });
+        
 
         if (response.ok) {
           const res = await response.json();
