@@ -99,6 +99,37 @@ async function verifyContractController(req, res) {
         // Log input data for verification process
         console.log("Starting contract verification with data:", { contractAddress, compilerVersion, types, values, libraryAddress });
 
+        // Try to parse the types and values only if they are JSON strings
+        let parsedTypes = types;
+        let parsedValues = values;
+
+        try {
+            // Parse JSON only if the types are a string and appear like JSON
+            if (typeof types === 'string') {
+                parsedTypes = JSON.parse(types);
+            }
+
+            if (typeof values === 'string') {
+                parsedValues = JSON.parse(values);
+            }
+        } catch (error) {
+            console.error("Error parsing JSON:", error.message);
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: "Invalid JSON format in types or values.",
+            });
+        }
+
+        // Ensure types and values have the same length
+        if (parsedTypes.length !== parsedValues.length) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: `Mismatch between types and values: expected ${parsedTypes.length}, got ${parsedValues.length}.`
+            });
+        }
+
         // Call the verification service with provided details
         const verificationResult = await verifyContract(
             contractAddress, 
@@ -107,8 +138,8 @@ async function verifyContractController(req, res) {
             evmVersionToTarget, 
             sourceCodeOptimized, 
             runsOptimizer, 
-            types, 
-            values, 
+            parsedTypes, 
+            parsedValues, 
             libraryAddress
         );
         
