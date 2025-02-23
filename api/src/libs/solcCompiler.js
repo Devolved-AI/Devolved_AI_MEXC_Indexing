@@ -21,8 +21,8 @@ function compileContract(
         sources: { 'Contract.sol': { content: sourceCode } },
         settings: {
             optimizer: { 
-                enabled: sourceCodeOptimized, 
-                runs: runsOptimizer 
+                enabled: Boolean(sourceCodeOptimized), // Convert to boolean
+                runs: Number.isInteger(runsOptimizer) && runsOptimizer >= 0 ? runsOptimizer : 200 // Default to 200 if invalid 
             },
             evmVersion: evmVersionToTarget,
             outputSelection: { '*': { '*': [ 'abi', 'evm.deployedBytecode.object' ] } }

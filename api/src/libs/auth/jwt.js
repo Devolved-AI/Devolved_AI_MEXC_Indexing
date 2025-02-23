@@ -1,27 +1,39 @@
+// this file generates different different jwt token and validate them
+
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
 // Generate Registration Confirmation Token
-function generateConfirmationToken(userEmail, userVerified) {
+function generateConfirmationToken(userEmail, referral) {
     return jwt.sign(
-        { email: userEmail, verified: userVerified }, 
+        { email: userEmail, referral: referral }, 
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_VERIFY_EMAIL_EXPIRATION });
+}
+
+// Generate Reset Password Token
+function generateResetToken(userEmail) {
+    return jwt.sign(
+        { email: userEmail }, 
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_RESET_PASSWORD_EXPIRATION });
 }
 
 // Generate User's Token (for authentication, assumed here)
 function generateUserToken(userEmail) {
     return jwt.sign(
-        { email: userEmail },
+        { email: userEmail, jti: uuidv4(), timestamp: Date.now() },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_USER_EXPIRATION });
 }
 
-function generateResetToken(userEmail) {
+// admin
+function generateAdminToken(adminMail, adminIP, devSecret) {
     return jwt.sign(
-        { email: userEmail },
+        { email: adminMail, ip: adminIP, secret: devSecret },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_RESET_PASSWORD_EXPIRATION });
+        { expiresIn: process.env.JWT_ADMIN_EXPIRATION });
 }
 
 const verifyToken = (token) => {
@@ -44,8 +56,9 @@ const decodeToken = (token) => {
 
 module.exports = {
     generateConfirmationToken,
-    generateUserToken,
     generateResetToken,
+    generateUserToken,
     verifyToken,
-    decodeToken
+    decodeToken,
+    generateAdminToken
 };
