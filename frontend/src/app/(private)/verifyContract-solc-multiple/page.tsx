@@ -177,7 +177,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                     Verify & Publish Contract Source Code
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Source code verification provides transparency for users interacting with smart contracts. By uploading the source code, Moonbase will match the compiled code with that on the blockchain. <a href="#" className="text-blue-600 hover:underline">Read more.</a>
+                Source code verification provides transparency and builds trust for users interacting with smart contracts on ArgoChain. By uploading your source code, ArgoChain will match the compiled bytecode with the one deployed on the blockchain, ensuring that the contract's code is authentic and unaltered. This process allows users to verify the integrity of smart contracts, fostering confidence in the platform.
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 mb-6">
                     This is an experimental source code verifier which supports verification of multi-part solidity files (imports).

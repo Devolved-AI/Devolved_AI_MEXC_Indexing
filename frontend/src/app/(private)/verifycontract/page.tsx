@@ -37,7 +37,7 @@ const VerifyContract: React.FC = () => {
           Verify & Publish Contract Source Code
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Source code verification provides transparency for users interacting with smart contracts. By uploading the source code, Moonbase will match the compiled code with that on the blockchain. <a href="#" className="text-blue-600 hover:underline">Read more.</a>
+        Source code verification provides transparency and trust for users interacting with smart contracts on Argo Chain. By uploading your contract's source code, Argo Chain will verify that the compiled code exactly matches the deployed version on the blockchain. This process ensures that users can confidently interact with smart contracts, knowing the code they reviewed is the code running on-chain.
         </p>
 
         <ol className="list-decimal list-inside mb-6 text-gray-700 dark:text-gray-300">

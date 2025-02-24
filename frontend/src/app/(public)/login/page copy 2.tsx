@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { auth_login, authEmail } from "@/app/var";
+import { auth_login } from "@/app/var";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import toast, { Toaster } from 'react-hot-toast';
 import newLogo from "@/logos/logo-2.png";
@@ -48,47 +48,14 @@ const LoginContent = () => {
     }
   };
 
-  // const handleLogin = (e: any) => {
-  //   e.preventDefault();
-  //   const url = `/verify?email=${email}`;
-  //   router.push(url);
-  //   setTimeout(() => {
-  //     window.history.replaceState(null, '', url);
-  //   }, 100); // 100ms delay; adjust if necessary
-  // };
-
-  const handleLogin = async (e: any) => {
+  const handleLogin = (e: any) => {
     e.preventDefault();
-  
-    try {
-      // Send OTP to the provided email using the authEmail endpoint
-      const response = await fetch(authEmail, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-  
-      const data = await response.json();
-  
-      if (data.success) {
-        toast.success("OTP sent to your email.");
-  
-        // Build the URL and navigate to the verify page
-        const url = `/verify?email=${email}`;
-        router.push(url);
-  
-        // Optional: Update the address bar to display the unencoded email
-        setTimeout(() => {
-          window.history.replaceState(null, '', url);
-        }, 100);
-      } else {
-        toast.error(data.message || 'Failed to send OTP.');
-      }
-    } catch (err) {
-      toast.error('An error occurred. Please try again.');
-    }
+    const url = `/verify?email=${email}`;
+    router.push(url);
+    setTimeout(() => {
+      window.history.replaceState(null, '', url);
+    }, 100); // 100ms delay; adjust if necessary
   };
-  
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 

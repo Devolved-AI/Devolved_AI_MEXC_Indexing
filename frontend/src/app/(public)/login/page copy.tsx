@@ -4,11 +4,9 @@ import Cookies from 'js-cookie';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { auth_login, authEmail } from "@/app/var";
+import { auth_login } from "@/app/var";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import toast, { Toaster } from 'react-hot-toast';
-import newLogo from "@/logos/logo-2.png";
-import Image from "next/image";
 
 const LoginContent = () => {
   const [email, setEmail] = useState('');
@@ -48,47 +46,31 @@ const LoginContent = () => {
     }
   };
 
-  // const handleLogin = (e: any) => {
-  //   e.preventDefault();
-  //   const url = `/verify?email=${email}`;
-  //   router.push(url);
-  //   setTimeout(() => {
-  //     window.history.replaceState(null, '', url);
-  //   }, 100); // 100ms delay; adjust if necessary
-  // };
-
   const handleLogin = async (e: any) => {
     e.preventDefault();
-  
+
     try {
-      // Send OTP to the provided email using the authEmail endpoint
-      const response = await fetch(authEmail, {
+      const response = await fetch(auth_login, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
       if (data.success) {
-        toast.success("OTP sent to your email.");
-  
-        // Build the URL and navigate to the verify page
-        const url = `/verify?email=${email}`;
-        router.push(url);
-  
-        // Optional: Update the address bar to display the unencoded email
-        setTimeout(() => {
-          window.history.replaceState(null, '', url);
-        }, 100);
+        Cookies.set('access_token', data.data.token, { expires: 29 });
+
+        toast.success("Login successful!");
+        router.push('/myaccount');
       } else {
-        toast.error(data.message || 'Failed to send OTP.');
+        toast.error(data.message || 'Login failed');
       }
     } catch (err) {
       toast.error('An error occurred. Please try again.');
     }
   };
-  
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -96,13 +78,7 @@ const LoginContent = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg dark:bg-gray-800">
-      <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <Image priority src={newLogo} alt="Logo" width={120} height={80} quality={70} className="flex flex-col items-center justify-center mx-auto" />
-            <h1 className="text-4xl pb-0 mb-0 font-bold text-center leading-none tracking-tight text-gray-900 md:text-4xl">
-            Sign In to Argochain Scanner
-              <br />
-            </h1>
-          </div>
+        <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Sign In to Argochaintestscan</h2>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
@@ -117,6 +93,33 @@ const LoginContent = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+          </div>
+
+          <div className="relative">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              className="w-full px-3 py-2 mt-1 pr-10 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute top-9 right-3 flex items-center text-gray-500 dark:text-gray-300"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+              Forgot password?
+            </Link>
           </div>
 
           <button

@@ -7,6 +7,10 @@ export const auth_login: any = `${base_url}/auth/login`;
 export const auth_logout: any = `${base_url}/auth/logout`;
 export const send_reset_password_mail: any = `${base_url}/auth/sendResetPasswordMail`;
 export const reset_password: any = `${base_url}/auth/resetPassword`;
+export const authEmail: any = `${base_url}/auth/authEmail`;
+export const verify: any = `${base_url}/auth/verify`;
+
+
 
 export const profile: any = `${base_url}/user/profile`;
 
