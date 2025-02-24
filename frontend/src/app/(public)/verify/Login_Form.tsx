@@ -4,11 +4,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import styles from "./Login_Form.module.css";
 import Image from "next/image";
 import newLogo from "@/logos/logo-2.png";
-import { FaEyeSlash, FaEye } from "react-icons/fa";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
-import Link from "next/link";
-import { verify } from "@/app/var"; // Your verify API endpoint
+import { authEmail, verify } from "@/app/var"; // Your API endpoints
 
 interface LoginFormProps {
   email: string;
@@ -22,17 +20,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180);
 
+  // Set error from URL params
   useEffect(() => {
     setError(params.get("error"));
   }, [params]);
 
+  // Timer: initialize and update every second. If no valid stored time, reset to 180.
   useEffect(() => {
-    // On component mount, initialize the timer from localStorage if available.
     const storedTime = localStorage.getItem("timeLeft");
-    if (storedTime) {
+    if (!storedTime || parseInt(storedTime, 10) <= 0) {
+      setTimeLeft(180);
+      localStorage.setItem("timeLeft", "180");
+    } else {
       setTimeLeft(parseInt(storedTime, 10));
     }
-    // Update the timer every second.
     const intervalId = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime > 0) {
@@ -45,25 +46,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
         }
       });
     }, 1000);
-
     return () => clearInterval(intervalId);
   }, []);
 
-  // Update the OTP state on each input change.
-  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const { value } = e.target;
-    if (/^[0-9a-zA-Z]?$/.test(value)) { // Allow only a single alphanumeric character
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-      // Auto focus the next input if a value is entered.
-      if (value && index < otp.length - 1) {
-        document.getElementById(`otp-${index + 1}`)?.focus();
-      }
+  // Auto-verify when all OTP fields are filled
+  useEffect(() => {
+    if (otp.every((digit) => digit !== "") && !isSubmitting) {
+      handleVerify();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp]);
 
-  // This function is called when the user clicks "Verify OTP".
+  // Verify OTP function
   const handleVerify = async () => {
     const otpCode = otp.join("");
     if (otpCode.length !== otp.length) {
@@ -77,16 +71,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpCode }),
       });
-
       const data = await response.json();
-      console.log("data.data.token",data);
       if (data.success) {
-        // Save the token to cookies.
-        // Ensure the API returns the token in data.data.token or adjust accordingly.
-        
         Cookies.set("access_token", data.user.token, { expires: 29 });
         toast.success("OTP verified successfully!");
-        // Redirect to the /myaccount page.
         router.push("/myaccount");
       } else {
         toast.error(data.message || "OTP verification failed.");
@@ -95,6 +83,55 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
       toast.error("An error occurred during OTP verification. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle each OTP input change
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const { value } = e.target;
+    if (/^[0-9a-zA-Z]?$/.test(value)) {
+      const newOtp = [...otp];
+      newOtp[index] = value;
+      setOtp(newOtp);
+      if (value && index < otp.length - 1) {
+        document.getElementById(`otp-${index + 1}`)?.focus();
+      }
+    }
+  };
+
+  // Allow full OTP paste into one field
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").trim().replace(/[^0-9a-zA-Z]/g, "");
+    const newOtp = [...otp];
+    for (let i = 0; i < pastedData.length && i < otp.length; i++) {
+      newOtp[i] = pastedData[i];
+    }
+    setOtp(newOtp);
+    if (newOtp.every((digit) => digit !== "")) {
+      handleVerify();
+    }
+  };
+
+  // Resend OTP: call authEmail API, show toast, reset countdown and clear OTP
+  const handleResend = async () => {
+    try {
+      const response = await fetch(authEmail, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success("OTP has been resent to your email.");
+        setTimeLeft(180);
+        localStorage.setItem("timeLeft", "180");
+        setOtp(Array(6).fill(""));
+      } else {
+        toast.error(data.message || "Failed to resend OTP.");
+      }
+    } catch (err) {
+      toast.error("An error occurred while resending OTP.");
     }
   };
 
@@ -117,18 +154,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
                 Argochain Scanner verify OTP
               </h1>
 
-              <form
-                autoComplete="off"
-                className={`${styles.form_container} flex justify-center items-center flex-col`}
-              >
+              <form autoComplete="off" className={`${styles.form_container} flex justify-center items-center flex-col`}>
                 <fieldset className="w-full px-2 flex justify-center items-center flex-col">
                   <label className="w-full text-[#253241] text-[1rem]" htmlFor="email">
                     Your Email
                   </label>
-                  <div className="w-full flex items-center border-solid border-[1px] border-[#EAECEF] bg-gray-50 rounded-lg">
+                  <div className="w-full flex items-center border border-[#EAECEF] bg-gray-50 rounded-lg">
                     <input
                       value={email}
-                      disabled={true}
+                      disabled
                       placeholder="Email"
                       className="w-full px-4 py-3 bg-gray-50 text-gray-900 focus:outline-none"
                     />
@@ -145,20 +179,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
                         key={index}
                         id={`otp-${index}`}
                         type="text"
-                        maxLength={1} // Ensures only one character per input.
+                        maxLength={1}
                         value={value}
                         onChange={(e) => handleOtpChange(e, index)}
                         onKeyDown={(e) => {
                           if (e.key === "Backspace") {
                             const updatedOtp = [...otp];
-                            updatedOtp[index] = ""; // Clear the current input.
+                            updatedOtp[index] = "";
                             setOtp(updatedOtp);
-                            // Focus the previous input if available.
                             if (index > 0) {
                               document.getElementById(`otp-${index - 1}`)?.focus();
                             }
                           }
                         }}
+                        onPaste={handleOtpPaste}
                         className="lg:w-10 lg:h-10 w-6 h-8 text-center mr-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-lg font-medium"
                       />
                     ))}
@@ -172,7 +206,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
                       </div>
                     ) : (
                       <button
-                        // Add your resend OTP functionality here if needed.
+                        type="button"
+                        onClick={handleResend}
                         className="mx-2 text-right p-1 text-[#5F5F5F] hover:text-[#0D0D0D] text-sm rounded-lg"
                       >
                         Resend
@@ -182,27 +217,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ email }) => {
                 </fieldset>
 
                 <div className="flex flex-col justify-center w-full items-center px-2">
-                  {isSubmitting ? "Verifying..." : ""}
+                  {isSubmitting && "Verifying..."}
                 </div>
                 <div className="h-2">
                   {error && <small className="block w-full px-2 text-red-600">{error}</small>}
                 </div>
-                <button
-                  type="button"
-                  onClick={handleVerify}
-                  disabled={isSubmitting}
-                  className="w-full py-2 mt-6 text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Verify OTP
-                </button>
+                {/* Removed the manual Verify OTP button */}
               </form>
-
-              <p className="mt-6 text-sm text-center text-gray-600 dark:text-gray-400">
-                Don’t have an account?{" "}
-                <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">
-                  Sign up
-                </Link>
-              </p>
             </div>
           </div>
         </div>
