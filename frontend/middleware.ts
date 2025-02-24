@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const protectedPaths = [
-    '/myaccount', 
-    '/myverify_address', 
-    '/verifycontract', 
+    '/myaccount',
+    '/myverify_address',
+    '/verifycontract',
     '/verifyContract-solc-multiple'
   ];
 
