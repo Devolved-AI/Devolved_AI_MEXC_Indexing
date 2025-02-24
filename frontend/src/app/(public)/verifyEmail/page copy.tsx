@@ -1,12 +1,13 @@
 "use client";
 
 import dynamic from 'next/dynamic';
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import LoginForm from "./Login_Form"
 
 
-const LoginForm = dynamic(() => import('./Login_Form'), { ssr: false });
+// const LoginForm = dynamic(() => import('./Login_Form'), { ssr: false });
 
-export default function Login() {
+export default function VerifyPage() {
     const searchParams = useSearchParams();
     const email = searchParams.get("email") || '';
 

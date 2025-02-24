@@ -74,7 +74,7 @@ const LoginContent = () => {
         toast.success("OTP sent to your email.");
   
         // Build the URL and navigate to the verify page
-        const url = `/verify?email=${email}`;
+        const url = `/verifyEmail?email=${email}`;
         router.push(url);
   
         // Optional: Update the address bar to display the unencoded email
