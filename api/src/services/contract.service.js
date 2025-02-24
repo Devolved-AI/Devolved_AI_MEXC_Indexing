@@ -1,5 +1,5 @@
 const { loadCompilerVersion, compileContract } = require('@libs/solcCompiler');
-const { stripMetadata, matchContractBytecode } = require('@utils/bytecodeUtils');
+const { stripMetadata } = require('@utils/bytecodeUtils');
 const { uploadFileToS3 } = require('@libs/s3Upload');
 const fs = require('fs');
 const { ethers, AbiCoder } = require("ethers");
@@ -14,6 +14,13 @@ const provider = new ethers.WebSocketProvider(process.env.ARGOCHAIN_RPC_URL);
  * @param {string} contractAddress - Address of the deployed contract on the blockchain.
  * @param {string} compilerVersion - Version of the Solidity compiler to use.
  * @param {Object} solidityFile - The uploaded Solidity (.sol) file object.
+ * @param {string} evmVersionToTarget - The target EVM version.
+ * @param {boolean} sourceCodeOptimized - Whether the source code is optimized.
+ * @param {number} runsOptimizer - Optimizer runs.
+ * @param {Array} types - Constructor parameter types.
+ * @param {Array} values - Constructor parameter values.
+ * @param {string} libraryAddress - Library address (or JSON string/array).
+ * @param {string} language - Programming language from req.body (e.g., "Solidity").
  * @returns {Object} - Verification results including contract details and S3 file URL.
  */
 async function verifyContract(
@@ -25,7 +32,8 @@ async function verifyContract(
     runsOptimizer,
     types, 
     values, 
-    libraryAddress
+    libraryAddress,
+    language
 ) {
     try {
         // Upload the Solidity file to S3 and retrieve the file URL
@@ -49,14 +57,19 @@ async function verifyContract(
         console.log(`Loading Solidity compiler version: ${compilerVersion}`);
         const solcSnapshot = await loadCompilerVersion(compilerVersion);
 
-        // Compile the Solidity contract using the loaded compiler
+        // Use the uploaded file's original name for the source key
+        const fileKey = solidityFile.originalname;
+
+        // Compile the Solidity contract using the loaded compiler with dynamic language and file name
         console.log("Compiling Solidity contract...");
         const compilationResult = compileContract(
             solcSnapshot, 
             sourceCode, 
             evmVersionToTarget,
             sourceCodeOptimized, 
-            runsOptimizer
+            runsOptimizer,
+            language,   // dynamic language from req.body
+            fileKey     // dynamic file name from the uploaded file
         );
 
         // Check for any compilation errors and throw an error if found
@@ -67,8 +80,8 @@ async function verifyContract(
         }
 
         // Extract contract data from the compilation result
-        const contractKey = Object.keys(compilationResult.contracts['Contract.sol'])[0];
-        const contractData = compilationResult.contracts['Contract.sol'][contractKey];
+        const contractKey = Object.keys(compilationResult.contracts[fileKey])[0];
+        const contractData = compilationResult.contracts[fileKey][contractKey];
         console.log("Contract compiled successfully:", contractKey);
 
         if (!contractData || !contractData.abi || !contractData.evm || !contractData.evm.deployedBytecode) {
@@ -85,7 +98,6 @@ async function verifyContract(
         let generatedBytecode = contractData.evm.deployedBytecode.object;
         if (types && values) {
             const abiCoder = new AbiCoder();
-            // const encodedParams = abiCoder.encode(types.split(','), values.split(','));
             const encodedParams = abiCoder.encode(types, values);
             generatedBytecode += encodedParams.slice(2);
         }
@@ -95,8 +107,10 @@ async function verifyContract(
             generatedBytecode = generatedBytecode.replace(placeholderPattern, cleanLibraryAddress);
         }
 
-        // Bytecode comparison
-        const { isMatch, strippedGeneratedBytecode, strippedDeployedBytecode } = matchContractBytecode(generatedBytecode, deployedBytecode);
+        // Use stripMetadata to remove compiler metadata from both bytecodes before comparison
+        const strippedGeneratedBytecode = stripMetadata(generatedBytecode);
+        const strippedDeployedBytecode = stripMetadata(deployedBytecode);
+        const isMatch = strippedGeneratedBytecode === strippedDeployedBytecode;
         
         return {
             contractName: contractKey,
@@ -110,12 +124,20 @@ async function verifyContract(
             strippedGeneratedBytecode,
             sourceCode,
             libraryAddress: libraryAddress || "No library linked",
-
         };
 
     } catch (error) {
         console.error("Error during contract verification:", error.message);
         throw error;
+    } finally {
+        // Delete the file from the local uploads folder
+        fs.unlink(solidityFile.path, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            } else {
+                console.log("File successfully deleted from uploads folder.");
+            }
+        });
     }
 }
 
