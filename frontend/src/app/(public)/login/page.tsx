@@ -75,12 +75,13 @@ const LoginContent = () => {
   
         // Build the URL and navigate to the verify page
         const url = `/verifyEmail?email=${email}`;
-        router.push(url);
+        // router.push(url);
   
         // Optional: Update the address bar to display the unencoded email
-        setTimeout(() => {
-          window.history.replaceState(null, '', url);
-        }, 100);
+        // setTimeout(() => {
+        //   window.history.replaceState(null, '', url);
+        // }, 100);
+        router.push(url);
       } else {
         toast.error(data.message || 'Failed to send OTP.');
       }
