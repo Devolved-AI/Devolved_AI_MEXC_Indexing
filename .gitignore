@@ -556,3 +556,5 @@ MigrationBackup/
 # backend/
 # cache/
 # api/
+
+uploads/
