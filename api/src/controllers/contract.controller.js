@@ -56,7 +56,8 @@ async function verifyContractController(req, res) {
             constructorArgs,
             libraryName,
             libraryAddress,
-            language
+            language,
+            contractName
         } = req.body;
 
         // Check for required fields: contract address, compiler version, and uploaded file
@@ -138,14 +139,15 @@ async function verifyContractController(req, res) {
         const verificationResult = await verifyContract(
             contractAddress, 
             compilerVersion, 
-            req.file, 
+            req.file,
             evmVersionToTarget, 
             sourceCodeOptimized, 
             runsOptimizer, 
             parsedTypes, 
             parsedValues, 
             libraryAddress,
-            language
+            language,
+            contractName
         );
         
         // Prepare verification data with schema-compliant ABI format
@@ -157,6 +159,7 @@ async function verifyContractController(req, res) {
             contractAddress: verificationResult?.contractAddress || "No contract address provided",
             compilerVersion: verificationResult?.compilerVersion || "No compiler version provided",
             verificationStatus: verificationResult?.verificationStatus || 'Verification status unknown',
+            verified: verificationResult?.verified || false,
             s3FileUrl: verificationResult?.s3FileUrl || 'No URL provided',
             abi: verificationResult?.abi || [],
             deployedBytecode: verificationResult?.deployedBytecode || 'No deployed bytecode available',

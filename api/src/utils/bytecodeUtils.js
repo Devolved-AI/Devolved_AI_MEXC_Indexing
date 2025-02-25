@@ -2,9 +2,9 @@ function stripMetadata(bytecode) {
     if (bytecode.startsWith('0x')) {
         bytecode = bytecode.slice(2);
     }
-    const metadataMarker = 'a2646970667358';
-    const metadataIndex = bytecode.indexOf(metadataMarker);
-    return metadataIndex === -1 ? bytecode : bytecode.slice(0, metadataIndex);
+    // Remove metadata that starts with either "a2646970667358" or "fea2646970667358"
+    const regex = /f?a2646970667358.*/;
+    return bytecode.replace(regex, '');
 }
 
 function matchContractBytecode(generatedBytecode, deployedBytecode) {

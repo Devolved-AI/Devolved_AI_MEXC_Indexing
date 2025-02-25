@@ -6,15 +6,11 @@ const path = require('path');
 
 const sendOTPMail = async (userEmail, userOTP) => {
     try {
-        // Construct the login link
-        const logInLink = `${process.env.WEBAPP_URL}/verify`;
-
         // Read and prepare the email template
         const templatePath = path.resolve(__dirname, 'otpMailTemplate.html');
         let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
 
         // Replace placeholders in the HTML template
-        htmlTemplate = htmlTemplate.replace(/{{logInLink}}/g, logInLink);
         htmlTemplate = htmlTemplate.replace(/{{otp}}/g, userOTP);
 
         // Create the nodemailer transporter
@@ -33,7 +29,7 @@ const sendOTPMail = async (userEmail, userOTP) => {
         const mailOptions = {
             from: `"Devolved AI Team" <${process.env.SMTP_USER}>`, // Sender address
             to: userEmail, // Receiver address
-            subject: 'Your OTP for Athena Verification', // Subject
+            subject: 'Your OTP for Argochain Scanner Verification', // Subject
             html: htmlTemplate, // HTML body
         };
 
