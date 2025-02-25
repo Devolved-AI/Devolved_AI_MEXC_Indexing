@@ -20,6 +20,10 @@ const VerifyContract: React.FC = () => {
     localStorage.setItem('walletAddress', walletAddress);
     localStorage.setItem('compilerVersion', compilerVersion);
     localStorage.setItem('licenseType', licenseType);
+    localStorage.setItem('contractName', contractName);
+    localStorage.setItem('language', contractType);
+    
+
 
     // Redirect to the specified page
     router.push('/verifyContract-solc-multiple');
@@ -31,6 +35,7 @@ const VerifyContract: React.FC = () => {
     setWalletAddress('');
     setCompilerVersion('');
     setLicenseType('');
+    setContractName('');
   };
 
   return (

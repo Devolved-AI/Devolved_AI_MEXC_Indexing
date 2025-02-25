@@ -18,7 +18,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [contractFiles, setContractFiles] = useState<FileList | null>(null);
     const [licenseType, setLicenseType] = useState('');
     const [optimization, setOptimization] = useState(false);
-    const [runs, setRuns] = useState(0);
+    const [runs, setRuns] = useState(200);
     const [evmVersion, setEvmVersion] = useState('');
     const [constructorArgs, setConstructorArgs] = useState('');
     const [types, setTypes] = useState('');
@@ -28,6 +28,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [message, setMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState('');
     const [showMessageScreen, setShowMessageScreen] = useState(false); // Toggle message screen
+    const [contractName, setContractName] = useState('');
+    const [language, setLanguage] = useState('');
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
@@ -69,6 +71,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
             const libraryAddresses = libraries.map(library => library.address);
             formData.append("libraryName", JSON.stringify(libraryNames));
             formData.append("libraryAddress", JSON.stringify(libraryAddresses));
+            formData.append("contractName", contractName);
+            formData.append("language", language);
             // formData.append("types", types);
             // formData.append("values", values);
             console.log("Step 3: Fetching access token");
@@ -138,11 +142,18 @@ const VerifyContractSolcMultiple: React.FC = () => {
         const storedCompilerVersion = localStorage.getItem('compilerVersion');
         const storedLicenseType = localStorage.getItem('licenseType');
         const storedWalletAddress = localStorage.getItem('walletAddress');
+        const storedcontractName = localStorage.getItem('contractName');
+        const storedlanguage = localStorage.getItem('language');
+
+
 
         if (storedContractAddress) setContractAddress(storedContractAddress);
         if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
         if (storedLicenseType) setLicenseType(storedLicenseType);
         if (storedWalletAddress) setWalletAddress(storedWalletAddress);
+        if (storedcontractName) setContractName(storedcontractName);
+        if (storedlanguage) setLanguage(storedlanguage);
+
     }, []);
 
     // Handle text input in <textarea>
@@ -227,6 +238,14 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">License Type:</label>
                             <p className="text-gray-800 dark:text-white">{licenseType}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Name:</label>
+                            <p className="text-gray-800 dark:text-white">{contractName}</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Language:</label>
+                            <p className="text-gray-800 dark:text-white">{language}</p>
                         </div>
 
                     </div>
@@ -364,44 +383,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
 
                         {/* Library Addresses */}
-                        {/* <div>
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Contract Library Address (for contracts that use libraries, supports up to 10 libraries)
-                        </label>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            Note: Library names are case sensitive and affect the keccak library hash
-                        </p>
-                        <button
-                            type="button"
-                            onClick={handleAddLibrary}
-                            className="px-4 py-2 mb-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-                        >
-                            Add Library
-                        </button>
-
-                        {libraries.map((library, index) => (
-                            <div key={index} className="mb-4">
-                                <input
-                                    type="text"
-                                    placeholder="Library Name"
-                                    value={library.name}
-                                    onChange={(e) => handleLibraryChange(index, 'name', e.target.value)}
-                                    className="w-full mt-1 mb-2 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Library Contract Address"
-                                    value={library.address}
-                                    onChange={(e) => handleLibraryChange(index, 'address', e.target.value)}
-                                    className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                />
-                            </div>
-                        ))}
-
-                    </div> */}
-
-
-
 
                         <div>
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -446,11 +427,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                             ))}
                         </div>
 
-
-
                     </div>
-
-
 
                     <button
                         type="button"
