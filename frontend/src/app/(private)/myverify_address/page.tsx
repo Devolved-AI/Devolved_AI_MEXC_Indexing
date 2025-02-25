@@ -239,8 +239,8 @@ const MyVerifyAddress: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {contractAddressesTest.length > 0 ? (
-                    contractAddressesTest.map((contract) => (
+                  {contractAddresses.length > 0 ? (
+                    contractAddresses.map((contract) => (
                       <tr key={contract.contractAddress} className="border-b border-gray-300 dark:border-gray-600">
                         <td className="px-4 py-2">
                           <span className="font-mono break-all">

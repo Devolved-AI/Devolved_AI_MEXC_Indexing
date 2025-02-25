@@ -120,7 +120,7 @@ contract TestContract {
           <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Contract Details</h2>
 
           {/* Display contract details */}
-          {/* <div className="space-y-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Name:</label>
               <p className="text-gray-800 dark:text-white">{contractDetails.contractName || "N/A"}</p>
@@ -169,10 +169,10 @@ contract TestContract {
                 {contractDetails.deployedBytecode || "N/A"}
               </pre>
             </div>
-          </div> */}
+          </div>
 
-{/* test section */}
-<div className="space-y-4">
+          {/* test section */}
+          {/* <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Name:</label>
               <p className="text-gray-800 dark:text-white">{contractDetailsTest.contractName || "N/A"}</p>
@@ -221,10 +221,7 @@ contract TestContract {
                 {contractDetailsTest.deployedBytecode || "N/A"}
               </pre>
             </div>
-          </div>
-
-
-
+          </div> */}
         </div>
       </div>
     </div>
