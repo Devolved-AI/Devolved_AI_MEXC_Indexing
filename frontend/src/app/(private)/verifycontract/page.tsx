@@ -12,7 +12,7 @@ const VerifyContract: React.FC = () => {
   const [licenseType, setLicenseType] = useState('');
   const [contractName, setContractName] = useState('');
   const [contractType, setContractType] = useState('Solidity');
-  const [agreed, setAgreed] = useState(false);
+  const [agreed, setAgreed] = useState(true);
 
   const handleContinue = () => {
     // Save data to local storage
