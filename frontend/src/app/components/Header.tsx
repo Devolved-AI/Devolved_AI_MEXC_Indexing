@@ -5,21 +5,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import HeaderLogo from '../../../public/headerLogo.jpg';
 import { FaUser } from 'react-icons/fa';
+import { profile } from "@/app/var";
 
 import Cookies from 'js-cookie';
 // import { jwtDecode } from 'jwt-decode';
-import {jwtDecode, JwtPayload } from 'jwt-decode';
 
-interface CustomJwtPayload extends JwtPayload {
-  email: string;
-}
 import { useRouter } from 'next/navigation';
 
 import { cookies } from 'next/headers';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [email, setEmail]:any = useState(null);
+  const [email, setEmail]: any = useState(null);
   const [userToken, setUserToken] = useState<string | null>(null);
 
   const toggleMenu = () => {
@@ -51,19 +48,58 @@ const Header: React.FC = () => {
   //   setUserToken(accessToken);
   // }, []);
 
+  // useEffect(() => {
+  //   const accessToken = Cookies.get('access_token');
+  //   if (accessToken) {
+  //     // Decode the token
+  //   const decodedToken = jwtDecode<CustomJwtPayload>(accessToken);
+  //   // Extract email from the token payload and set it
+  //   console.log(decodedToken.email);
+  //   // setEmail(decodedToken.email);
+  //   setUserToken(accessToken);
+  //   }
+  // }, []);
+
+
   useEffect(() => {
-    const accessToken = Cookies.get('access_token');
-    if (accessToken) {
-      // Decode the token
-    const decodedToken = jwtDecode<CustomJwtPayload>(accessToken);
-    // Extract email from the token payload and set it
-    console.log(decodedToken.email);
-    setEmail(decodedToken.email);
-    setUserToken(accessToken);
-    }
+    // Fetch profile information from the API
+    const fetchProfile = async () => {
+      const accessToken = Cookies.get("access_token");
+      // setUserToken(accessToken);
+
+      if (!accessToken) {
+        console.error("No access token found.");
+        return;
+      }
+
+      try {
+        setUserToken(accessToken);
+        const response = await fetch(profile, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const res = await response.json();
+          if (res.success) {
+            setEmail(res.data.email);
+          } else {
+            console.error(res.message || "Error retrieving profile data.");
+          }
+        } else {
+          const errorData = await response.json();
+          console.error(errorData.message || "Failed to fetch profile data.");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+
+    fetchProfile();
   }, []);
-
-
 
   return (
     <header className="bg-white shadow-md">
@@ -115,25 +151,25 @@ const Header: React.FC = () => {
 
           <div className="relative inline-block text-left">
             {
-              userToken? ((
+              userToken ? ((
                 <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
-            >
-              <FaUser className="mr-2" />
-              <span>Profile</span>
-            </button>
-              )):((
+                  onClick={() => setIsOpen(!isOpen)}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+                >
+                  <FaUser className="mr-2" />
+                  <span>Profile</span>
+                </button>
+              )) : ((
                 <button
-              // onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
-            >
-              <FaUser className="mr-2" />
-              <Link href={'/login'}>Sign In</Link>
-            </button>
+                  // onClick={() => setIsOpen(!isOpen)}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+                >
+                  <FaUser className="mr-2" />
+                  <Link href={'/login'}>Sign In</Link>
+                </button>
               ))
             }
-            
+
 
             {isOpen && (
               <div

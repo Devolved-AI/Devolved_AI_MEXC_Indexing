@@ -31,7 +31,7 @@ const MyAccount: React.FC = () => {
 
       try {
         const response = await fetch(profile, {
-          method: "GET",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
@@ -89,10 +89,10 @@ const MyAccount: React.FC = () => {
               <p className="text-gray-700">Below are the username, email, and overview information for your account.</p>
 
               <div className="mt-4 space-y-4 text-gray-800 dark:text-gray-300">
-                <div>
+                {/* <div>
                   <p className="font-medium ">Your Username:</p>
                   <p className="">{username}</p>
-                </div>
+                </div> */}
                 <div>
                   <p className="font-medium ">Your Email Address:</p>
                   <p className="">{email}</p>
