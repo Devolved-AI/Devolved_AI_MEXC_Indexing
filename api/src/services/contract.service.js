@@ -19,8 +19,9 @@ const provider = new ethers.WebSocketProvider(process.env.ARGOCHAIN_RPC_URL);
  * @param {number} runsOptimizer - Optimizer runs.
  * @param {Array} types - Constructor parameter types.
  * @param {Array} values - Constructor parameter values.
- * @param {string} libraryAddress - Library address (or JSON string/array).
- * @param {string} language - Programming language from req.body (e.g., "Solidity").
+ * @param {string|Array} libraryAddress - Library address (or JSON string/array).
+ * @param {string} language - Programming language (e.g., "Solidity").
+ * @param {string} contractName - Name of the contract to verify (e.g., "HelloWorld").
  * @returns {Object} - Verification results including contract details and S3 file URL.
  */
 async function verifyContract(
@@ -33,7 +34,8 @@ async function verifyContract(
     types, 
     values, 
     libraryAddress,
-    language
+    language,
+    contractName
 ) {
     try {
         // Upload the Solidity file to S3 and retrieve the file URL
@@ -68,8 +70,8 @@ async function verifyContract(
             evmVersionToTarget,
             sourceCodeOptimized, 
             runsOptimizer,
-            language,   // dynamic language from req.body
-            fileKey     // dynamic file name from the uploaded file
+            language,
+            fileKey
         );
 
         // Check for any compilation errors and throw an error if found
@@ -79,10 +81,19 @@ async function verifyContract(
             throw new Error(errorMessage);
         }
 
-        // Extract contract data from the compilation result
-        const contractKey = Object.keys(compilationResult.contracts[fileKey])[0];
-        const contractData = compilationResult.contracts[fileKey][contractKey];
-        console.log("Contract compiled successfully:", contractKey);
+        // Extract contract data from the compilation result using the provided contractName.
+        const compiledContracts = compilationResult.contracts[fileKey];
+        if (contractName) {
+            if (!compiledContracts[contractName]) {
+                throw new Error(`Contract ${contractName} not found in the compiled output.`);
+            }
+        } else {
+            // Optionally, default to the first contract if contractName isn't provided.
+            contractName = Object.keys(compiledContracts)[0];
+            console.warn(`No contractName provided. Defaulting to ${contractName}.`);
+        }
+        const contractData = compiledContracts[contractName];
+        console.log("Contract compiled successfully:", contractName);
 
         if (!contractData || !contractData.abi || !contractData.evm || !contractData.evm.deployedBytecode) {
             console.error("Compiled output is missing required fields (ABI or bytecode).");
@@ -102,9 +113,18 @@ async function verifyContract(
             generatedBytecode += encodedParams.slice(2);
         }
         if (libraryAddress) {
-            const cleanLibraryAddress = libraryAddress.slice(2);
-            const placeholderPattern = /__\$[a-fA-F0-9]{34}\$__/g;
-            generatedBytecode = generatedBytecode.replace(placeholderPattern, cleanLibraryAddress);
+            // If libraryAddress is an array, you might need to iterate over it
+            if (Array.isArray(libraryAddress)) {
+                libraryAddress.forEach((libAddr) => {
+                    const cleanLibraryAddress = libAddr.slice(2);
+                    const placeholderPattern = /__\$[a-fA-F0-9]{34}\$__/g;
+                    generatedBytecode = generatedBytecode.replace(placeholderPattern, cleanLibraryAddress);
+                });
+            } else {
+                const cleanLibraryAddress = libraryAddress.slice(2);
+                const placeholderPattern = /__\$[a-fA-F0-9]{34}\$__/g;
+                generatedBytecode = generatedBytecode.replace(placeholderPattern, cleanLibraryAddress);
+            }
         }
 
         // Use stripMetadata to remove compiler metadata from both bytecodes before comparison
@@ -113,9 +133,11 @@ async function verifyContract(
         const isMatch = strippedGeneratedBytecode === strippedDeployedBytecode;
         
         return {
-            contractName: contractKey,
+            contractName,
             contractAddress,
+            compilerVersion,
             verificationStatus: isMatch ? "Contract verified successfully." : "Verification failed: Bytecode mismatch.",
+            verified: isMatch ? true : false,
             s3FileUrl,
             abi,
             deployedBytecode,
