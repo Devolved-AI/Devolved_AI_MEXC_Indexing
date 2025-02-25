@@ -147,7 +147,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
     // Handle text input in <textarea>
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setConstructorArgs(e.target.value);
+        setMessage(e.target.value);
     }
 
     if (loading) {
@@ -329,7 +329,7 @@ const CircleXMarkIcon = () => (
                         </label>
                         <textarea
                             id="contractCode"
-                            value={constructorArgs} // Bind the `message` state here
+                            value={message} // Bind the `message` state here
                             onChange={handleTextChange} // Call `handleTextChange` on each change
                             className="block p-2.5 w-full min-h-[150px] text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder=""
@@ -404,47 +404,58 @@ const CircleXMarkIcon = () => (
 
 
 <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Contract Library Address (for contracts that use libraries, supports up to 10 libraries)
-              </label>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Note: Library names are case sensitive and affect the keccak library hash
-              </p>
-              <button
-                type="button"
-                onClick={handleAddLibrary}
-                className="px-4 py-2 mb-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-              >
-                Add Library
-              </button>
-              {libraries.map((library, index) => (
-                <div key={index} className="relative mb-4 flex items-center w-full">
-                  <div className="w-11/12">
-                    <input
-                      type="text"
-                      placeholder="Library Name"
-                      value={library.name}
-                      onChange={(e) => handleLibraryChange(index, 'name', e.target.value)}
-                      className="w-full mt-1 mb-2 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Library Contract Address"
-                      value={library.address}
-                      onChange={(e) => handleLibraryChange(index, 'address', e.target.value)}
-                      className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveLibrary(index)}
-                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 focus:outline-none"
-                  >
-                    <CircleXMarkIcon />
-                  </button>
-                </div>
-              ))}
+    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        Contract Library Address (for contracts that use libraries, supports up to 10 libraries)
+    </label>
+    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        Note: Library names are case sensitive and affect the keccak library hash
+    </p>
+    <button
+        type="button"
+        onClick={handleAddLibrary}
+        className="px-4 py-2 mb-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+    >
+        Add Library
+    </button>
+
+    {libraries.map((library, index) => (
+        <div key={index} className="mb-4 flex items-center space-x-2">
+            {/* Left section with input fields (90% width) */}
+        <div className="w-11/12">
+            <input
+                type="text"
+                placeholder="Library Name"
+                value={library.name}
+                onChange={(e) => handleLibraryChange(index, 'name', e.target.value)}
+                className="w-full mt-1 mb-2 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            />
+            <input
+                type="text"
+                placeholder="Library Contract Address"
+                value={library.address}
+                onChange={(e) => handleLibraryChange(index, 'address', e.target.value)}
+                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            />
             </div>
+            {/* Delete Button - Positioned to the Right */}
+        {/* <button
+            type="button"
+            onClick={() => handleRemoveLibrary(index)}
+            className="ml-auto px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none"
+        >
+            Delete
+        </button> */}
+         {/* Delete Button - Positioned at the Top-Right */}
+    <button
+      type="button"
+      onClick={() => handleRemoveLibrary(index)}
+      className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 focus:outline-none"
+    >
+      <CircleXMarkIcon />
+    </button>
+        </div>
+    ))}
+</div>
 
 
 
