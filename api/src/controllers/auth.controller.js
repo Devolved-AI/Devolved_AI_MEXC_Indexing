@@ -11,7 +11,7 @@ const {
 } = require('@validations/auth.validation');
 const sendOTPMail = require('@libs/email/sendOTPMail');
 
-const { generateUserToken }= require('@libs/auth/jwt');
+const { generateUserToken, verifyToken }= require('@libs/auth/jwt');
 
 const authEmail = async (req, res) => {
     // Validate the request body
@@ -180,7 +180,79 @@ const verify = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    // Extract token from the Authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(' ')[1]; // Using optional chaining
+
+    if (!token) {
+        return res.status(401).json({ 
+            status: 401,
+            success: false,
+            message: 'Authorization token required' 
+        });
+    }
+
+    try {
+        const decodedToken = await verifyToken(token);
+        if (!decodedToken) {
+            return res.status(403).json({ 
+                status: 403,
+                success: false,
+                message: 'Invalid Token' 
+            });
+        }
+
+        const user = await User.findOne({ email: decodedToken.email });
+        // Check if the user exists
+        if (!user) {
+            return res.status(404).json({ 
+                status: 404,
+                success: false,
+                message: 'User not found' 
+            });
+        }
+
+        // Log the user out by clearing the token and loggedIn flag
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id, 
+            { $unset: { token: 1 }, $set: { loggedIn: false, otp: "" } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(500).json({
+                status: 500,
+                success: false,
+                message: 'Could not log out' 
+            });
+        }
+
+        // Successful logout
+        return res.status(200).json({
+            status: 200,
+            success: true,
+            message: 'Successfully logged out',
+            user: {
+                name: updatedUser.name,
+                email: updatedUser.email,
+                loggedIn: updatedUser.loggedIn,
+                token: updatedUser.token
+            }
+        });
+
+    } catch (error) {
+        console.error('Logout Error:', error);
+        return res.status(500).json({ 
+            status: 500,
+            success: false,
+            message: 'Server error' 
+        });
+    }
+};
+
 module.exports = {
     authEmail,
-    verify
+    verify,
+    logout
 };
