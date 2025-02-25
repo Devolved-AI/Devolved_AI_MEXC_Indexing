@@ -56,8 +56,7 @@ async function verifyContractController(req, res) {
             constructorArgs,
             libraryName,
             libraryAddress,
-            language,
-            contractName
+            language
         } = req.body;
 
         // Check for required fields: contract address, compiler version, and uploaded file
@@ -146,8 +145,7 @@ async function verifyContractController(req, res) {
             parsedTypes, 
             parsedValues, 
             libraryAddress,
-            language,
-            contractName
+            language
         );
         
         // Prepare verification data with schema-compliant ABI format
