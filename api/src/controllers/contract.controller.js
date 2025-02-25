@@ -55,7 +55,8 @@ async function verifyContractController(req, res) {
             evmVersionToTarget,
             constructorArgs,
             libraryName,
-            libraryAddress
+            libraryAddress,
+            language
         } = req.body;
 
         // Check for required fields: contract address, compiler version, and uploaded file
@@ -99,18 +100,21 @@ async function verifyContractController(req, res) {
         // Log input data for verification process
         console.log("Starting contract verification with data:", { contractAddress, compilerVersion, types, values, libraryAddress });
 
-        // Try to parse the types and values only if they are JSON strings
+        // Try to parse the types and values only if they are provided
         let parsedTypes = types;
         let parsedValues = values;
 
         try {
-            // Parse JSON only if the types are a string and appear like JSON
             if (typeof types === 'string') {
                 parsedTypes = JSON.parse(types);
+            } else if (!types) {
+                parsedTypes = []; // default to an empty array if undefined
             }
 
             if (typeof values === 'string') {
                 parsedValues = JSON.parse(values);
+            } else if (!values) {
+                parsedValues = []; // default to an empty array if undefined
             }
         } catch (error) {
             console.error("Error parsing JSON:", error.message);
@@ -140,7 +144,8 @@ async function verifyContractController(req, res) {
             runsOptimizer, 
             parsedTypes, 
             parsedValues, 
-            libraryAddress
+            libraryAddress,
+            language
         );
         
         // Prepare verification data with schema-compliant ABI format
@@ -167,7 +172,8 @@ async function verifyContractController(req, res) {
             constructorArgs: constructorArgs || [],
             types: types || [],
             values: values || [],
-            deployedBytecodeSourcemap: deployedBytecodeSourcemap || 'No deployed bytecode sourcemap provided'
+            deployedBytecodeSourcemap: deployedBytecodeSourcemap || 'No deployed bytecode sourcemap provided',
+            language: language || 'No language provided'
         };
 
         // // Store verification data in MongoDB

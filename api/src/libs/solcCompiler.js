@@ -14,15 +14,17 @@ function compileContract(
     sourceCode, 
     evmVersionToTarget,
     sourceCodeOptimized, 
-    runsOptimizer
+    runsOptimizer,
+    language,       // dynamic language (e.g., "Solidity")
+    fileName        // dynamic file name (e.g., "test1.sol")
 ) {
     const input = {
         language: 'Solidity',
-        sources: { 'Contract.sol': { content: sourceCode } },
+        sources: { [fileName]: { content: sourceCode } },
         settings: {
             optimizer: { 
-                enabled: Boolean(sourceCodeOptimized), // Convert to boolean
-                runs: Number.isInteger(runsOptimizer) && runsOptimizer >= 0 ? runsOptimizer : 200 // Default to 200 if invalid 
+                enabled: Boolean(sourceCodeOptimized),
+                runs: Number.isInteger(runsOptimizer) && runsOptimizer >= 0 ? runsOptimizer : 200
             },
             evmVersion: evmVersionToTarget,
             outputSelection: { '*': { '*': [ 'abi', 'evm.deployedBytecode.object' ] } }

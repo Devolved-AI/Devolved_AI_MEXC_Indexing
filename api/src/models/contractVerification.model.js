@@ -11,6 +11,7 @@ const ContractVerificationSchema = new Schema({
     license : { type: String, default: 'No license linked' },
     s3FileUrl: { type: String, required: true },
     verificationStatus: { type: String, required: true },
+    verified: { type: Boolean, default: false },
     abi: { type: Array, required: true },
     deployedBytecode: { type: String, required: true },
     generatedBytecode: { type: String, required: true },
@@ -25,7 +26,8 @@ const ContractVerificationSchema = new Schema({
     libraryAddress: { type: [String], default: ['No library linked'] },
     constructorArgs: { type: [String], default: ['No constructor argument provided'] },
     types: { type: [String], default: ['No types provided'] },
-    values: { type: [String], default: ['No values provided'] }
+    values: { type: [String], default: ['No values provided'] },
+    language: { type: String, required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ContractVerification', ContractVerificationSchema);
