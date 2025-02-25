@@ -10,6 +10,9 @@ const VerifyContract: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState('');
   const [compilerVersion, setCompilerVersion] = useState('');
   const [licenseType, setLicenseType] = useState('');
+  const [contractName, setContractName] = useState('');
+  const [contractType, setContractType] = useState('Solidity');
+  const [agreed, setAgreed] = useState(false);
 
   const handleContinue = () => {
     // Save data to local storage
@@ -70,6 +73,34 @@ const VerifyContract: React.FC = () => {
             value={contractAddress}
             onChange={(e) => setContractAddress(e.target.value)}
             placeholder="0x..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
+            required
+          />
+
+          {/* Contract name Input */}
+          <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Please enter the Contract Name you would like to verify
+          </label>
+          <input
+            type="text"
+            id="contractName"
+            value={contractName}
+            onChange={(e) => setContractName(e.target.value)}
+            placeholder="name..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
+            required
+          />
+
+          {/* Please select Compiler Type */}
+          <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Please select Compiler Type
+          </label>
+          <input
+            type="text"
+            id="contractType"
+            value={contractType}
+            onChange={(e) => setContractType(e.target.value)}
+            placeholder="name..."
             className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-4"
             required
           />
@@ -198,6 +229,37 @@ const VerifyContract: React.FC = () => {
             <option value="Business Source License (BSL 1.1)">Business Source License (BSL 1.1)</option>
             {/* Add other license options here */}
           </select>
+
+          <div className="flex items-center space-x-2 mb-4">
+      <label className="relative cursor-pointer flex items-center">
+        <input
+          type="checkbox"
+          className="hidden"
+          checked={agreed}
+          onChange={() => setAgreed(!agreed)}
+        />
+        <div
+          className={`w-5 h-5 border-2 border-gray-400 rounded-full flex items-center justify-center ${
+            agreed ? "border-blue-500" : ""
+          }`}
+        >
+          {agreed && (
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+          )}
+        </div>
+      </label>
+      <span className="text-gray-700">
+        I (nurdev) agree to the{" "}
+        <a
+          href="https://polygonscan.com/verifyContract"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          terms of service
+        </a>
+      </span>
+    </div>
           
           {/* Buttons */}
           <div className="flex justify-between">
