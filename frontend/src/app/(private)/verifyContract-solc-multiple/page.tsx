@@ -28,8 +28,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [message, setMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState('');
     const [showMessageScreen, setShowMessageScreen] = useState(false); // Toggle message screen
-    const [contractName, setContractName] = useState('');
-    const [language, setLanguage] = useState('');
+    // const [contractName, setContractName] = useState('');
+    // const [language, setLanguage] = useState('');
 
     const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setContractFiles(e.target.files);
@@ -71,8 +71,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
             const libraryAddresses = libraries.map(library => library.address);
             formData.append("libraryName", JSON.stringify(libraryNames));
             formData.append("libraryAddress", JSON.stringify(libraryAddresses));
-            formData.append("contractName", contractName);
-            formData.append("language", language);
+            // formData.append("contractName", contractName);
+            // formData.append("language", language);
             const typesArray = types
                 .split(",")
                 .map((item) => item.trim())
@@ -148,8 +148,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
         const storedCompilerVersion = localStorage.getItem('compilerVersion');
         const storedLicenseType = localStorage.getItem('licenseType');
         const storedWalletAddress = localStorage.getItem('walletAddress');
-        const storedcontractName = localStorage.getItem('contractName');
-        const storedlanguage = localStorage.getItem('language');
+        // const storedcontractName = localStorage.getItem('contractName');
+        // const storedlanguage = localStorage.getItem('language');
 
 
 
@@ -157,8 +157,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
         if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
         if (storedLicenseType) setLicenseType(storedLicenseType);
         if (storedWalletAddress) setWalletAddress(storedWalletAddress);
-        if (storedcontractName) setContractName(storedcontractName);
-        if (storedlanguage) setLanguage(storedlanguage);
+        // if (storedcontractName) setContractName(storedcontractName);
+        // if (storedlanguage) setLanguage(storedlanguage);
 
     }, []);
 
@@ -245,14 +245,14 @@ const VerifyContractSolcMultiple: React.FC = () => {
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">License Type:</label>
                             <p className="text-gray-800 dark:text-white">{licenseType}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Name:</label>
                             <p className="text-gray-800 dark:text-white">{contractName}</p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Language:</label>
                             <p className="text-gray-800 dark:text-white">{language}</p>
-                        </div>
+                        </div> */}
 
                     </div>
 
