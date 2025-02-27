@@ -18,7 +18,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [contractFiles, setContractFiles] = useState<FileList | null>(null);
     const [licenseType, setLicenseType] = useState('');
     const [optimization, setOptimization] = useState(false);
-    const [runs, setRuns] = useState(200);
+    const [runs, setRuns] = useState(0);
     const [evmVersion, setEvmVersion] = useState('');
     const [constructorArgs, setConstructorArgs] = useState('');
     const [types, setTypes] = useState('');
@@ -319,47 +319,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
                                     <option value="shanghai">shanghai</option>
                                 </select>
                             </div>
-                        </div>
-
-
-                        <div>
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">License Type</label>
-                            {/* <p className="text-gray-800 dark:text-white">10) Mozilla Public License 2.0 (MPL-2.0)</p> */}
-                            <select
-                                value={licenseType}
-                                onChange={(e) => setLicenseType(e.target.value)}
-                                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            >
-                                <option value="">Please Select</option>
-                                <option value="No License (None)">No License (None)</option>
-                                <option value="The Unlicense (Unlicense)">The Unlicense (Unlicense)</option>
-                                <option value="MIT License (MIT)">MIT License (MIT)</option>
-                                <option value="GNU General Public License v2.0 (GNU GPLv2)">GNU General Public License v2.0 (GNU GPLv2)</option>
-                                <option value="GNU General Public License v3.0 (GNU GPLv3)">GNU General Public License v3.0 (GNU GPLv3)</option>
-                                <option value="GNU Lesser General Public License v2.1 (GNU LGPLv2.1)">GNU Lesser General Public License v2.1 (GNU LGPLv2.1)</option>
-                                <option value="GNU Lesser General Public License v3.0 (GNU LGPLv3)">GNU Lesser General Public License v3.0 (GNU LGPLv3)</option>
-                                <option value="BSD 2-clause &quot;Simplified&quot; license (BSD-2-Clause)">BSD 2-clause "Simplified" license (BSD-2-Clause)</option>
-                                <option value="BSD 3-clause &quot;New&quot; Or &quot;Revised&quot; license (BSD-3-Clause)">BSD 3-clause "New" Or "Revised" license (BSD-3-Clause)</option>
-                                <option value="Mozilla Public License 2.0 (MPL-2.0)">Mozilla Public License 2.0 (MPL-2.0)</option>
-                                <option value="Open Software License 3.0 (OSL-3.0">Open Software License 3.0 (OSL-3.0)</option>
-                                <option value="Apache 2.0 (Apache-2.0)">Apache 2.0 (Apache-2.0)</option>
-                                <option value="GNU Affero General Public License (GNU AGPLv3)">GNU Affero General Public License (GNU AGPLv3)</option>
-                                <option value="Business Source License (BSL 1.1)">Business Source License (BSL 1.1)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Constructor Arguments ABI-encoded
-                            </label>
-                            <textarea
-                                id="contractCode"
-                                value={constructorArgs} // Bind the `message` state here
-                                onChange={handleTextChange} // Call `handleTextChange` on each change
-                                className="block p-2.5 w-full min-h-[150px] text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholder=""
-                            ></textarea>
-
                         </div>
 
                         <div className="mt-6 space-y-4">
