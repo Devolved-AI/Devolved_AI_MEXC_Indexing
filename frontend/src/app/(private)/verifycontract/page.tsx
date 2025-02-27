@@ -23,8 +23,6 @@ const VerifyContract: React.FC = () => {
     localStorage.setItem('contractName', contractName);
     localStorage.setItem('language', contractType);
     
-
-
     // Redirect to the specified page
     router.push('/verifyContract-solc-multiple');
   };
@@ -101,6 +99,7 @@ const VerifyContract: React.FC = () => {
           Please select Compiler Type
           </label>
           <input
+            readOnly
             type="text"
             id="contractType"
             value={contractType}
@@ -241,6 +240,7 @@ const VerifyContract: React.FC = () => {
           type="checkbox"
           className="hidden"
           checked={agreed}
+          disabled
           onChange={() => setAgreed(!agreed)}
         />
         <div
@@ -254,9 +254,9 @@ const VerifyContract: React.FC = () => {
         </div>
       </label>
       <span className="text-gray-700">
-        I (nurdev) agree to the{" "}
+        I agree to the{" "}
         <a
-          href="https://polygonscan.com/verifyContract"
+          href="/terms-conditions"
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 underline"

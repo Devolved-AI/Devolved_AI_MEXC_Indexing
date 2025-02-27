@@ -73,8 +73,20 @@ const VerifyContractSolcMultiple: React.FC = () => {
             formData.append("libraryAddress", JSON.stringify(libraryAddresses));
             formData.append("contractName", contractName);
             formData.append("language", language);
-            // formData.append("types", types);
-            // formData.append("values", values);
+            const typesArray = types
+                .split(",")
+                .map((item) => item.trim())
+                .filter((item) => item.length > 0);
+            const valuesArray = values
+                .split(",")
+                .map((item) => {
+                const trimmed = item.trim();
+                const num = Number(trimmed);
+                return isNaN(num) ? trimmed : num;
+                })
+                .filter((item) => item !== "");
+            formData.append("types", JSON.stringify(typesArray));
+            formData.append("values", JSON.stringify(valuesArray));
             console.log("Step 3: Fetching access token");
             const accessToken = Cookies.get("access_token");
             if (!accessToken) {
@@ -82,12 +94,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
                 toast.error("Access token is missing.");
                 return;
             }
-
-            console.log("Step 3: Verifying FormData entries");
-            // Log each key-value pair in formData using getAll for each key
-            formData.forEach((value, key) => {
-                console.log(`${key}: ${value}`);
-            });
 
             // Log each key-value pair in formData for inspection
             console.log("Step 4: Verifying FormData entries");
