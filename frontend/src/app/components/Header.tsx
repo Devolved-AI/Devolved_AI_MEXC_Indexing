@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import HeaderLogo from '../../../public/headerLogo.jpg';
 import { FaUser } from 'react-icons/fa';
-import { profile } from "@/app/var";
+import { profile, auth_logout } from "@/app/var";
 
 import Cookies from 'js-cookie';
 // import { jwtDecode } from 'jwt-decode';
@@ -31,7 +31,35 @@ const Header: React.FC = () => {
 
   const router = useRouter();
 
-  const handleSignOut = () => {
+  // const handleSignOut = () => {
+  //   // Clear cookies
+  //   Cookies.remove('email');
+  //   Cookies.remove('access_token');
+
+  //   // Redirect to the login page
+  //   router.push('/login');
+  // };
+
+  const handleSignOut = async () => {
+    const accessToken = Cookies.get('access_token');
+    console.log("accessToken logout", accessToken);
+    try {
+      if (accessToken) {
+        const response = await fetch(auth_logout, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+        });
+
+        if (!response.ok) {
+          console.error("Logout API failed", await response.json());
+        }
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
     // Clear cookies
     Cookies.remove('email');
     Cookies.remove('access_token');
@@ -39,26 +67,6 @@ const Header: React.FC = () => {
     // Redirect to the login page
     router.push('/login');
   };
-
-  // useEffect(() => {
-  //   // Access email cookie on the client side
-  //   const emailCookie:any = Cookies.get('email');
-  //   const accessToken:any = Cookies.get('access_token');
-  //   setEmail(emailCookie);
-  //   setUserToken(accessToken);
-  // }, []);
-
-  // useEffect(() => {
-  //   const accessToken = Cookies.get('access_token');
-  //   if (accessToken) {
-  //     // Decode the token
-  //   const decodedToken = jwtDecode<CustomJwtPayload>(accessToken);
-  //   // Extract email from the token payload and set it
-  //   console.log(decodedToken.email);
-  //   // setEmail(decodedToken.email);
-  //   setUserToken(accessToken);
-  //   }
-  // }, []);
 
 
   useEffect(() => {
