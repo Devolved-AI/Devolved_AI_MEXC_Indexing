@@ -55,8 +55,7 @@ async function verifyContractController(req, res) {
             evmVersionToTarget,
             constructorArgs,
             libraryName,
-            libraryAddress,
-            language
+            libraryAddress
         } = req.body;
 
         // Check for required fields: contract address, compiler version, and uploaded file
@@ -97,42 +96,73 @@ async function verifyContractController(req, res) {
             }
         }
 
-        // Log input data for verification process
-        console.log("Starting contract verification with data:", { contractAddress, compilerVersion, types, values, libraryAddress });
-
         // Try to parse the types and values only if they are provided
-        let parsedTypes = types;
-        let parsedValues = values;
-
-        try {
-            if (typeof types === 'string') {
-                parsedTypes = JSON.parse(types);
-            } else if (!types) {
-                parsedTypes = []; // default to an empty array if undefined
-            }
-
-            if (typeof values === 'string') {
-                parsedValues = JSON.parse(values);
-            } else if (!values) {
-                parsedValues = []; // default to an empty array if undefined
-            }
-        } catch (error) {
-            console.error("Error parsing JSON:", error.message);
-            return res.status(400).json({
-                status: 400,
-                success: false,
-                message: "Invalid JSON format in types or values.",
-            });
+        // Normalize types and values
+        let parsedTypes = [];
+        if (typeof types === 'string' && types.trim() !== '') {
+        parsedTypes = JSON.parse(types);
+        } else if (Array.isArray(types)) {
+        parsedTypes = types;
         }
 
-        // Ensure types and values have the same length
+        let parsedValues = [];
+        if (typeof values === 'string' && values.trim() !== '') {
+        parsedValues = JSON.parse(values);
+        } else if (Array.isArray(values)) {
+        parsedValues = values;
+        }
+
         if (parsedTypes.length !== parsedValues.length) {
+        return res.status(400).json({
+            status: 400,
+            success: false,
+            message: `Mismatch between types and values: expected ${parsedTypes.length}, got ${parsedValues.length}.`
+        });
+        }
+
+        // -------------------------------
+        // NEW: Normalize sourceCodeOptimized and runsOptimizer
+        // If not provided, default to false and 0 respectively.
+        const optimized = (sourceCodeOptimized === true || sourceCodeOptimized === 'true') ? true : false;
+        let optimizerRuns = (runsOptimizer === undefined || runsOptimizer === null) ? 0 : Number(runsOptimizer);
+
+        // NEW: Validate the relationship between sourceCodeOptimized and runsOptimizer
+        if (!optimized && optimizerRuns !== 0) {
             return res.status(400).json({
                 status: 400,
                 success: false,
-                message: `Mismatch between types and values: expected ${parsedTypes.length}, got ${parsedValues.length}.`
+                message: "When sourceCodeOptimized is false, runsOptimizer must be 0."
             });
         }
+        if (optimized && optimizerRuns <= 0) {
+            return res.status(400).json({
+                status: 400,
+                success: false,
+                message: "When sourceCodeOptimized is true, runsOptimizer must be greater than 0."
+            });
+        }
+        // -------------------------------
+
+        // Normalize libraryAddress if needed
+        let parsedLibraryAddress = [];
+        if (typeof libraryAddress === 'string' && libraryAddress.trim() !== '') {
+        parsedLibraryAddress = JSON.parse(libraryAddress);
+        } else if (Array.isArray(libraryAddress)) {
+        parsedLibraryAddress = libraryAddress;
+        }
+
+        // Log input data for verification process
+        console.log("Starting contract verification with data:", { 
+            contractAddress, 
+            compilerVersion, 
+            filename: req.file.originalname,
+            evmVersionToTarget, 
+            optimized, 
+            optimizerRuns, 
+            parsedTypes, 
+            parsedValues, 
+            parsedLibraryAddress
+        });
 
         // Call the verification service with provided details
         const verificationResult = await verifyContract(
@@ -140,12 +170,11 @@ async function verifyContractController(req, res) {
             compilerVersion, 
             req.file,
             evmVersionToTarget, 
-            sourceCodeOptimized, 
-            runsOptimizer, 
+            optimized, 
+            optimizerRuns, 
             parsedTypes, 
             parsedValues, 
-            libraryAddress,
-            language
+            parsedLibraryAddress
         );
         
         // Prepare verification data with schema-compliant ABI format
@@ -165,8 +194,8 @@ async function verifyContractController(req, res) {
             strippedDeployedBytecode: verificationResult?.strippedDeployedBytecode || 'No stripped deployed bytecode available',
             strippedGeneratedBytecode: verificationResult?.strippedGeneratedBytecode || 'No stripped generated bytecode available',
             sourceCode: verificationResult?.sourceCode || 'No source code available',
-            sourceCodeOptimized: sourceCodeOptimized || false,
-            runsOptimizer: runsOptimizer || 0,
+            sourceCodeOptimized: optimized,
+            runsOptimizer: optimizerRuns,
             evmVersionToTarget: evmVersionToTarget || 'No EVM version specified',
             libraryName: libraryName || 'No library name linked',
             libraryAddress: libraryAddress || 'No library address linked',
@@ -174,7 +203,7 @@ async function verifyContractController(req, res) {
             types: types || [],
             values: values || [],
             deployedBytecodeSourcemap: deployedBytecodeSourcemap || 'No deployed bytecode sourcemap provided',
-            language: language || 'No language provided'
+            language: 'Solidity'
         };
 
         // // Store verification data in MongoDB

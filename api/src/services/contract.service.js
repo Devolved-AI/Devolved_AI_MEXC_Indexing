@@ -22,7 +22,6 @@ const provider = new ethers.WebSocketProvider(process.env.ARGOCHAIN_RPC_URL);
  * @param {Array} types - Constructor parameter types.
  * @param {Array} values - Constructor parameter values.
  * @param {string|Array} libraryAddress - Library addresses (if any).
- * @param {string} language - Programming language (e.g., "Solidity").
  *
  * @returns {Object} - Verification results including contract details and S3 file URL.
  */
@@ -35,8 +34,7 @@ async function verifyContract(
   runsOptimizer,
   types,
   values,
-  libraryAddress,
-  language
+  libraryAddress
 ) {
   try {
     // Upload the Solidity file to S3 and get its URL
@@ -71,7 +69,6 @@ async function verifyContract(
       evmVersionToTarget,
       sourceCodeOptimized,
       runsOptimizer,
-      language,
       fileKey
     );
 

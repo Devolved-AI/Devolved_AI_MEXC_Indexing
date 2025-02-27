@@ -15,7 +15,6 @@ function compileContract(
     evmVersionToTarget,
     sourceCodeOptimized, 
     runsOptimizer,
-    language,       // dynamic language (e.g., "Solidity")
     fileName        // dynamic file name (e.g., "test1.sol")
 ) {
     const input = {
