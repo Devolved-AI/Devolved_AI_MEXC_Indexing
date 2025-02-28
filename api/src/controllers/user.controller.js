@@ -64,6 +64,52 @@ const profile = async (req, res) => {
     }
 }
 
+const isValid = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+        if (!token) return res.status(401).json({
+            status: 401,
+            success: false,
+            message: "Authorization token required",
+            valid: false
+        });
+
+        const decodedToken = await verifyToken(token);
+        if(!decodedToken) return res.status(400).json({
+            status: 400,
+            success: false,
+            message: "Invalid Token",
+            valid: false
+        });
+        
+        const user = await User.findOne({ email: decodedToken.email });
+        if (!user) {
+            return res.status(404).json({
+                status: 404,
+                success: false,
+                message: 'User not found',
+                valid: false
+            });
+        } else {
+            return res.status(200).json({
+                status: 200,
+                success: true,
+                message: 'Valid user found',
+                valid: true
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ 
+            status: 500,
+            success: false,
+            message: error.message,
+            valid: false
+        });
+    }
+};
+
 module.exports = { 
     profile,
+    isValid
 };

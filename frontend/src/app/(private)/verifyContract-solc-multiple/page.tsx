@@ -21,8 +21,15 @@ const VerifyContractSolcMultiple: React.FC = () => {
     const [runs, setRuns] = useState(0);
     const [evmVersion, setEvmVersion] = useState('');
     const [constructorArgs, setConstructorArgs] = useState('');
-    const [types, setTypes] = useState('');
-    const [values, setValues] = useState('');
+    // ---------------------------
+    // CHANGED: Removed single string states for types and values
+    // const [types, setTypes] = useState('');
+    // const [values, setValues] = useState('');
+    // ---------------------------
+    // NEW: Added state arrays for types and values
+    const [typesArray, setTypesArray] = useState<string[]>(['']);
+    const [valuesArray, setValuesArray] = useState<string[]>(['']);
+    // ---------------------------
     const [libraries, setLibraries] = useState<{ name: string; address: string }[]>([]);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [message, setMessage] = useState("");
@@ -45,6 +52,38 @@ const VerifyContractSolcMultiple: React.FC = () => {
         );
         setLibraries(updatedLibraries);
     };
+
+    // ---------------------------
+    // NEW: Functions to handle dynamic types array
+    const handleTypeChange = (index: number, value: string) => {
+        const updatedTypes = [...typesArray];
+        updatedTypes[index] = value;
+        setTypesArray(updatedTypes);
+    };
+
+    const handleAddType = () => {
+        setTypesArray([...typesArray, '']);
+    };
+
+    const handleRemoveType = (index: number) => {
+        setTypesArray(typesArray.filter((_, i) => i !== index));
+    };
+
+    // NEW: Functions to handle dynamic values array
+    const handleValueChange = (index: number, value: string) => {
+        const updatedValues = [...valuesArray];
+        updatedValues[index] = value;
+        setValuesArray(updatedValues);
+    };
+
+    const handleAddValue = () => {
+        setValuesArray([...valuesArray, '']);
+    };
+
+    const handleRemoveValue = (index: number) => {
+        setValuesArray(valuesArray.filter((_, i) => i !== index));
+    };
+    // ---------------------------
 
     const handleVerifyAndPublish = async () => {
         console.log("Step 1: Starting verification process");
@@ -71,22 +110,19 @@ const VerifyContractSolcMultiple: React.FC = () => {
             const libraryAddresses = libraries.map(library => library.address);
             formData.append("libraryName", JSON.stringify(libraryNames));
             formData.append("libraryAddress", JSON.stringify(libraryAddresses));
-            // formData.append("contractName", contractName);
-            // formData.append("language", language);
-            const typesArray = types
-                .split(",")
-                .map((item) => item.trim())
-                .filter((item) => item.length > 0);
-            const valuesArray = values
-                .split(",")
-                .map((item) => {
-                const trimmed = item.trim();
-                const num = Number(trimmed);
-                return isNaN(num) ? trimmed : num;
-                })
-                .filter((item) => item !== "");
-            formData.append("types", JSON.stringify(typesArray));
-            formData.append("values", JSON.stringify(valuesArray));
+            // ---------------------------
+            // CHANGED: Use the new typesArray and valuesArray instead of splitting a string
+            const filteredTypes = typesArray.map(item => item.trim()).filter(item => item !== "");
+            const filteredValues = valuesArray
+                .map(item => item.trim())
+                .filter(item => item !== "")
+                .map(item => {
+                    const num = Number(item);
+                    return isNaN(num) ? item : num;
+                });
+            formData.append("types", JSON.stringify(filteredTypes));
+            formData.append("values", JSON.stringify(filteredValues));
+            // ---------------------------
             console.log("Step 3: Fetching access token");
             const accessToken = Cookies.get("access_token");
             if (!accessToken) {
@@ -97,7 +133,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
 
             // Log each key-value pair in formData for inspection
             console.log("Step 4: Verifying FormData entries");
-            // Log each key-value pair in formData using getAll for each key
             formData.forEach((value, key) => {
                 console.log(`${key}: ${value}`);
             });
@@ -128,6 +163,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
         } finally {
             setLoading(false);
             console.log("Step 7: Verification process complete");
+            localStorage.clear();
         }
     };
 
@@ -138,7 +174,12 @@ const VerifyContractSolcMultiple: React.FC = () => {
         setConstructorArgs('');
         setLibraries([]);
         setOptimization(false);
-
+        // ---------------------------
+        // NEW: Reset types and values arrays
+        setTypesArray(['']);
+        setValuesArray(['']);
+        localStorage.clear();
+        // ---------------------------
     };
 
     // Load data from local storage on component mount
@@ -148,18 +189,11 @@ const VerifyContractSolcMultiple: React.FC = () => {
         const storedCompilerVersion = localStorage.getItem('compilerVersion');
         const storedLicenseType = localStorage.getItem('licenseType');
         const storedWalletAddress = localStorage.getItem('walletAddress');
-        // const storedcontractName = localStorage.getItem('contractName');
-        // const storedlanguage = localStorage.getItem('language');
-
-
 
         if (storedContractAddress) setContractAddress(storedContractAddress);
         if (storedCompilerVersion) setCompilerVersion(storedCompilerVersion);
         if (storedLicenseType) setLicenseType(storedLicenseType);
         if (storedWalletAddress) setWalletAddress(storedWalletAddress);
-        // if (storedcontractName) setContractName(storedcontractName);
-        // if (storedlanguage) setLanguage(storedlanguage);
-
     }, []);
 
     // Handle text input in <textarea>
@@ -181,7 +215,6 @@ const VerifyContractSolcMultiple: React.FC = () => {
         setLibraries(libraries.filter((_, libIndex) => libIndex !== index));
     };
 
-
     // Define the custom SVG icon component
     const CircleXMarkIcon = () => (
         <svg
@@ -198,17 +231,19 @@ const VerifyContractSolcMultiple: React.FC = () => {
         </svg>
     );
 
-
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-6">
 
             {showMessageScreen ? (
                 // Message screen content
                 <div className='max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
-                    <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Contract verified and published</h2>
+                    <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white">Contract verified and published successfully</h2>
                     <p className="mt-4 text-sm p-2 bg-[#011a27] border-[#044f75] border-2 rounded-lg text-[#6edff6] dark:text-[#6edff6] text-center">
-                        You've successfully Contract verified and published !.
+                    <a href="/myverify_address">
+                        Go to verified address list
+                    </a>
                     </p>
+                    
                 </div>
             ) : (
                 <div className="max-w-4xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -231,7 +266,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                     <div className="space-y-4 bg-[#e9ecef] dark:bg-gray-700 p-2 rounded-lg border">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Wallet Address:</label>
-                            <p className="text-gray-800 dark:text-white">{walletAddress}</p>
+                            <p className="text-gray-800 dark:text-white">{walletAddress ? walletAddress : "N/A"}</p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Address:</label>
@@ -243,17 +278,8 @@ const VerifyContractSolcMultiple: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">License Type:</label>
-                            <p className="text-gray-800 dark:text-white">{licenseType}</p>
+                            <p className="text-gray-800 dark:text-white">{licenseType ? licenseType : "N/A"}</p>
                         </div>
-                        {/* <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contract Name:</label>
-                            <p className="text-gray-800 dark:text-white">{contractName}</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Language:</label>
-                            <p className="text-gray-800 dark:text-white">{language}</p>
-                        </div> */}
-
                     </div>
 
                     {/* Upload Contract Files */}
@@ -292,6 +318,7 @@ const VerifyContractSolcMultiple: React.FC = () => {
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Runs (Optimizer)</label>
                                 <input
                                     type="number"
+                                    disabled={!optimization}
                                     value={runs}
                                     onChange={(e) => setRuns(Number(e.target.value))}
                                     className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -321,35 +348,75 @@ const VerifyContractSolcMultiple: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="mt-6 space-y-4">
-
-                            <div className='lg:flex '>
-                                <div className='mx-2'>
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Types</label>
-                                    <input
-                                        type="types"
-                                        value={types}
-                                        onChange={(e) => setTypes(e.target.value)}
-                                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                </div>
-
-                                <div className='mx-2'>
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Values</label>
-                                    <input
-                                        type="values"
-                                        value={values}
-                                        onChange={(e) => setValues(e.target.value)}
-                                        className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    />
-                                </div>
+                        {/* ---------------------------
+                            CHANGED: Replace single input fields for Types and Values
+                            with dynamic list inputs for each
+                        --------------------------- */}
+                        <div className="lg:flex">
+                            <div className="mx-2 w-1/2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Types</label>
+                                {typesArray.map((type, index) => (
+                                    <div key={index} className="flex items-center my-2">
+                                        <input
+                                            type="text"
+                                            value={type}
+                                            onChange={(e) => handleTypeChange(index, e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        {typesArray.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveType(index)}
+                                                className="ml-2 text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={handleAddType}
+                                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
+                                >
+                                    Add Type
+                                </button>
+                            </div>
+                            <div className="mx-2 w-1/2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Values</label>
+                                {valuesArray.map((value, index) => (
+                                    <div key={index} className="flex items-center my-2">
+                                        <input
+                                            type="text"
+                                            value={value}
+                                            onChange={(e) => handleValueChange(index, e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                        {valuesArray.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveValue(index)}
+                                                className="ml-2 text-red-500"
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={handleAddValue}
+                                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
+                                >
+                                    Add Value
+                                </button>
                             </div>
                         </div>
 
-
-                        {/* Library Addresses */}
-
-                        <div>
+                        {/* ---------------------------
+                            RE-ADDED: Library Addresses section (as in the original)
+                        --------------------------- */}
+                        <div className="mt-6">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Contract Library Address (for contracts that use libraries, supports up to 10 libraries)
                             </label>
@@ -391,13 +458,15 @@ const VerifyContractSolcMultiple: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-
                     </div>
 
+                    {/* ---------------------------
+                        CHANGED: Added margin-top (mt-4) to the reset button section
+                    --------------------------- */}
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+                        className="mt-4 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                     >
                         Reset
                     </button>
@@ -416,12 +485,10 @@ const VerifyContractSolcMultiple: React.FC = () => {
                             className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             Verify and Publish
-
                         </button>
                     </div>
                 </div>
-            )
-            }
+            )}
 
         </div>
     );
