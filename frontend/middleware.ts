@@ -1,41 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { isValid } from "@/app/var";
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const protectedPaths = [
-    '/myaccount',
-    '/myverify_address',
-    '/verifycontract',
-    '/verifyContract-solc-multiple'
-  ];
+export async function middleware(req: NextRequest) {
+  const token = req.cookies.get("access_token")?.value || "";
 
-  // Check if email and access_token cookies exist
-  const accessToken = req.cookies.get('access_token')?.value;
+  const redirectToAuth = () => NextResponse.redirect(new URL("/login", req.url));
+  const redirectToChat = () => NextResponse.redirect(new URL("/myaccount", req.url));
 
-  // If cookies are missing, restrict access to only /login and /registration
-  if (!accessToken) {
-    if (pathname !== '/registration') {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-  } else {
-    // Check if the request path is not allowed for authenticated users
-    const isProtectedRoute = protectedPaths.some(path => pathname.startsWith(path));
-    if (!isProtectedRoute && pathname !== '/login' && pathname !== '/registration') {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
+  try {
+    // Redirect to /auth if email or token are missing
+    if (!token) return redirectToAuth();
+
+    // Perform the API call to validate the token and email
+    const response = await fetch(isValid, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      }
+    });
+
+    const res = await response.json();
+
+    if (!res.valid) return redirectToAuth();
+
+    // Paths to redirect authenticated users to /chat
+    const pathsToRedirect = ["/", "/myaccount", "/login"];
+    if (pathsToRedirect.includes(req.nextUrl.pathname)) return redirectToChat();
+  } catch (error) {
+    console.error("Error validating user:", error);
+    return redirectToAuth();
   }
-
-  return NextResponse.next();
 }
 
-// Define the routes where the middleware should run
 export const config = {
   matcher: [
-    '/myaccount',
-    '/myverify_address',
-    '/verifycontract',
-    // '/verifyContract-solc-multiple/:addressId*',
-    '/verifyContract-solc-multiple',
-    // '/contract-address/:id',
+    "/", 
+    "/myaccount"
   ],
 };

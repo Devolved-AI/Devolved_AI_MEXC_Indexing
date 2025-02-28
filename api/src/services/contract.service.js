@@ -46,6 +46,11 @@ async function verifyContract(
     console.log(`Fetching deployed bytecode for contract at address: ${contractAddress}`);
     const deployedBytecode = await provider.getCode(contractAddress);
     console.log("Deployed Bytecode:", deployedBytecode);
+    
+    // Log the block number where the deployed bytecode was retrieved
+    const currentBlockNumber = await provider.getBlockNumber();
+    console.log(`Verification performed at block number: ${currentBlockNumber}`);
+    
     if (!deployedBytecode || deployedBytecode === "0x") {
       throw new Error("Deployed bytecode not found or contract address is incorrect.");
     }
