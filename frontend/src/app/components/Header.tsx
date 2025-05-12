@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import HeaderLogo from '../../../public/headerLogo.jpg';
+import HeaderLogo from '../../../public/Athena2.png';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,7 +23,7 @@ const Header: React.FC = () => {
         <div className="flex items-center">
         <Link href="/">
               <samp className="flex items-center text-gray-700">
-                <Image src="/headerLogo.jpg" alt="Logo" width={40} height={40} className="h-10 w-10" />
+                <Image src="/Athena2.png" alt="Logo" width={40} height={40} className="h-10 w-10" />
                 <span className="ml-2 text-xl font-bold">Argochain Scanner</span>
               </samp>
             </Link>
