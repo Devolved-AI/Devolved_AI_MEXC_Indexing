@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
           <div className="w-full md:w-1/3 mb-6 md:mb-0">
             <Link href="/">
               <samp className="flex items-center text-gray-700">
-                <Image src="/headerLogo.jpg" alt="Logo" width={40} height={40} className="h-10 w-10" />
+                <Image src="/Athena2.png" alt="Logo" width={40} height={40} className="h-10 w-10" />
                 <span className="ml-2 text-xl font-bold">Argochain Scanner</span>
               </samp>
             </Link>
