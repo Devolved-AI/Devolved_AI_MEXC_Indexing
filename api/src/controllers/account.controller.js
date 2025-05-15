@@ -8,6 +8,7 @@ const { query } = require('../config/connectDB'); // Update with your actual DB 
  * @returns {string} The formatted amount.
  */
 const convertToFixedPrecision = (amount, decimals = 18) => {
+  
   try {
     // Validate that the amount is convertible to a BigInt.
     if (typeof amount !== 'string' && typeof amount !== 'number' && typeof amount !== 'bigint') {
