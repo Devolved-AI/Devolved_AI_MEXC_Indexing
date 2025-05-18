@@ -159,18 +159,6 @@ const TransactionDetailsByAddress = () => {
     );
   }
 
-  if ((!balance && !transactionData) || error) {
-    return (
-      <div className="p-4 bg-white text-gray-700 shadow rounded-md text-center">
-        <h1 className="text-4xl font-bold text-red-500">404</h1>
-        <p className="mt-2 text-gray-600">The balance and transaction details for the specified address were not found.</p>
-        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
-          Return to Home
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       {balance && (

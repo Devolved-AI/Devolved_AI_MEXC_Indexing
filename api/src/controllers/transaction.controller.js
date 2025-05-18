@@ -1,5 +1,7 @@
 const { query } = require('@config/connectDB');
 const { ApiPromise, WsProvider } = require( '@polkadot/api' );
+const { u8aToHex, hexToU8a } = require('@polkadot/util');
+const { decodeAddress, encodeAddress, cryptoWaitReady, blake2AsU8a } = require('@polkadot/util-crypto');
 require('dotenv').config();
 
 // Initialize WebSocket provider
@@ -184,42 +186,79 @@ const getTransactionDetailsByAddress = async (req, res) => {
   }
 };
 
+// Function to convert EVM address (H160) to Substrate address (AccountId32)
+const evmToSubstrateAddress = (evmAddress) => {
+  // Remove '0x' prefix and convert to Uint8Array
+  const evmBytes = hexToU8a(evmAddress);
+  
+  // Substrate address derivation for EVM accounts (Moonbeam/Astar style)
+  // Prefix 'evm:' + 20-byte EVM address + padding to 32 bytes
+  const prefix = 'evm:';
+  const prefixBytes = new TextEncoder().encode(prefix); // Convert prefix to bytes
+  const substrateBytes = new Uint8Array(32); // Substrate address is 32 bytes
+  substrateBytes.set(prefixBytes, 0); // Set 'evm:' prefix
+  substrateBytes.set(evmBytes, prefixBytes.length); // Append EVM address bytes
+
+  // Convert to SS58 format (requires api instance for SS58 prefix)
+  // We'll return the raw bytes as hex for now and encode later
+  return u8aToHex(substrateBytes);
+};
+
+// Function to validate address (basic check for EVM or Substrate)
+const isEvmAddress = (address) => {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+};
 
 // Function to get the account balance from Redis or from the blockchain
-const getBalance = async ( req, res ) => {
-  // Extract address from request body
+const getBalance = async (req, res) => {
   const { address } = req.body;
 
-  // If address is not provided, return a 400 error
-  if ( !address ) {
-      return res.status( 400 ).json( {
-          success: false,
-          message: 'Address is required',
-      } );
+  if (!address) {
+    return res.status(400).json({
+      success: false,
+      message: 'Address is required',
+    });
   }
 
   try {
-      // If address does not exist in Redis, fetch the balance from the blockchain
-      const wsProvider = new WsProvider( process.env.ARGOCHAIN_RPC_URL ); // Replace with your blockchain's RPC URL
-      const api = await ApiPromise.create( { provider: wsProvider } );
+    const wsProvider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
+    const api = await ApiPromise.create({ provider: wsProvider });
+    await cryptoWaitReady();
 
-      // @ts-ignore
-      const { data: { free: balance } } = await api.query.system.account( address );
+    let substrateAddress;
 
-      // Return the balance from the blockchain
-      return res.status( 200 ).json( {
-          success: true,
-          address,
-          balance: balance.toString(),
-          message: `Successfully retrieved balance for address "${address}" from the blockchain`,
-      } );
-  } catch ( error ) {
-      console.error( `Error retrieving balance for address "${address}":`, error.message );
-      return res.status( 500 ).json( {
-          success: false,
-          message: 'Internal server error',
-          error: error.message,
-      } );
+    if (address.startsWith('0x') && address.length === 42) {
+      // It's an EVM address — derive the corresponding Substrate AccountId32
+      const evmU8a = hexToU8a(address);
+      const prefix = new TextEncoder().encode('evm:');
+      const entropy = new Uint8Array(prefix.length + evmU8a.length);
+      entropy.set(prefix);
+      entropy.set(evmU8a, prefix.length);
+
+      const hashed = blake2AsU8a(entropy, 256);
+      substrateAddress = encodeAddress(hashed, 42); // 42 is the default SS58 prefix
+    } else {
+      // It's already a Substrate address
+      substrateAddress = address;
+    }
+
+    const {
+      data: { free: balance },
+    } = await api.query.system.account(substrateAddress);
+
+    return res.status(200).json({
+      success: true,
+      address: substrateAddress,
+      balance: balance.toString(),
+      message: `Successfully retrieved balance for address "${address}" (resolved to "${substrateAddress}")`,
+    });
+  } catch (error) {
+    console.error(`Error retrieving balance for address "${address}":`, error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
   }
 };
 
