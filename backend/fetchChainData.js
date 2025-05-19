@@ -418,6 +418,69 @@ const processBlock = async (api, blockNumber) => {
         await updateAccountBalance(api, from);
         if (to) await updateAccountBalance(api, to);
       }
+
+      if (section === 'ethereum' && method === 'transact') {
+        let from = null;
+        let to = null;
+        let amount = '0';
+        let gasFee = '0';
+        const txHash = hash.toHex();
+
+        const extrinsicEvents = allEvents.filter(
+          ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrinsicIndex)
+        );
+
+        // Extract from `ethereum.Executed`
+        const executedEvent = extrinsicEvents.find(
+          ({ event }) => event.section === 'ethereum' && event.method === 'Executed'
+        );
+
+        if (executedEvent && executedEvent.event.data.length >= 3) {
+          from = executedEvent.event.data[0].toString(); // H160
+          to = executedEvent.event.data[1].toString();   // H160
+          // txHash is already taken from extrinsic.hash.toHex()
+        }
+
+        // Extract from `balances.Transfer`
+        const transferEvent = extrinsicEvents.find(
+          ({ event }) => event.section === 'balances' && event.method === 'Transfer'
+        );
+        if (transferEvent && transferEvent.event.data.length >= 3) {
+          amount = transferEvent.event.data[2].toString();
+        }
+
+        // Extract from `balances.Withdraw` (gas fee)
+        const withdrawEvent = extrinsicEvents.find(
+          ({ event }) => event.section === 'balances' && event.method === 'Withdraw'
+        );
+        if (withdrawEvent && withdrawEvent.event.data.length >= 2) {
+          gasFee = withdrawEvent.event.data[1].toString();
+        }
+
+        transactions.push({
+          hash: txHash,
+          block_number: blockNum,
+          from_address: from,
+          to_address: to,
+          amount,
+          fee: '0', // no explicit tip field for ethereum.transact
+          gas_fee: gasFee,
+          gas_value: '0',
+          method: 'ethereum.transact',
+          events: JSON.stringify(
+            extrinsicEvents.map(({ event }) => ({
+              section: event.section,
+              method: event.method,
+              data: event.data.map(d => d.toString())
+            }))
+          ),
+        });
+
+        // Optional: update balances if you have H160 support
+        // await updateAccountBalance(api, from);
+        // await updateAccountBalance(api, to);
+      }
+
     }
 
     // Accumulate transaction data for insertion
