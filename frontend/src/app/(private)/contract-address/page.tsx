@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { get_users_all_contract } from "@/app/var";
+import { get_users_all_contract } from "@/src/app/var";
 import Link from 'next/link';
 
 // Define an interface for the contract data structure

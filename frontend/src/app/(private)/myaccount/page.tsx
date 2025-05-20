@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
-import { profile } from "@/app/var";
+import { profile } from "@/src/app/var";
 
 const MyAccount: React.FC = () => {
   const [contractAddress, setContractAddress] = useState("");
