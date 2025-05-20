@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Cookies from "js-cookie";
-import { verify_contract } from "@/app/var";
+import { verify_contract } from "@/src/app/var";
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';

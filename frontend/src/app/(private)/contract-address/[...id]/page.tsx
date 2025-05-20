@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import { usePathname } from "next/navigation";
-import { get_users_contract_details } from "@/app/var"; // Ensure this contains the correct endpoint URL for contract details
+import { get_users_contract_details } from "@/src/app/var"; // Ensure this contains the correct endpoint URL for contract details
 
 const AddressDetails: React.FC = () => {
   const pathname = usePathname();

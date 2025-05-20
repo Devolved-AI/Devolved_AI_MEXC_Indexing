@@ -1,3 +1,5 @@
+import Footer from "../components/Footer";
+import Header from "../components/Header";
 import "../globals.css";
 
 interface Metadata {
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
   title: "ARGOCHAIN TEST SCANNER",
   description: "Argochain TEST Scanner allows you to explore and search the argochain TESTNET for transactions, addresses, tokens, prices and other activities taking place on Argochain TESTNET",
   image: "https://storage-devolvedai.s3.amazonaws.com/web-app/thumbnail/thumbnail_banner.jpeg",
-  url: "https://scanner.argoscan.net/",
+  url: "https://test-scanner.devolvedai.com/",
 };
 
 export default function RootLayout({
@@ -43,7 +45,9 @@ export default function RootLayout({
         <meta property="twitter:description" content="Argochain TEST Scanner allows you to explore and search the argochain TESTNET for transactions, addresses, tokens, prices and other activities taking place on Argochain TESTNET" />
         <meta property="twitter:image" content="https://storage-devolvedai.s3.amazonaws.com/web-app/thumbnail/thumbnail_banner.jpeg" />
       </head>
-      <body>{children}</body>
+      <Header/>
+        {children}
+      <Footer/>
     </html>
   )
 }

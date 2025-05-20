@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 13, 5, 30;
+  --background-end-rgb: 5, 10, 30;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px 5px rgba(217, 26, 156, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px 10px rgba(217, 26, 156, 0.4);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
+
+/* Hexagon grid pattern */
+.hex-pattern {
+  background-color: #0f0f1a;
+  background-image: 
+    linear-gradient(30deg, #1a1a2e 12%, transparent 12.5%, transparent 87%, #1a1a2e 87.5%, #1a1a2e),
+    linear-gradient(150deg, #1a1a2e 12%, transparent 12.5%, transparent 87%, #1a1a2e 87.5%, #1a1a2e),
+    linear-gradient(30deg, #1a1a2e 12%, transparent 12.5%, transparent 87%, #1a1a2e 87.5%, #1a1a2e),
+    linear-gradient(150deg, #1a1a2e 12%, transparent 12.5%, transparent 87%, #1a1a2e 87.5%, #1a1a2e),
+    linear-gradient(60deg, #1a1a2e77 25%, transparent 25.5%, transparent 75%, #1a1a2e77 75%, #1a1a2e77),
+    linear-gradient(60deg, #1a1a2e77 25%, transparent 25.5%, transparent 75%, #1a1a2e77 75%, #1a1a2e77);
+  background-size: 40px 70px;
+  background-position: 0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px;
+}

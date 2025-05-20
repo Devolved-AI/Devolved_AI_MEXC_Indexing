@@ -2,9 +2,9 @@
 
 import { useState, Suspense, FormEvent, ChangeEvent, FC } from 'react';
 import { useRouter } from 'next/navigation';
-import { authEmail } from "@/app/var";
+import { authEmail } from "@/src/app/var";
 import toast, { Toaster } from 'react-hot-toast';
-import newLogo from "@/logos/logo-2.png";
+import newLogo from "@/public/headerLogo.png";
 import Image from "next/image";
 
 // Define a strong type for the authEmail response
