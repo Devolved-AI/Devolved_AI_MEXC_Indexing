@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import styles from "./Login_Form.module.css";
 import Image from "next/image";
-import newLogo from "@/logos/logo-2.png";
+import newLogo from "@/public/headerLogo.png";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
-import { authEmail, verify } from "@/app/var"; // Your API endpoints
+import { authEmail, verify } from "@/src/app/var"; // Your API endpoints
 
 interface LoginFormProps {
   email: string;
