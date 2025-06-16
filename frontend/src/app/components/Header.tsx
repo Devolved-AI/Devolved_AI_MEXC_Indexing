@@ -25,10 +25,14 @@ const Header: React.FC = () => {
     setIsMenuOpen(false)
   }
 
-  const handleSignOut = async () => {
+  useEffect(() => {
     const accessToken = Cookies.get("access_token")
-    console.log("accessToken logout", accessToken)
+    setUserToken(accessToken || null)
+  }, [])
+
+  const handleSignOut = async () => {
     try {
+      const accessToken = Cookies.get("access_token")
       if (accessToken) {
         const response = await fetch(auth_logout, {
           method: "POST",
@@ -44,13 +48,13 @@ const Header: React.FC = () => {
       }
     } catch (error) {
       console.error("Error logging out:", error)
+    } finally {
+      // Clear cookies
+      Cookies.remove("email")
+      Cookies.remove("access_token")
+      // Redirect to the login page
+      router.push("/login")
     }
-    // Clear cookies
-    Cookies.remove("email")
-    Cookies.remove("access_token")
-
-    // Redirect to the login page
-    router.push("/login")
   }
 
   useEffect(() => {

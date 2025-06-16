@@ -6,6 +6,7 @@ import ClipboardJS from 'clipboard';
 import Link from 'next/link';
 import { FiClipboard } from 'react-icons/fi';
 import dynamic from 'next/dynamic';
+import PageLayout from '../../../components/PageLayout';
 
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
@@ -132,17 +133,34 @@ const BlocksDetailsByBlockNumber = () => {
     }
   };
 
-  const formatTimestamp = (timestamp: any) => {
-    const date = new Date(timestamp);
-    return new Intl.DateTimeFormat('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).format(date);
+  const formatTimestamp = (timestamp: string | number | undefined) => {
+    if (!timestamp) return 'N/A';
+    
+    try {
+      // Convert to number if it's a string
+      const timestampNum = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp;
+      
+      // Check if timestamp is in milliseconds or seconds
+      const date = new Date(timestampNum * (timestampNum < 10000000000 ? 1000 : 1));
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return 'Invalid Date';
+    }
   };
 
   const getTransactionStatus = (events: string | undefined) => {
@@ -169,168 +187,280 @@ const BlocksDetailsByBlockNumber = () => {
     return { status: 'Unknown' };
   };
   
-  if (loading) {
-    return (
-      <div className="p-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow">
-        <div className="flex justify-center items-center h-64">
-          <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-700 shadow text-center">
-        <h1 className="text-4xl font-bold text-red-500">404</h1>
-        <p className="mt-2 text-gray-600">{error}</p>
-        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
-          Return to Home
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className=" dark:bg-gray-800 dark:text-gray-300">
-      <div className=' container mx-auto p-4 sm:p-6 lg:p-8'>
+    <PageLayout
+      title="Block Details"
+      loading={loading}
+      error={error}
+    >
       {blockData && (
-        <div className="mt-6">
-          <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-4">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">Block Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-              <div className="flex justify-between">
-                <span className="font-semibold">Block Number:</span>
-                <span className="flex items-center">{blockData.block_number}</span>
+        <div className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Block Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Block Number</h3>
+                <p className="text-gray-800 dark:text-gray-100">{blockData.block_number}</p>
               </div>
 
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Block Hash:</span>
-                <span className="flex items-center">{blockData.block_hash}</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Block Hash</h3>
+                <div className="flex items-center space-x-2">
+                  <code className="text-sm bg-gray-50 dark:bg-gray-700 p-2 rounded flex-1 overflow-x-auto text-gray-800 dark:text-gray-100">
+                    {blockData.block_hash}
+                  </code>
+                  <button
+                    className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                    data-clipboard-text={blockData.block_hash}
+                  >
+                    <FiClipboard className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Parent Hash:</span>
-                <span className="flex items-center">{blockData.parent_hash}</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Parent Hash</h3>
+                <div className="flex items-center space-x-2">
+                  <code className="text-sm bg-gray-50 dark:bg-gray-700 p-2 rounded flex-1 overflow-x-auto text-gray-800 dark:text-gray-100">
+                    {blockData.parent_hash}
+                  </code>
+                  <button
+                    className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                    data-clipboard-text={blockData.parent_hash}
+                  >
+                    <FiClipboard className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">State Root:</span>
-                <span className="flex items-center">{blockData.state_root}</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">State Root</h3>
+                <div className="flex items-center space-x-2">
+                  <code className="text-sm bg-gray-50 dark:bg-gray-700 p-2 rounded flex-1 overflow-x-auto text-gray-800 dark:text-gray-100">
+                    {blockData.state_root}
+                  </code>
+                  <button
+                    className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                    data-clipboard-text={blockData.state_root}
+                  >
+                    <FiClipboard className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Extrinsics Root:</span>
-                <span className="flex items-center">{blockData.extrinsics_root}</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Extrinsics Root</h3>
+                <div className="flex items-center space-x-2">
+                  <code className="text-sm bg-gray-50 dark:bg-gray-700 p-2 rounded flex-1 overflow-x-auto text-gray-800 dark:text-gray-100">
+                    {blockData.extrinsics_root}
+                  </code>
+                  <button
+                    className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                    data-clipboard-text={blockData.extrinsics_root}
+                  >
+                    <FiClipboard className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Timestamp:</span>
-                <span>{formatTimestamp(blockData.timestamp)}</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Timestamp</h3>
+                <p className="text-gray-800 dark:text-gray-100">{formatTimestamp(blockData.timestamp)}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* EVM Transactions */}
       {blockDataEVM.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
-          {blockDataEVM.map((transaction, index) => (
-            <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <div className="flex justify-between">
-                  <span className="font-semibold">Transaction Hash:</span>
-                  <span className="flex items-center">{transaction.transactionHash}</span>
-                </div>
+        <div className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">EVM Transactions</h2>
+            <div className="space-y-6">
+              {blockDataEVM.map((transaction, index) => (
+                <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-6 last:pb-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Transaction Hash</h3>
+                      <div className="flex items-center space-x-2">
+                        <code className="text-sm bg-gray-100 dark:bg-gray-700 p-2 rounded flex-1 overflow-x-auto">
+                          {transaction.transactionHash}
+                        </code>
+                        <button
+                          className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          data-clipboard-text={transaction.transactionHash}
+                        >
+                          <FiClipboard className="h-5 w-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
 
-                <hr className="opacity-75"></hr>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">From Address</h3>
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/address/${transaction.from}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                        >
+                          {transaction.from}
+                        </Link>
+                        <button
+                          className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          data-clipboard-text={transaction.from}
+                        >
+                          <FiClipboard className="h-5 w-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span className="font-semibold">From Address:</span>
-                  <span className="flex items-center">{transaction.from}</span>
-                </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">To Address</h3>
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/address/${transaction.to}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                        >
+                          {transaction.to}
+                        </Link>
+                        <button
+                          className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                          data-clipboard-text={transaction.to}
+                        >
+                          <FiClipboard className="h-5 w-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
 
-                <hr className="opacity-75"></hr>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Gas Fee</h3>
+                      <p className="text-gray-900 dark:text-white">{transaction.gasFee} AGC</p>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span className="font-semibold">To Address:</span>
-                  <span className="flex items-center">{transaction.to}</span>
-                </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Amount</h3>
+                      <p className="text-gray-900 dark:text-white">{transaction.amount} AGC</p>
+                    </div>
 
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Gas Fee:</span>
-                  <span className="flex items-center">{transaction.gasFee} AGC</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Amount:</span>
-                  <span className="flex items-center">{transaction.amount} AGC</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Timestamp:</span>
-                  <span>{formatTimestamp(transaction.timestamp)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction List</h2>
-
-        {transactionData && transactionData.length > 0 ? (
-          transactionData.map((transaction: Transaction, index: number) => {
-            const statusInfo = getTransactionStatus(transaction.events);
-
-            return (
-              <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                  <div className="flex justify-between">
-                    <span className="font-semibold">Transaction Hash:</span>
-                    <span className="flex items-center">
-                      <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
-                        {transaction.tx_hash}
-                      </Link>
-                      <button
-                        className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
-                        data-clipboard-text={transaction.tx_hash}
-                        title="Copy txhash to clipboard"
-                      >
-                        <FiClipboard />
-                      </button>
-                    </span>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Timestamp</h3>
+                      <p className="text-gray-900 dark:text-white">{formatTimestamp(transaction.timestamp)}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="bg-white text-gray-600 dark:text-gray-300 dark:bg-gray-700 shadow-md rounded-lg p-4 mb-4">
-            <p className=" text-center">No transaction found</p>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
-      </div>
-    </div>
+        </div>
+      )}
+
+      {/* Regular Transactions */}
+      {transactionData && transactionData.length > 0 && (
+        <div className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Transactions</h2>
+            <div className="space-y-6">
+              {transactionData.map((transaction, index) => {
+                const statusInfo = getTransactionStatus(transaction.events);
+                return (
+                  <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-6 last:pb-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Transaction Hash</h3>
+                        <div className="flex items-center space-x-2">
+                          <Link
+                            href={`/tx/${transaction.tx_hash}`}
+                            className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                          >
+                            {transaction.tx_hash}
+                          </Link>
+                          <button
+                            className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                            data-clipboard-text={transaction.tx_hash}
+                          >
+                            <FiClipboard className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Status</h3>
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          statusInfo.status === 'Success'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : statusInfo.status === 'Failed'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {statusInfo.status}
+                          {statusInfo.reason && ` - ${statusInfo.reason}`}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">From Address</h3>
+                        <div className="flex items-center space-x-2">
+                          <Link
+                            href={`/address/${transaction.from_address}`}
+                            className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                          >
+                            {transaction.from_address}
+                          </Link>
+                          <button
+                            className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                            data-clipboard-text={transaction.from_address}
+                          >
+                            <FiClipboard className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">To Address</h3>
+                        <div className="flex items-center space-x-2">
+                          <Link
+                            href={`/address/${transaction.to_address}`}
+                            className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+                          >
+                            {transaction.to_address}
+                          </Link>
+                          <button
+                            className="copy-btn p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded text-gray-500 dark:text-gray-400"
+                            data-clipboard-text={transaction.to_address}
+                          >
+                            <FiClipboard className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Method</h3>
+                        <p className="text-gray-800 dark:text-gray-100">{transaction.method}</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Amount</h3>
+                        <p className="text-gray-800 dark:text-gray-100">{transaction.amount} AGC</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Gas Fee</h3>
+                        <p className="text-gray-800 dark:text-gray-100">{transaction.gas_fee} AGC</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Timestamp</h3>
+                        <p className="text-gray-800 dark:text-gray-100">{formatTimestamp(transaction.timestamp)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </PageLayout>
   );
 };
 
