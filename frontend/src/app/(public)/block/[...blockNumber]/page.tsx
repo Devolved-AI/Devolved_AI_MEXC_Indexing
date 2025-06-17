@@ -6,6 +6,8 @@ import ClipboardJS from 'clipboard';
 import Link from 'next/link';
 import { FiClipboard } from 'react-icons/fi';
 import dynamic from 'next/dynamic';
+import Header from '../../../components/Header';
+import Footer from '../../../components/Footer';
 
 const Player = dynamic(() => import('@lottiefiles/react-lottie-player').then(mod => mod.Player), {
   ssr: false,
@@ -42,6 +44,24 @@ interface Transaction {
   method: string;
   events: string;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1
+  }
+};
 
 const BlocksDetailsByBlockNumber = () => {
   const [blockData, setBlockData] = useState<Block | null>(null);
@@ -171,166 +191,178 @@ const BlocksDetailsByBlockNumber = () => {
   
   if (loading) {
     return (
-      <div className="p-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow">
-        <div className="flex justify-center items-center h-64">
-          <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
+      <>
+        <Header />
+        <div className="p-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow">
+          <div className="flex justify-center items-center h-64">
+            <Player autoplay loop src={LoadinJson} style={{ height: '150px', width: '150px' }} />
+          </div>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-700 shadow text-center">
-        <h1 className="text-4xl font-bold text-red-500">404</h1>
-        <p className="mt-2 text-gray-600">{error}</p>
-        <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
-          Return to Home
-        </Link>
-      </div>
+      <>
+        <Header />
+        <div className="p-4 bg-white dark:bg-gray-800 dark:text-gray-300 text-gray-700 shadow text-center">
+          <h1 className="text-4xl font-bold text-red-500">404</h1>
+          <p className="mt-2 text-gray-600">{error}</p>
+          <Link href="/" className="text-[#D91A9C] hover:underline mt-4 inline-block">
+            Return to Home
+          </Link>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <div className=" dark:bg-gray-800 dark:text-gray-300">
-      <div className=' container mx-auto p-4 sm:p-6 lg:p-8'>
-      {blockData && (
-        <div className="mt-6">
-          <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-4">
-            <h2 className="text-lg sm:text-xl font-bold mb-4">Block Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-              <div className="flex justify-between">
-                <span className="font-semibold">Block Number:</span>
-                <span className="flex items-center">{blockData.block_number}</span>
-              </div>
-
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Block Hash:</span>
-                <span className="flex items-center">{blockData.block_hash}</span>
-              </div>
-
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Parent Hash:</span>
-                <span className="flex items-center">{blockData.parent_hash}</span>
-              </div>
-
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">State Root:</span>
-                <span className="flex items-center">{blockData.state_root}</span>
-              </div>
-
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Extrinsics Root:</span>
-                <span className="flex items-center">{blockData.extrinsics_root}</span>
-              </div>
-
-              <hr className="opacity-75" />
-
-              <div className="flex justify-between">
-                <span className="font-semibold">Timestamp:</span>
-                <span>{formatTimestamp(blockData.timestamp)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {blockDataEVM.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
-          {blockDataEVM.map((transaction, index) => (
-            <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <div className="flex justify-between">
-                  <span className="font-semibold">Transaction Hash:</span>
-                  <span className="flex items-center">{transaction.transactionHash}</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">From Address:</span>
-                  <span className="flex items-center">{transaction.from}</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">To Address:</span>
-                  <span className="flex items-center">{transaction.to}</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Gas Fee:</span>
-                  <span className="flex items-center">{transaction.gasFee} AGC</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Amount:</span>
-                  <span className="flex items-center">{transaction.amount} AGC</span>
-                </div>
-
-                <hr className="opacity-75"></hr>
-
-                <div className="flex justify-between">
-                  <span className="font-semibold">Timestamp:</span>
-                  <span>{formatTimestamp(transaction.timestamp)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction List</h2>
-
-        {transactionData && transactionData.length > 0 ? (
-          transactionData.map((transaction: Transaction, index: number) => {
-            const statusInfo = getTransactionStatus(transaction.events);
-
-            return (
-              <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+    <>
+      <Header />
+      <div className="dark:bg-gray-800 dark:text-gray-300">
+        <div className='container mx-auto p-4 sm:p-6 lg:p-8'>
+          {blockData && (
+            <div className="mt-6">
+              <div className="bg-white dark:bg-gray-700 shadow-md rounded-lg p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-4">Block Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <div className="flex justify-between">
-                    <span className="font-semibold">Transaction Hash:</span>
-                    <span className="flex items-center">
-                      <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
-                        {transaction.tx_hash}
-                      </Link>
-                      <button
-                        className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
-                        data-clipboard-text={transaction.tx_hash}
-                        title="Copy txhash to clipboard"
-                      >
-                        <FiClipboard />
-                      </button>
-                    </span>
+                    <span className="font-semibold">Block Number:</span>
+                    <span className="flex items-center">{blockData.block_number}</span>
+                  </div>
+
+                  <hr className="opacity-75" />
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Block Hash:</span>
+                    <span className="flex items-center">{blockData.block_hash}</span>
+                  </div>
+
+                  <hr className="opacity-75" />
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Parent Hash:</span>
+                    <span className="flex items-center">{blockData.parent_hash}</span>
+                  </div>
+
+                  <hr className="opacity-75" />
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold">State Root:</span>
+                    <span className="flex items-center">{blockData.state_root}</span>
+                  </div>
+
+                  <hr className="opacity-75" />
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Extrinsics Root:</span>
+                    <span className="flex items-center">{blockData.extrinsics_root}</span>
+                  </div>
+
+                  <hr className="opacity-75" />
+
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Timestamp:</span>
+                    <span>{formatTimestamp(blockData.timestamp)}</span>
                   </div>
                 </div>
               </div>
-            );
-          })
-        ) : (
-          <div className="bg-white text-gray-600 dark:text-gray-300 dark:bg-gray-700 shadow-md rounded-lg p-4 mb-4">
-            <p className=" text-center">No transaction found</p>
+            </div>
+          )}
+
+          {blockDataEVM.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction Details</h2>
+              {blockDataEVM.map((transaction, index) => (
+                <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Transaction Hash:</span>
+                      <span className="flex items-center">{transaction.transactionHash}</span>
+                    </div>
+
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">From Address:</span>
+                      <span className="flex items-center">{transaction.from}</span>
+                    </div>
+
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">To Address:</span>
+                      <span className="flex items-center">{transaction.to}</span>
+                    </div>
+
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Gas Fee:</span>
+                      <span className="flex items-center">{transaction.gasFee} AGC</span>
+                    </div>
+
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Amount:</span>
+                      <span className="flex items-center">{transaction.amount} AGC</span>
+                    </div>
+
+                    <hr className="opacity-75"></hr>
+
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Timestamp:</span>
+                      <span>{formatTimestamp(transaction.timestamp)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Transaction List</h2>
+
+            {transactionData && transactionData.length > 0 ? (
+              transactionData.map((transaction: Transaction, index: number) => {
+                const statusInfo = getTransactionStatus(transaction.events);
+
+                return (
+                  <div key={index} className="bg-white shadow-md rounded-lg p-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">Transaction Hash:</span>
+                        <span className="flex items-center">
+                          <Link href={`/tx/${transaction.tx_hash}`} className="hover:underline">
+                            {transaction.tx_hash}
+                          </Link>
+                          <button
+                            className="ml-2 copy-btn bg-[#D91A9C] text-white hover:bg-[#e332ab] px-2 py-1 rounded"
+                            data-clipboard-text={transaction.tx_hash}
+                            title="Copy txhash to clipboard"
+                          >
+                            <FiClipboard />
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="bg-white text-gray-600 dark:text-gray-300 dark:bg-gray-700 shadow-md rounded-lg p-4 mb-4">
+                <p className="text-center">No transaction found</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-      </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 
