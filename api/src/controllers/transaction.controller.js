@@ -114,6 +114,37 @@ const getTransactionDetailsByHash = async (req, res) => {
   }
 };
 
+// Function to determine transaction status from events
+const getTransactionStatus = (events) => {
+  try {
+    // If events is a string, parse it as JSON
+    const parsedEvents = typeof events === 'string' ? JSON.parse(events) : events;
+    
+    if (!Array.isArray(parsedEvents)) {
+      return { status: 'Unknown' };
+    }
+
+    const failedEvent = parsedEvents.find((event) => 
+      event.section === 'system' && event.method === 'ExtrinsicFailed'
+    );
+    if (failedEvent) {
+      return { status: 'Failed', reason: 'FundsUnavailable' };
+    }
+
+    const successEvent = parsedEvents.find((event) => 
+      event.section === 'balances' && event.method === 'Transfer'
+    );
+    if (successEvent) {
+      return { status: 'Success' };
+    }
+
+    return { status: 'Unknown' };
+  } catch (error) {
+    console.error('Error parsing events for status:', error);
+    return { status: 'Unknown' };
+  }
+};
+
 const getTransactionDetailsByAddress = async (req, res) => {
   try {
     // Extract the address from the request body
@@ -155,9 +186,13 @@ const getTransactionDetailsByAddress = async (req, res) => {
       });
     }
 
-    // Organize the transactions by block number
+    // Organize the transactions by block number and add status
     const transactionsByBlock = result.rows.reduce((acc, row) => {
-      const { block_number, timestamp, ...transactionDetails } = row;
+      const { block_number, timestamp, events, ...transactionDetails } = row;
+      
+      // Determine transaction status from events
+      const statusInfo = getTransactionStatus(events);
+      
       if (!acc[block_number]) {
         acc[block_number] = {
           block_number,
@@ -165,7 +200,15 @@ const getTransactionDetailsByAddress = async (req, res) => {
           transactions: [],
         };
       }
-      acc[block_number].transactions.push(transactionDetails);
+      
+      // Add status to transaction details
+      acc[block_number].transactions.push({
+        ...transactionDetails,
+        status: statusInfo.status,
+        statusReason: statusInfo.reason || null,
+        events
+      });
+      
       return acc;
     }, {});
 
