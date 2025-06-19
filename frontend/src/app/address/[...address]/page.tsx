@@ -17,6 +17,7 @@ interface Transaction {
   gas_fee: string;
   method: string;
   methodName?: string;
+  events?: any;
 }
 
 interface Block {
@@ -116,6 +117,23 @@ const TransactionDetailsByAddress = () => {
         console.error("Invalid input for conversion:", error);
         return '0.0'; // Default value if input is invalid
     }
+  };
+
+  const getTransactionStatus = (events: any) => {
+    // If events is a string, parse it as JSON
+    const parsedEvents = typeof events === 'string' ? JSON.parse(events) : events;
+
+    const failedEvent = parsedEvents.find((event: { section: string; method: string; }) => event.section === 'system' && event.method === 'ExtrinsicFailed');
+    if (failedEvent) {
+      return { status: 'Failed', reason: 'FundsUnavailable' };
+    }
+
+    const successEvent = parsedEvents.find((event: { section: string; method: string; }) => event.section === 'balances' && event.method === 'Transfer');
+    if (successEvent) {
+      return { status: 'Success' };
+    }
+
+    return { status: 'Unknown' };
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -239,6 +257,61 @@ const TransactionDetailsByAddress = () => {
                   <div className="col-span-1">
                     <span className="text-gray-500 font-semibold">Gas Fee</span>
                     <p className="text-gray-700">{convertToFixedPrecision(transaction.gas_fee)} AGC</p>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-500 font-semibold">Status</span>
+                    <div className="text-gray-700">
+                      {transaction.events ? (
+                        (() => {
+                          const statusInfo = getTransactionStatus(transaction.events);
+                          return statusInfo.status === 'Failed' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M6 18L18 6M6 6l12 12"
+                                ></path>
+                              </svg>
+                              Failed
+                            </span>
+                          ) : statusInfo.status === 'Success' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M5 13l4 4L19 7"
+                                ></path>
+                              </svg>
+                              Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                              Unknown
+                            </span>
+                          );
+                        })()
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                          Unknown
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
