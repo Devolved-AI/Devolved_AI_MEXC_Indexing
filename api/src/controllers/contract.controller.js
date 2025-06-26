@@ -174,7 +174,8 @@ async function verifyContractController(req, res) {
             optimizerRuns, 
             parsedTypes, 
             parsedValues, 
-            parsedLibraryAddress
+            parsedLibraryAddress,
+            libraryName
         );
         
         // Prepare verification data with schema-compliant ABI format
