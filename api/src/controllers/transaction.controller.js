@@ -1,5 +1,8 @@
 const { query } = require('@config/connectDB');
 const { ApiPromise, WsProvider } = require( '@polkadot/api' );
+const logger = require('@config/logger');
+const { asyncHandler, errorHandler } = require('@middleware/errorHandler');
+const { successResponse, errorResponse, paginatedResponse } = require('@middleware/responseFormatter');
 require('dotenv').config();
 
 // Initialize WebSocket provider
@@ -7,18 +10,26 @@ const wsProvider = new WsProvider(process.env.ARGOCHAIN_RPC_URL);
 
 const initializeApi = async () => {
   try {
+    logger.debug('🔗 Initializing Polkadot API connection...');
     const api = await ApiPromise.create({ provider: wsProvider });
+    logger.info('✅ Polkadot API connection established successfully');
     return api;
   } catch (error) {
-    console.error("Failed to connect to RPC:", error);
+    logger.error('❌ Failed to connect to RPC:', error);
     throw error;
   }
 };
 
 // Function to get the last 10 transactions from the database
-const getLast10Transactions = async (req, res) => {
+const getLast10Transactions = asyncHandler(async (req, res) => {
+  const requestId = req.requestId;
+  
+  logger.info(`[${requestId}] 📊 Fetching last 10 transactions from database`);
+  
   try {
     // SQL query to get the last 10 transactions along with their block timestamp
+    logger.debug(`[${requestId}] Executing SQL query for last 10 transactions`);
+    
     const result = await query(
       `SELECT
         tx.tx_hash,
@@ -36,43 +47,48 @@ const getLast10Transactions = async (req, res) => {
       LIMIT 10`
     );
 
+    logger.debug(`[${requestId}] Query executed successfully, found ${result.rows.length} transactions`);
+
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No transactions found',
-      });
+      logger.warn(`[${requestId}] No transactions found in database`);
+      return errorResponse(res, 'No transactions found', 404, 'NO_DATA_FOUND');
     }
 
     // Format and return the transactions
-    return res.status(200).json({
-      success: true,
-      transactions: result.rows,
-    });
+    logger.info(`[${requestId}] Successfully retrieved ${result.rows.length} transactions`);
+    return successResponse(res, result.rows, 'Last 10 transactions retrieved successfully');
+    
   } catch (error) {
-    console.error('Error retrieving transactions from PostgreSQL:', error.message);
-    return res.status(500).json({
-      message: 'Internal server error',
-      error: error.message,
-    });
+    logger.error(`[${requestId}] Database error while fetching transactions:`, error);
+    throw new Error(`Database query failed: ${error.message}`);
   }
-};
+});
 
-const getTransactionDetailsByHash = async (req, res) => {
+const getTransactionDetailsByHash = asyncHandler(async (req, res) => {
+  const requestId = req.requestId;
   const { tx_hash } = req.body;
 
+  logger.info(`[${requestId}] 🔍 Fetching transaction details for hash: ${tx_hash}`);
+
   if (!tx_hash) {
-    return res.status(400).json({
-      success: false,
-      message: 'tx_hash is required',
-    });
+    logger.warn(`[${requestId}] Missing tx_hash in request body`);
+    return errorResponse(res, 'tx_hash is required', 400, 'MISSING_PARAMETER');
+  }
+
+  // Validate transaction hash format
+  if (!/^0x[a-fA-F0-9]{64}$/.test(tx_hash)) {
+    logger.warn(`[${requestId}] Invalid transaction hash format: ${tx_hash}`);
+    return errorResponse(res, 'Invalid transaction hash format', 400, 'INVALID_FORMAT');
   }
 
   try {
+    logger.debug(`[${requestId}] Executing SQL query for transaction hash: ${tx_hash}`);
+    
     // SQL query to get the transaction details along with the block number and timestamp
     const result = await query(
       `SELECT 
         tx.tx_hash, 
-        tx.block_number,  -- Include block number
+        tx.block_number,
         tx.from_address, 
         tx.to_address, 
         tx.amount, 
@@ -80,50 +96,56 @@ const getTransactionDetailsByHash = async (req, res) => {
         tx.gas_fee, 
         tx.method,
         tx.events,
-        b.timestamp  -- Include block timestamp
+        b.timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
       WHERE tx.tx_hash = $1`,
       [tx_hash]
     );
 
+    logger.debug(`[${requestId}] Query executed successfully, found ${result.rows.length} matching transactions`);
+
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No transaction found with tx_hash: ${tx_hash}`,
-      });
+      logger.warn(`[${requestId}] No transaction found with hash: ${tx_hash}`);
+      return errorResponse(res, `No transaction found with tx_hash: ${tx_hash}`, 404, 'TRANSACTION_NOT_FOUND');
     }
 
-    // Return the transaction details including the block timestamp
-    return res.status(200).json({
-      success: true,
-      transaction: {
-        ...result.rows[0], // Transaction details
-        timestamp: result.rows[0].timestamp // Include the block timestamp
-      }
-    });
-  } catch (error) {
-    console.error('Error retrieving transaction by tx_hash from PostgreSQL:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message,
-    });
-  }
-};
+    const transaction = {
+      ...result.rows[0],
+      timestamp: result.rows[0].timestamp
+    };
 
-const getTransactionDetailsByAddress = async (req, res) => {
+    logger.info(`[${requestId}] Successfully retrieved transaction details for hash: ${tx_hash}`);
+    return successResponse(res, transaction, 'Transaction details retrieved successfully');
+    
+  } catch (error) {
+    logger.error(`[${requestId}] Database error while fetching transaction by hash:`, error);
+    throw new Error(`Database query failed: ${error.message}`);
+  }
+});
+
+const getTransactionDetailsByAddress = asyncHandler(async (req, res) => {
+  const requestId = req.requestId;
+  
   try {
     // Extract the address from the request body
     const { address } = req.body;
 
+    logger.info(`[${requestId}] 🔍 Fetching transaction details for address: ${address}`);
+
     if (!address) {
-      return res.status(400).json({
-        success: false,
-        message: 'Address is required.',
-      });
+      logger.warn(`[${requestId}] Missing address in request body`);
+      return errorResponse(res, 'Address is required', 400, 'MISSING_PARAMETER');
     }
 
+    // Validate address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      logger.warn(`[${requestId}] Invalid address format: ${address}`);
+      return errorResponse(res, 'Invalid address format', 400, 'INVALID_FORMAT');
+    }
+
+    logger.debug(`[${requestId}] Executing SQL query for address: ${address}`);
+    
     // SQL query to retrieve all transaction details for the given address
     const result = await query(
       `SELECT 
@@ -137,7 +159,7 @@ const getTransactionDetailsByAddress = async (req, res) => {
         tx.method, 
         tx.events, 
         tx.block_number, 
-        b.timestamp  -- Include block timestamp
+        b.timestamp
       FROM transactions tx
       JOIN blocks b ON tx.block_number = b.block_number
       WHERE tx.from_address = $1 OR tx.to_address = $1
@@ -145,12 +167,12 @@ const getTransactionDetailsByAddress = async (req, res) => {
       [address]
     );
 
+    logger.debug(`[${requestId}] Query executed successfully, found ${result.rows.length} transactions for address`);
+
     // If no transactions are found
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No transactions found for address ${address}.`,
-      });
+      logger.warn(`[${requestId}] No transactions found for address: ${address}`);
+      return errorResponse(res, `No transactions found for address ${address}`, 404, 'NO_TRANSACTIONS_FOUND');
     }
 
     // Organize the transactions by block number
@@ -167,61 +189,66 @@ const getTransactionDetailsByAddress = async (req, res) => {
       return acc;
     }, {});
 
+    const blocks = Object.values(transactionsByBlock);
+
+    logger.info(`[${requestId}] Successfully retrieved ${result.rows.length} transactions across ${blocks.length} blocks for address: ${address}`);
+    
     // Return the organized transactions grouped by block number
-    return res.status(200).json({
-      success: true,
-      message: `Transactions grouped by block number retrieved for address ${address}.`,
-      blocks: Object.values(transactionsByBlock),
-    });
+    return successResponse(res, {
+      blocks: blocks,
+      totalTransactions: result.rows.length,
+      totalBlocks: blocks.length
+    }, `Transactions grouped by block number retrieved for address ${address}`);
 
   } catch (error) {
-    console.error(`Error retrieving transaction data for address "${req.body.address}":`, error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error.',
-      error: error.message,
-    });
+    logger.error(`[${requestId}] Database error while fetching transactions for address "${req.body.address}":`, error);
+    throw new Error(`Database query failed: ${error.message}`);
   }
-};
-
+});
 
 // Function to get the account balance from Redis or from the blockchain
-const getBalance = async ( req, res ) => {
+const getBalance = asyncHandler(async (req, res) => {
+  const requestId = req.requestId;
+  
   // Extract address from request body
   const { address } = req.body;
 
+  logger.info(`[${requestId}] 💰 Fetching balance for address: ${address}`);
+
   // If address is not provided, return a 400 error
-  if ( !address ) {
-      return res.status( 400 ).json( {
-          success: false,
-          message: 'Address is required',
-      } );
+  if (!address) {
+    logger.warn(`[${requestId}] Missing address in request body`);
+    return errorResponse(res, 'Address is required', 400, 'MISSING_PARAMETER');
+  }
+
+  // Validate address format
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    logger.warn(`[${requestId}] Invalid address format: ${address}`);
+    return errorResponse(res, 'Invalid address format', 400, 'INVALID_FORMAT');
   }
 
   try {
-      // If address does not exist in Redis, fetch the balance from the blockchain
-      const wsProvider = new WsProvider( process.env.ARGOCHAIN_RPC_URL ); // Replace with your blockchain's RPC URL
-      const api = await ApiPromise.create( { provider: wsProvider } );
+    logger.debug(`[${requestId}] Initializing Polkadot API for balance check`);
+    const api = await initializeApi();
 
-      // @ts-ignore
-      const { data: { free: balance } } = await api.query.system.account( address );
+    logger.debug(`[${requestId}] Querying balance for address: ${address}`);
+    const { data: balance } = await api.query.system.account(address);
 
-      // Return the balance from the blockchain
-      return res.status( 200 ).json( {
-          success: true,
-          address,
-          balance: balance.toString(),
-          message: `Successfully retrieved balance for address "${address}" from the blockchain`,
-      } );
-  } catch ( error ) {
-      console.error( `Error retrieving balance for address "${address}":`, error.message );
-      return res.status( 500 ).json( {
-          success: false,
-          message: 'Internal server error',
-          error: error.message,
-      } );
+    logger.info(`[${requestId}] Successfully retrieved balance for address: ${address}`);
+    
+    return successResponse(res, {
+      address: address,
+      balance: balance.free.toString(),
+      reserved: balance.reserved.toString(),
+      miscFrozen: balance.miscFrozen.toString(),
+      feeFrozen: balance.feeFrozen.toString()
+    }, 'Balance retrieved successfully');
+
+  } catch (error) {
+    logger.error(`[${requestId}] Error fetching balance for address ${address}:`, error);
+    throw new Error(`Failed to fetch balance: ${error.message}`);
   }
-};
+});
 
 const fetchTransactionData = async (req, res) => {
   try {

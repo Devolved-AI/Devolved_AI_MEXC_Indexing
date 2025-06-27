@@ -67,6 +67,7 @@
     "@libs": "./src/libs",
     "@public": "./src/public",
     "@utils": "./src/utils",
-    "@services": "./src/services"
+    "@services": "./src/services",
+    "@middleware": "./src/middleware"
   }
 }
